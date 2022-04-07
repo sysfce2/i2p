@@ -8919,7 +8919,9 @@ th.options {
 }
 
 @media screen and (-ms-high-contrast: active) {
-    -ms-high-contrast-adjust: none;
+    body {
+        -ms-high-contrast-adjust: none;
+    }
 }
 
 @-moz-document url-prefix() {
