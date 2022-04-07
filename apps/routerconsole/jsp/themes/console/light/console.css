@@ -8913,7 +8913,7 @@ th.options {
 /*disable high-contrast mode*/
 
 @media (forced-colors: active) {
-    .prefs__palette {
+    body {
         forced-color-adjust: none;
     }
 }
@@ -8925,7 +8925,7 @@ th.options {
 }
 
 @-moz-document url-prefix() {
-    .moz-contrast {
-        color-adjust: none;
+    body {
+        high-contrast-adjust: none;
     }
 }

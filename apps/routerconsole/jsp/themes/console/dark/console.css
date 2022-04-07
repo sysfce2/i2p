@@ -8489,7 +8489,7 @@ table#externali2cp th {
 /*disable high-contrast mode*/
 
 @media (forced-colors: active) {
-    .prefs__palette {
+    body {
         forced-color-adjust: none;
     }
 }
@@ -8501,7 +8501,7 @@ table#externali2cp th {
 }
 
 @-moz-document url-prefix() {
-    .moz-contrast {
-        color-adjust: none;
+    body {
+        high-contrast-adjust: none;
     }
 }
