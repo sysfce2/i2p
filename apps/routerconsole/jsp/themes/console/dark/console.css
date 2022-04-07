@@ -8484,3 +8484,9 @@ table#externali2cp th {
     letter-spacing: 0 !important;
     word-spacing: 0 !important;
 }
+
+@media (forced-colors: active) {
+    .prefs__palette {
+        forced-color-adjust: none;
+    }
+}

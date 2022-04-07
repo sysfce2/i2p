@@ -8908,3 +8908,9 @@ th.options {
 
 
 /* end chrome overrides */
+
+@media (forced-colors: active) {
+    .prefs__palette {
+        forced-color-adjust: none;
+    }
+}
