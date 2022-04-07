@@ -8909,8 +8909,21 @@ th.options {
 
 /* end chrome overrides */
 
+
+/*disable high-contrast mode*/
+
 @media (forced-colors: active) {
     .prefs__palette {
         forced-color-adjust: none;
+    }
+}
+
+@media screen and (-ms-high-contrast: active) {
+    -ms-high-contrast-adjust: none;
+}
+
+@-moz-document url-prefix() {
+    .moz-contrast {
+        color-adjust: none;
     }
 }
