@@ -8912,20 +8912,8 @@ th.options {
 
 /*disable high-contrast mode*/
 
-@media (forced-colors: active) {
-    body {
-        forced-color-adjust: none;
-    }
-}
-
-@media screen and (-ms-high-contrast: active) {
-    body {
-        -ms-high-contrast-adjust: none;
-    }
-}
-
-@-moz-document url-prefix() {
-    body {
-        high-contrast-adjust: none;
-    }
+* {
+    forced-color-adjust: none;
+    -ms-high-contrast-adjust: none;
+    high-contrast-adjust: none;
 }
