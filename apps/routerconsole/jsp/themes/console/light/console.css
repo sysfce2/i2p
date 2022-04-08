@@ -8917,3 +8917,21 @@ th.options {
     -ms-high-contrast-adjust: none;
     high-contrast-adjust: none;
 }
+
+@media (prefers-contrast: forced) {
+    * {
+        color: unset;
+        background-color: unset;
+        text-decoration-color: unset;
+        text-emphasis-color: unset;
+        border-color: unset;
+        outline-color: unset;
+        column-rule-color: unset;
+        -webkit-tap-highlight-color: unset;
+        box-shadow: unset;
+        text-shadow: unset;
+        background-image: unset;
+        color-scheme: unset;
+        scrollbar-color: unset;
+    }
+}
