@@ -8494,7 +8494,7 @@ table#externali2cp th {
     high-contrast-adjust: none;
 }
 
-@media (prefers-contrast: forced) {
+@media (forced-colors: active) {
     * {
         color: unset;
         background-color: unset;
