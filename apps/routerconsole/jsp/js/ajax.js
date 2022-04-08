@@ -55,7 +55,7 @@ function ajaxDone(url, target, refresh) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+function forceColorAdjustNone() {
     //var file = location.pathname.split("/").pop();
     file = document.getElementById("pagestyle").href
 
@@ -66,6 +66,16 @@ document.addEventListener("DOMContentLoaded", function() {
     link.media = "screen,print";
 
     document.getElementsByTagName("head")[0].appendChild(link);
-})
+}
+
+if (document.readyState == 'complete') {
+    forceColorAdjustNone();
+} else {
+    document.onreadystatechange = function() {
+        if (document.readyState === "complete") {
+            forceColorAdjustNone();
+        }
+    }
+}
 
 /* @license-end */
