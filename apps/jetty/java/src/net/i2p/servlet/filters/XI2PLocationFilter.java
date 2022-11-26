@@ -34,47 +34,15 @@ import net.i2p.util.Log;
  *
  *  @since 0.9.51
  */
-public class XI2PLocationFilter extends HandlerWrapper {
-    private String X_I2P_Location = null;
-    private long lastFailure = -1;
+public class XI2PLocationFilter extends XI2PHeaderFilter {
     private static final long failTimeout = 600000;
-    private static final String encodeUTF = StandardCharsets.UTF_8.toString();
-    private final Log _log = I2PAppContext.getGlobalContext().logManager().getLog(XI2PLocationFilter.class);
 
-
-    private synchronized void setLocation(String xi2plocation) {
-        if (_log.shouldInfo())
-            _log.info("Checking X-I2P-Location header prefix" + xi2plocation);
-        if (X_I2P_Location != null)
-            return ;
-        if (xi2plocation == null)
-            return ;
-        if (xi2plocation.equals(""))
-            return ;
-        X_I2P_Location = xi2plocation;
-        if (_log.shouldInfo())
-            _log.info("Caching X-I2P-Location header prefix" + X_I2P_Location);
+    public XI2PLocationFilter(){
+        super(failTimeout);
+        headerKey = "X-I2P-Location";
+        applyToClearnet = true;
     }
 
-    private synchronized boolean shouldRecheck(){
-        boolean settable = (X_I2P_Location == null);
-        if (!settable) return settable;
-        if (lastFailure == -1) {
-            lastFailure = System.currentTimeMillis();
-            if (_log.shouldDebug())
-                _log.debug("New instance, attempting to set X-I2P-Location header for the first time");
-            return settable;
-        }
-        if ((System.currentTimeMillis() - lastFailure) > failTimeout){
-            lastFailure = System.currentTimeMillis();
-            if (_log.shouldDebug())
-                _log.debug("More than ten minutes since failing attempt to re-check X-I2P-Location header");
-            return settable;
-        }
-        if (_log.shouldDebug())
-            _log.debug("Not attempting to re-check X-I2P-Location header");
-        return false;
-    }
 
     private synchronized String getXI2PLocation(String host, String port) {
         File configDir = I2PAppContext.getGlobalContext().getConfigDir();
@@ -135,8 +103,12 @@ public class XI2PLocationFilter extends HandlerWrapper {
         return null;
     }
 
-    private synchronized String headerContents(final HttpServletRequest httpRequest) {
-        if (X_I2P_Location != null) {
+    public synchronized String getCachableHeader(final Request request) {
+        return getXI2PLocation(request.getLocalAddr(), String.valueOf(request.getLocalPort()));
+    }
+
+    public synchronized String headerContents(final HttpServletRequest httpRequest) {
+        if (cacheableHeader != null) {
             String scheme = httpRequest.getScheme();
             if (scheme == null)
                  scheme = "";
@@ -148,11 +120,11 @@ public class XI2PLocationFilter extends HandlerWrapper {
                 query = "";
             try {
                 if (query.equals("")) {
-                    URI uri = new URI(scheme, X_I2P_Location, path, null);
+                    URI uri = new URI(scheme, cachedHeader, path, null);
                     String encodedURL = uri.toASCIIString();
                     return encodedURL;
                 } else {
-                    URI uri = new URI(scheme, X_I2P_Location, path, query, null);
+                    URI uri = new URI(scheme, cachedHeader, path, query, null);
                     String encodedURL = uri.toASCIIString();
                     return encodedURL;
                 }
@@ -161,28 +133,5 @@ public class XI2PLocationFilter extends HandlerWrapper {
             }
         }
         return null;
-    }
-
-    @Override
-    public void handle(final String target, final Request request, final HttpServletRequest httpRequest, HttpServletResponse httpResponse)
-    throws IOException, ServletException {
-        final String hashHeader = httpRequest.getHeader("X-I2P-DestHash");
-
-        if (hashHeader == null) {
-            if (shouldRecheck()) {
-                String xi2plocation = getXI2PLocation(request.getLocalAddr(), String.valueOf(request.getLocalPort()));
-                if (_log.shouldInfo())
-                   _log.info("Checking X-I2P-Location header IP " + request.getLocalAddr() + " port " + request.getLocalPort() + " prefix " + xi2plocation);
-                setLocation(xi2plocation);
-            }
-            String headerURL = headerContents(httpRequest);
-            if (headerURL != null) {
-                if (_log.shouldInfo())
-                    _log.info("Checking X-I2P-Location header" + headerURL);
-                httpResponse.addHeader("X-I2P-Location", headerURL);
-            }
-        }
-
-        _handler.handle(target, request, httpRequest, httpResponse);
     }
 }
