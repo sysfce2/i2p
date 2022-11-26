@@ -3,6 +3,7 @@ package net.i2p.servlet.filters;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
@@ -10,6 +11,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.i2p.I2PAppContext;
+import net.i2p.data.Destination;
 import net.i2p.util.Log;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
@@ -46,12 +48,30 @@ public class XI2PLocationFilter extends XI2PHeaderFilter {
     return null;
   }
 
+  /**
+   * getCachableHeader obtains the spoofed hostname or the base32 from
+   * the tunnel configuration and caches it.
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return the data to cache
+   *
+   */
   public synchronized String getCachableHeader(
       final HttpServletRequest httpRequest, final Request request) {
     return getXI2PLocation(request.getLocalAddr(),
                            String.valueOf(request.getLocalPort()));
   }
 
+  /**
+   * headerContents computes the addresshelper which is the value to the
+   * X-I2P-Hostname key.
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return the full header
+   *
+   */
   public synchronized String
   headerContents(final HttpServletRequest httpRequest, final Request request) {
     if (cachedHeader != null) {

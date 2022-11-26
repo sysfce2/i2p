@@ -38,6 +38,15 @@ public class XI2PHostnameFilter extends XI2PHeaderFilter {
     applyToI2P = true;
   }
 
+  /**
+   * getCachableHeader obtains the base64 of the tunnel by loading the keys from
+   * the tunnel config file, and stores it in the cachedHeader
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return the data to cache
+   *
+   */
   public synchronized String getCachableHeader(
       final HttpServletRequest httpRequest, final Request request) {
     if (isFromI2P(httpRequest)) {
@@ -50,6 +59,15 @@ public class XI2PHostnameFilter extends XI2PHeaderFilter {
     return null;
   }
 
+  /**
+   * headerContents computes the addresshelper which is the value to the
+   * X-I2P-Hostname key.
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return the full header
+   *
+   */
   public synchronized String
   headerContents(final HttpServletRequest httpRequest, final Request request) {
     if (cachedHeader != null) {

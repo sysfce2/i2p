@@ -25,11 +25,16 @@ import org.eclipse.jetty.server.handler.HandlerWrapper;
  * sites. It provides configuration, caching, and the ability to differentate
  * between requests coming from I2P and requests coming from the clearweb.
  *
- *  @String cachedHeader a value which can be either a whole header "Value" or a fragment of one
- *  @String headerKey a value which is the "Key" in the header applied to the response.
- *  @boolean applyToI2P set to true to apply the header to responses bound to I2P clients
- *  @boolean applyToClearnet set to true to apply the header tor responses bound to non-I2P clients
- *  @long cacheTimeout a value in milliseconds to wait before re-computing a cachedHeader value
+ *  @String cachedHeader a value which can be either a whole header "Value" or a
+ * fragment of one
+ *  @String headerKey a value which is the "Key" in the header applied to the
+ * response.
+ *  @boolean applyToI2P set to true to apply the header to responses bound to
+ * I2P clients
+ *  @boolean applyToClearnet set to true to apply the header tor responses bound
+ * to non-I2P clients
+ *  @long cacheTimeout a value in milliseconds to wait before re-computing a
+ * cachedHeader value
  *
  *  @since 0.9.57
  */
@@ -105,11 +110,26 @@ public abstract class XI2PHeaderFilter extends HandlerWrapper {
   }
 
   /**
-
+   * getCachableHeader obtains the "cacheable" part of a header and stores
+   * it in the cachedHeader variable.
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return String the cachable part of the header
+   *
    */
   public abstract String getCachableHeader(final HttpServletRequest httpRequest,
                                            final Request request);
 
+  /**
+   * headerContents computes the final contents which will be used as the header
+   * "Key" in the key-value pair.
+   *
+   * @param httpRequest the HttpServletRequest from the caller
+   * @param request the Request from the caller
+   * @return the full header
+   *
+   */
   public abstract String headerContents(final HttpServletRequest httpRequest,
                                         final Request request);
 
