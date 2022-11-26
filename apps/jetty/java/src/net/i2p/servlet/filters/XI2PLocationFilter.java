@@ -1,29 +1,22 @@
 package net.i2p.servlet.filters;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.i2p.I2PAppContext;
 import net.i2p.data.Destination;
-import net.i2p.util.Log;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
 
 /**
  * Adds a header, X-I2P-Location, to requests when they do **not** come in on an
  * I2P hostname. This header contains a URL that looks like:
- * [scheme://][i2phostname.i2p][/path][?query] and expresses the I2P-Equivalent
- * URL of the clearnet query. Clients can use this to prompt users to switch
- * from a non-I2P host to an I2P host or to redirect them automatically. It
- * automatically enabled on the default I2P site located on port 7658 by
- * default.
+ * 
+ * [scheme://][i2phostname.i2p][/path][?query]
+ *
+ * This expresses the I2P-Equivalent URL of the clearnet query. Clients can use
+ * this to prompt users to switch from a non-I2P host to an I2P host or to
+ * redirect them automatically. It automatically enabled on the default I2P site
+ * located on port 7658 by default.
  *
  *  @since 0.9.51
  */
