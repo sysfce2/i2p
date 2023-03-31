@@ -49,6 +49,7 @@ import net.i2p.util.SystemVersion;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.UserStore;
 import org.eclipse.jetty.security.authentication.DigestAuthenticator;
 import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.ConnectionFactory;
@@ -987,6 +988,8 @@ public class RouterConsoleRunner implements RouterApp {
             } else {
                 HashLoginService realm = new CustomHashLoginService(JETTY_REALM, context.getContextPath(),
                                                                     ctx.logManager().getLog(RouterConsoleRunner.class));
+                UserStore userStore = new UserStore();
+                realm.setUserStore(userStore);
                 sec.setLoginService(realm);
                 sec.setAuthenticator(authenticator);
                 String[] role = new String[] {JETTY_ROLE};
@@ -994,7 +997,7 @@ public class RouterConsoleRunner implements RouterApp {
                     String user = e.getKey();
                     String pw = e.getValue();
                     Credential cred = Credential.getCredential(MD5_CREDENTIAL_TYPE + pw);
-                    realm.putUser(user, cred, role);
+                    userStore.addUser(user, cred, role);
                     Constraint constraint = new Constraint(user, JETTY_ROLE);
                     constraint.setAuthenticate(true);
                     ConstraintMapping cm = new ConstraintMapping();
@@ -1014,7 +1017,7 @@ public class RouterConsoleRunner implements RouterApp {
                         try {
                             // each char truncated to 8 bytes
                             String user2 = new String(b2, "ISO-8859-1");
-                            realm.putUser(user2, cred, role);
+                            userStore.addUser(user2, cred, role);
                             constraint = new Constraint(user2, JETTY_ROLE);
                             constraint.setAuthenticate(true);
                             cm = new ConstraintMapping();
@@ -1025,7 +1028,7 @@ public class RouterConsoleRunner implements RouterApp {
                             // each UTF-8 byte as a char
                             // this is what chrome does
                             String user3 = new String(b1, "ISO-8859-1");
-                            realm.putUser(user3, cred, role);
+                            userStore.addUser(user3, cred, role);
                             constraint = new Constraint(user3, JETTY_ROLE);
                             constraint.setAuthenticate(true);
                             cm = new ConstraintMapping();

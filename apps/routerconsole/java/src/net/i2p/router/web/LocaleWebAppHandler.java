@@ -87,9 +87,9 @@ public class LocaleWebAppHandler extends HandlerWrapper
                     String testPath = pathInContext.substring(0, len - 4) + '_' + lang + ".jsp";
                     // Do we have a servlet for the new path that isn't the catchall *.jsp?
                     @SuppressWarnings("rawtypes")
-                    Map.Entry servlet = _wac.getServletHandler().getHolderEntry(testPath);
+                    org.eclipse.jetty.http.pathmap.MappedResource servlet = _wac.getServletHandler().getMappedServlet(testPath);
                     if (servlet != null) {
-                        String servletPath = (String) servlet.getKey();
+                        String servletPath = servlet.getPathSpec().getDeclaration();
                         if (servletPath != null && !servletPath.startsWith("*")) {
                             // success!!
                             //System.err.println("Servlet is: " + servletPath);

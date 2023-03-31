@@ -135,7 +135,6 @@ public class I2PDefaultServlet extends DefaultServlet
      *
      * Get the resource list as a HTML directory listing.
      */
-    @Override
     protected void sendDirectory(HttpServletRequest request,
             HttpServletResponse response,
             Resource resource,
