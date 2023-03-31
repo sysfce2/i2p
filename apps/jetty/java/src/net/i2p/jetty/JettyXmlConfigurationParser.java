@@ -43,9 +43,9 @@ public class JettyXmlConfigurationParser
     private static XmlParser initParser()
     {
         XmlParser parser = new XmlParser();
-        URL config60 = Loader.getResource(XmlConfiguration.class, "org/eclipse/jetty/xml/configure_6_0.dtd");
-        URL config76 = Loader.getResource(XmlConfiguration.class,"org/eclipse/jetty/xml/configure_7_6.dtd");
-        URL config90 = Loader.getResource(XmlConfiguration.class,"org/eclipse/jetty/xml/configure_9_0.dtd");
+        URL config60 = Loader.getResource("org/eclipse/jetty/xml/configure_6_0.dtd");
+        URL config76 = Loader.getResource("org/eclipse/jetty/xml/configure_7_6.dtd");
+        URL config90 = Loader.getResource("org/eclipse/jetty/xml/configure_9_0.dtd");
         parser.redirectEntity("configure.dtd",config90);
         parser.redirectEntity("configure_1_0.dtd",config60);
         parser.redirectEntity("configure_1_1.dtd",config60);
