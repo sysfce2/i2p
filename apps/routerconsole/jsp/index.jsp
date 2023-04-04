@@ -25,6 +25,7 @@
     net.i2p.I2PAppContext ctx = net.i2p.I2PAppContext.getGlobalContext();
     boolean oldHome = ctx.getBooleanProperty("routerconsole.oldHomePage");
     boolean wizRun = ctx.getBooleanProperty(net.i2p.router.web.helpers.WizardHelper.PROP_COMPLETE);
+    boolean needsJettyMigration = ctx.getBooleanProperty(net.i2p.router.web.helpers.JettyMigrationHelper.PROP_NEEDS_JETTY_MIGRATION);
     String firstVersion = ctx.getProperty("router.firstVersion");
     String tgt;
     final boolean ENABLE_WIZARD_ON_FIRST_RUN = true;
