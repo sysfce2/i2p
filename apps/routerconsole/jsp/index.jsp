@@ -31,6 +31,8 @@
     final boolean ENABLE_WIZARD_ON_FIRST_RUN = true;
     if (oldHome) {
         tgt = "console";
+    } if (needsJettyMigration) {
+        //TODO: migrate users off of md5 hashes here
     } else if (!ENABLE_WIZARD_ON_FIRST_RUN || wizRun || firstVersion == null) {
         // wizard already run
         tgt = "home";
