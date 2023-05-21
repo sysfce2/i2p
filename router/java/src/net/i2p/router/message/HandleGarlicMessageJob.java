@@ -74,7 +74,7 @@ public class HandleGarlicMessageJob extends JobImpl implements GarlicMessageRece
             case DeliveryInstructions.DELIVERY_MODE_LOCAL:
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("local delivery instructions for clove: " + data);
-                getContext().inNetMessagePool().add(data, null, null);
+                getContext().inNetMessagePool().add(data, null, null, 0);
                 return;
             case DeliveryInstructions.DELIVERY_MODE_DESTINATION:
                 // i2pd bug with DLM to ratchet router
@@ -86,7 +86,7 @@ public class HandleGarlicMessageJob extends JobImpl implements GarlicMessageRece
                 if (getContext().routerHash().equals(instructions.getRouter())) {
                     if (_log.shouldLog(Log.DEBUG))
                         _log.debug("router delivery instructions targetting us");
-                    getContext().inNetMessagePool().add(data, null, null);
+                    getContext().inNetMessagePool().add(data, null, null, 0);
                 } else {
                     if (_log.shouldLog(Log.DEBUG))
                         _log.debug("router delivery instructions targetting " 

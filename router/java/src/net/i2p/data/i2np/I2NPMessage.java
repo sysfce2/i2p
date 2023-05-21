@@ -87,7 +87,8 @@ public interface I2NPMessage {
     /**
      * Replay resistant message ID
      */
-    public long getUniqueId(); 
+    public long getUniqueId(long msgIdBloomXor); 
+    public long getUniqueId();
     public void setUniqueId(long id);
     
     /**

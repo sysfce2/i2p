@@ -33,7 +33,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
     private final Log _log;
     private final Hash _client;
     private final GarlicMessageReceiver _receiver;
-    private String _clientNickname;
+    private final String _clientNickname;
     private final long _msgIdBloomXor;
     /**
      *  @param client null for router tunnel
@@ -215,10 +215,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                               + " (for client " + _clientNickname + " ("
                               + ((_client != null) ? _client.toBase32() : "null")
                               + ") to target=NULL/tunnel=NULL " + msg);
-                if (_msgIdBloomXor == 0)
-                    _context.inNetMessagePool().add(msg, null, null);
-                else
-                    _context.inNetMessagePool().add(msg, null, null, _msgIdBloomXor);
+                _context.inNetMessagePool().add(msg, null, null, _msgIdBloomXor);
             }
         } else if (_context.routerHash().equals(target)) {
             if (type == GarlicMessage.MESSAGE_TYPE)
@@ -292,10 +289,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                                         _log.info("Storing garlic LS down tunnel for: " + dsm.getKey() + " sent to: "
                                                   + _clientNickname + " ("
                                                   + (_client != null ? _client.toBase32() : ") router"));
-                                    if (_msgIdBloomXor == 0)
-                                        _context.inNetMessagePool().add(dsm, null, null);
-                                    else
-                                        _context.inNetMessagePool().add(dsm, null, null, _msgIdBloomXor);
+                                    _context.inNetMessagePool().add(dsm, null, null, _msgIdBloomXor);
                             } else {                                        
                                 if (_client != null) {
                                     // drop it, since the data we receive shouldn't include router 
@@ -317,10 +311,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                                 if (_log.shouldLog(Log.INFO))
                                     _log.info("Storing garlic RI down tunnel (" + _clientNickname
                                               + ") for: " + dsm.getKey());
-                                if (_msgIdBloomXor == 0)
-                                    _context.inNetMessagePool().add(dsm, null, null);
-                                else
-                                    _context.inNetMessagePool().add(dsm, null, null, _msgIdBloomXor);
+                                _context.inNetMessagePool().add(dsm, null, null, _msgIdBloomXor);
                             }
                 } else if (_client != null && type == DatabaseSearchReplyMessage.MESSAGE_TYPE) {
                     // DSRMs show up here now that replies are encrypted
@@ -339,10 +330,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                         orig = newMsg;
                      }
                    ****/
-                    if (_msgIdBloomXor == 0)
-                        _context.inNetMessagePool().add(orig, null, null);
-                    else
-                        _context.inNetMessagePool().add(orig, null, null, _msgIdBloomXor);
+                    _context.inNetMessagePool().add(orig, null, null, _msgIdBloomXor);
                 } else if (type == DataMessage.MESSAGE_TYPE) {
                         // a data message targetting the local router is how we send load tests (real
                         // data messages target destinations)
@@ -359,10 +347,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                                        + _clientNickname + " (" + _client.toBase32() + ") : "
                                        + data, new Exception("cause"));
                 } else {
-                            if (_msgIdBloomXor == 0)
-                                _context.inNetMessagePool().add(data, null, null);
-                            else
-                                _context.inNetMessagePool().add(data, null, null, _msgIdBloomXor);
+                        _context.inNetMessagePool().add(data, null, null, _msgIdBloomXor);
                 }
                 return;
 
