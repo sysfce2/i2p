@@ -8,6 +8,8 @@ package net.i2p.router.message;
  *
  */
 
+import java.util.Random;
+
 import net.i2p.data.Hash;
 import net.i2p.data.router.RouterIdentity;
 import net.i2p.data.i2np.GarlicMessage;
@@ -27,13 +29,23 @@ import net.i2p.router.RouterContext;
  */
 public class GarlicMessageHandler implements HandlerJobBuilder {
     private final RouterContext _context;
+    private final long _msgIDBloomXorLocal;
+    private final long _msgIDBloomXorRouter;
     
     public GarlicMessageHandler(RouterContext context) {
         _context = context;
+        _msgIDBloomXorLocal = new Random().nextLong();
+        _msgIDBloomXorRouter = new Random().nextLong();
+    }
+
+    public GarlicMessageHandler(RouterContext context, long msgIDBloomXorLocal, long msgIdBloomXorRouter) {
+        _context = context;
+        _msgIDBloomXorLocal = msgIDBloomXorLocal;
+        _msgIDBloomXorRouter = msgIdBloomXorRouter;
     }
     
     public Job createJob(I2NPMessage receivedMessage, RouterIdentity from, Hash fromHash) {
-        HandleGarlicMessageJob job = new HandleGarlicMessageJob(_context, (GarlicMessage)receivedMessage, from, fromHash);
+        HandleGarlicMessageJob job = new HandleGarlicMessageJob(_context, (GarlicMessage)receivedMessage, from, fromHash, _msgIDBloomXorLocal, _msgIDBloomXorRouter);
         return job;
     }
     
