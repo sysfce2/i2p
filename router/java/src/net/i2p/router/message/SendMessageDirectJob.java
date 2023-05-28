@@ -42,12 +42,21 @@ public class SendMessageDirectJob extends JobImpl {
     private boolean _alreadySearched;
     private boolean _sent;
     private long _searchOn;
+    private final long _msgIdBloomXor;
     
     /**
      * @param toPeer may be ourselves
      */
     public SendMessageDirectJob(RouterContext ctx, I2NPMessage message, Hash toPeer, int timeoutMs, int priority) {
-        this(ctx, message, toPeer, null, null, null, null, timeoutMs, priority);
+        this(ctx, message, toPeer, null, null, null, null, timeoutMs, priority, 0);
+    }
+
+    /**
+     * @param toPeer may be ourselves
+     * @param msgIdBloomXor value to xor the messageID with before passing to the InNetMessagePool, may be 0
+     */
+    public SendMessageDirectJob(RouterContext ctx, I2NPMessage message, Hash toPeer, int timeoutMs, int priority, long msgIdBloomXor) {
+        this(ctx, message, toPeer, null, null, null, null, timeoutMs, priority, msgIdBloomXor);
     }
 
     /**
@@ -58,7 +67,7 @@ public class SendMessageDirectJob extends JobImpl {
      */
     public SendMessageDirectJob(RouterContext ctx, I2NPMessage message, Hash toPeer, ReplyJob onSuccess,
                                 Job onFail, MessageSelector selector, int timeoutMs, int priority) {
-        this(ctx, message, toPeer, null, onSuccess, onFail, selector, timeoutMs, priority);
+        this(ctx, message, toPeer, null, onSuccess, onFail, selector, timeoutMs, priority, 0);
     }
 
     /**
@@ -67,11 +76,13 @@ public class SendMessageDirectJob extends JobImpl {
      * @param onSuccess may be null
      * @param onFail may be null
      * @param selector be null
+     * @param msgIdBloomXor value to xor the messageID with before passing to the InNetMessagePool, may be 0
      */
     public SendMessageDirectJob(RouterContext ctx, I2NPMessage message, Hash toPeer, Job onSend, ReplyJob onSuccess,
-                                Job onFail, MessageSelector selector, int timeoutMs, int priority) {
+                                Job onFail, MessageSelector selector, int timeoutMs, int priority, long msgIdBloomXor) {
         super(ctx);
         _log = getContext().logManager().getLog(SendMessageDirectJob.class);
+        _msgIdBloomXor = msgIdBloomXor;
         _message = message;
         _targetHash = toPeer;
         if (timeoutMs < 10*1000) {
@@ -159,7 +170,7 @@ public class SendMessageDirectJob extends JobImpl {
             if (_onSend != null)
                 getContext().jobQueue().addJob(_onSend);
 
-            getContext().inNetMessagePool().add(_message, _router.getIdentity(), null, 0);
+            getContext().inNetMessagePool().add(_message, _router.getIdentity(), null, _msgIdBloomXor);
 
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Adding " + _message.getClass().getName() 

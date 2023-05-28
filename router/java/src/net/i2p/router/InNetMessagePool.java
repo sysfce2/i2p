@@ -150,7 +150,8 @@ public class InNetMessagePool implements Service {
         
         if (_log.shouldDebug())
                 _log.debug("Rcvd" 
-                          + " ID " + messageBody.getUniqueId(msgIDBloomXor)
+                          + " ID " + messageBody.getUniqueId()
+                          + " xor-ed ID " + messageBody.getUniqueId(msgIDBloomXor)
                           + " exp. " + new Date(exp)
                           + " type " + messageBody.getClass().getSimpleName());
         
@@ -174,7 +175,7 @@ public class InNetMessagePool implements Service {
             //if (messageBody instanceof TunnelCreateMessage)
             //    level = Log.INFO;
             if (_log.shouldLog(level))
-                _log.log(level, "Dropping message [" + messageBody.getUniqueId(msgIDBloomXor) 
+                _log.log(level, "Dropping message ID [" + messageBody.getUniqueId() + " xor-ed: " + messageBody.getUniqueId(msgIDBloomXor)
                           + " expiring on " + exp + "]: " + messageBody.getClass().getSimpleName() + ": " + invalidReason 
                           + ": " + messageBody);
             _context.statManager().addRateData("inNetPool.dropped", 1);
