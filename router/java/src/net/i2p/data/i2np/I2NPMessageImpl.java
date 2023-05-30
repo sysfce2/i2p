@@ -180,8 +180,8 @@ public abstract class I2NPMessageImpl implements I2NPMessage {
     /**
      * Replay resistant message Id
      */
-    public synchronized long getUniqueId(long msgIdBloomXor) {
-        return getUniqueId() ^ msgIdBloomXor;
+    public synchronized long getUniqueId(long msgIDBloomXor) {
+        return getUniqueId() ^ msgIDBloomXor;
     }
 
     public synchronized long getUniqueId() {
