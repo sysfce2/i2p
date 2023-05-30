@@ -81,7 +81,7 @@ public class HandleGarlicMessageJob extends JobImpl implements GarlicMessageRece
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("local delivery instructions for clove: " + data);
                 // Here we are adding the message to the InNetMessagePool and it is Local. Xor the messageID with
-                    // a long unique to the router/session.
+                // a long unique to the router/session.
                 getContext().inNetMessagePool().add(data, null, null, _msgIDBloomXorLocal);
                 return;
             case DeliveryInstructions.DELIVERY_MODE_DESTINATION:
@@ -105,7 +105,7 @@ public class HandleGarlicMessageJob extends JobImpl implements GarlicMessageRece
                     // where the message will be added to the InNetMessagePool(see SendMessageDirectJob 159-179)
                     SendMessageDirectJob j = new SendMessageDirectJob(getContext(), data, 
                                                                       instructions.getRouter(), 
-                                                                      10*1000, ROUTER_PRIORITY);
+                                                                      10*1000, ROUTER_PRIORITY, _msgIDBloomXorRouter);
                     // run it inline (adds to the outNetPool if it has the router info, otherwise queue a lookup)
                     j.runJob(); 
                     //getContext().jobQueue().addJob(j);

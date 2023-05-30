@@ -1,5 +1,7 @@
 package net.i2p.router.tunnel;
 
+import java.util.Random;
+
 import net.i2p.data.DatabaseEntry;
 import net.i2p.data.Hash;
 import net.i2p.data.LeaseSet;
@@ -56,7 +58,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
             _msgIdBloomXor = clienttps.getMsgIdBloomXor();
         } else {
             _clientNickname = "NULL/Expl";
-            _msgIdBloomXor = 0;
+            _msgIdBloomXor = new Random().nextLong();
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Initializing null or exploratory InboundMessageDistributor");
         }

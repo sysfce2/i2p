@@ -72,6 +72,18 @@ public class SendMessageDirectJob extends JobImpl {
 
     /**
      * @param toPeer may be ourselves
+     * @param onSuccess may be null
+     * @param onFail may be null
+     * @param selector be null
+     * @param msgIdBloomXor value to xor the messageID with before passing to the InNetMessagePool, may be 0
+     */
+    public SendMessageDirectJob(RouterContext ctx, I2NPMessage message, Hash toPeer, ReplyJob onSuccess,
+                                Job onFail, MessageSelector selector, int timeoutMs, int priority, long msgIDBloomXor) {
+        this(ctx, message, toPeer, null, onSuccess, onFail, selector, timeoutMs, priority, msgIDBloomXor);
+    }
+
+    /**
+     * @param toPeer may be ourselves
      * @param onSend may be null
      * @param onSuccess may be null
      * @param onFail may be null
