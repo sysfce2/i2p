@@ -64,6 +64,7 @@ public abstract class DatabaseEntry extends DataStructureImpl {
     private long _routingKeyGenMod;
     protected boolean _receivedAsPublished;
     protected boolean _receivedAsReply;
+    protected boolean _possibleMultihome;
 
     /**
      * A common interface to the timestamp of the two subclasses.
@@ -295,5 +296,13 @@ public abstract class DatabaseEntry extends DataStructureImpl {
      */
     public void setReceivedAsReply() {
         _receivedAsReply = true;
+    }
+
+    public void setMultihome() {
+        _possibleMultihome = true;
+    }
+
+    public boolean getMultihome() {
+        return _possibleMultihome;
     }
 }
