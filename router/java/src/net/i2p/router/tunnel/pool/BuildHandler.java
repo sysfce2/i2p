@@ -42,6 +42,7 @@ import net.i2p.router.util.CoDelBlockingQueue;
 import net.i2p.stat.Rate;
 import net.i2p.stat.RateStat;
 import net.i2p.util.Log;
+import net.i2p.util.VersionComparator;
 
 /**
  * Handle the received tunnel build message requests and replies,
@@ -486,8 +487,7 @@ class BuildHandler implements Runnable {
                         // if fromVersion is greater than 0.9.58, then then ban the router due to it disrespecting our
                         // congestion flags
                         if (fromVersion != null){
-                            int intFromVersion = Integer.parseInt(fromVersion);
-                            if (intFromVersion >= 958){
+                            if (VersionComparator.comp(fromVersion, "0.9.58") >= 0) {
                                 if (_log.shouldLog(Log.WARN))
                                     _log.warn("Banning peer: " + fromRI.getHash() + " due to it disrespecting our congestion flags");
                                 _context.banlist().banlistRouter(from, "disrespected our tunnel flags", null, false);
