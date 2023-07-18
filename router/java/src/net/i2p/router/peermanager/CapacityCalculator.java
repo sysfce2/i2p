@@ -34,13 +34,12 @@ class CapacityCalculator {
     private static final double PENALTY_NO_R_CAP = 1;
     private static final double PENALTY_U_CAP = 2;
     private static final double PENALTY_LAST_SEND_FAIL = 4;
-    // congestion cap penalty not yet applied
     private static final String PROP_D_CAP = "router.dcapPenalty";
     private static final double PENALTY_D_CAP = 0.5;
-    // congestion cap penalty not yet applied
     private static final String PROP_E_CAP = "router.ecapPenalty";
     private static final double PENALTY_E_CAP = 0.9;
-    //private static final double PENALTY_G_CAP = 0;
+    // private static final String PROP_G_CAP = "router.gcapPenalty";
+    // private static final double PENALTY_G_CAP = 0;
     private static final double PENALTY_RECENT_SEND_FAIL = 4;
     private static final double BONUS_LAST_SEND_SUCCESS = 1;
     private static final double BONUS_RECENT_SEND_SUCCESS = 1;
