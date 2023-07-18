@@ -76,6 +76,7 @@ class BuildHandler implements Runnable {
     private volatile boolean _isRunning;
     private final Object _startupLock = new Object();
     private ExplState _explState = ExplState.NONE;
+    private final String MIN_VERSION_HONOR_CAPS = "0.9.58";
 
     private enum ExplState { NONE, IB, OB, BOTH }
 
@@ -487,7 +488,7 @@ class BuildHandler implements Runnable {
                         // if fromVersion is greater than 0.9.58, then then ban the router due to it disrespecting our
                         // congestion flags
                         if (fromVersion != null){
-                            if (VersionComparator.comp(fromVersion, "0.9.58") >= 0) {
+                            if (VersionComparator.comp(fromVersion, MIN_VERSION_HONOR_CAPS) >= 0) {
                                 if (_log.shouldLog(Log.WARN))
                                     _log.warn("Banning peer: " + fromRI.getHash() + " due to it disrespecting our congestion flags");
                                 _context.banlist().banlistRouter(from, "disrespected our tunnel flags", null, false);
