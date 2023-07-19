@@ -489,11 +489,14 @@ class BuildHandler implements Runnable {
                         // congestion flags
                         if (fromVersion != null){
                             if (VersionComparator.comp(fromVersion, MIN_VERSION_HONOR_CAPS) >= 0) {
-                                if (_log.shouldLog(Log.WARN))
-                                    _log.warn("Banning peer: " + fromRI.getHash() + " due to it disrespecting our congestion flags");
-                                _context.banlist().banlistRouter(from, "disrespected our tunnel flags", null, false);
+                                _context.statManager().addRateData("tunnel.dropTunnelFromVersion"+from, 1);
+                                long knocks = _context.statManager().getRate("tunnel.dropTunnelFromVersion"+from).getLifetimeEventCount();
+                                if (knocks > 10) {
+                                    if (_log.shouldLog(Log.WARN))
+                                        _log.warn("Banning peer: " + fromRI.getHash() + " due to it disrespecting our congestion flags");
+                                    _context.banlist().banlistRouter(from, "disrespected our tunnel flags", null, false);    
+                                }
                             }
-                                
                         }
                     }
                     return -1;
