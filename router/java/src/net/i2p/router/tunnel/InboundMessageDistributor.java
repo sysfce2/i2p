@@ -49,6 +49,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
         if (_client != null) {
             TunnelPoolSettings clienttps = _context.tunnelManager().getInboundSettings(_client);
             if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Initializing client for dest: " + _client.toBase32());
                 _log.debug("Initializing client (nickname: "
                            + clienttps.getDestinationNickname()
                            + " b32: " + _client.toBase32()
