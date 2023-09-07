@@ -956,4 +956,18 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         }
         return null;
     }
+
+    public void remove(String dbid) {
+        if (dbid != null) {
+            if (dbid.endsWith(".i2p") && !dbid.startsWith("clients_"))
+                dbid = "clients_" + dbid;
+            else if (dbid.equals(""))
+                dbid = MAIN_DBID;
+            GetSubNetDB(dbid).shutdown();
+            _subDBs.remove(dbid);
+        } else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("remove called with null dbid, refusing to remove main DB");
+        }
+    }
 }

@@ -44,6 +44,7 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
 
     public void restart() {}
     public void shutdown() {}
+    public void remove(String dbid){}
     public void startup() {
         RouterInfo info = _context.router().getRouterInfo();
         _routers.put(info.getIdentity().getHash(), info);

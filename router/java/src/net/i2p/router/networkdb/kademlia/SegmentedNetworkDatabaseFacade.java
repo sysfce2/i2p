@@ -332,4 +332,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
     }
 
     public abstract String getDbidByHash(Hash clientKey);
+
+    public abstract void remove(String dbid);
 }
