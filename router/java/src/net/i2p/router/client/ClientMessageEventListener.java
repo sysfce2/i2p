@@ -863,7 +863,7 @@ class ClientMessageEventListener implements I2CPMessageReader.I2CPMessageEventLi
         }
         BlindData obd = _context.netDbSegmentor().getBlindData(spk);
         if (obd == null) {
-            _context.netDbSegmentor().setBlindData(bd, _runner.getDestHash().toBase32());
+            _context.clientNetDb(_runner.getDestHash().toBase32()).setBlindData(bd);
             if (_log.shouldWarn())
                 _log.warn("New: " + bd);
         } else {
@@ -884,7 +884,7 @@ class ClientMessageEventListener implements I2CPMessageReader.I2CPMessageEventLi
                         return;
                     }
                 }
-                _context.netDbSegmentor().setBlindData(bd, _runner.getDestHash().toBase32());
+                _context.clientNetDb(_runner.getDestHash().toBase32()).setBlindData(bd);
                 if (_log.shouldWarn())
                     _log.warn("Updated: " + bd);
             } else {
@@ -893,7 +893,7 @@ class ClientMessageEventListener implements I2CPMessageReader.I2CPMessageEventLi
                 if (nexp > oexp) {
                     obd.setExpiration(nexp);
                     // to force save at shutdown
-                    _context.netDbSegmentor().setBlindData(obd, _runner.getDestHash().toBase32());
+                    _context.clientNetDb(_runner.getDestHash().toBase32()).setBlindData(obd);
                     if (_log.shouldWarn())
                         _log.warn("Updated expiration: " + obd);
                 } else {

@@ -23,14 +23,14 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
         // super(context, null);
     }
 
-    protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String id);
-    public abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash id);
+    protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String dbid);
+    public abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
 
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
 
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
 
-    public abstract FloodfillNetworkDatabaseFacade clientNetDB(String id);
+    public abstract FloodfillNetworkDatabaseFacade clientNetDB(String dbid);
 
     public abstract FloodfillNetworkDatabaseFacade exploratoryNetDB();
 
@@ -38,118 +38,9 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
 
     public abstract void shutdown();
 
-    /**
-     * Return the RouterInfo structures for the routers closest to the given key.
-     * At most maxNumRouters will be returned
-     *
-     * @param key           The key
-     * @param maxNumRouters The maximum number of routers to return
-     * @param peersToIgnore Hash of routers not to include
-     */
-    public abstract Set<Hash> findNearestRouters(Hash key, int maxNumRouters, Set<Hash> peersToIgnore, String dbid);
-
-    /**
-     * @return RouterInfo, LeaseSet, or null
-     * @since 0.9.59
-     */
-    public abstract DatabaseEntry lookupLocally(Hash key, String dbid);
-
-    /**
-     * Not for use without validation
-     * 
-     * @return RouterInfo, LeaseSet, or null, NOT validated
-     * @since 0.9.59
-     */
-    public abstract DatabaseEntry lookupLocallyWithoutValidation(Hash key, String dbid);
-
-    public abstract void lookupLeaseSet(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid);
-
-    /**
-     * Lookup using the client's tunnels
-     * 
-     * @param fromLocalDest use these tunnels for the lookup, or null for
-     *                      exploratory
-     * @since 0.9.59
-     */
-    public abstract void lookupLeaseSet(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs,
-            Hash fromLocalDest, String dbid);
-
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
 
-    public abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
-
-    public abstract void lookupRouterInfo(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid);
-
-    public abstract RouterInfo lookupRouterInfoLocally(Hash key, String dbid);
-
-    /**
-     * Unconditionally lookup using the client's tunnels.
-     * No success or failed jobs, no local lookup, no checks.
-     * Use this to refresh a leaseset before expiration.
-     *
-     * @param fromLocalDest use these tunnels for the lookup, or null for
-     *                      exploratory
-     * @since 0.9.59
-     */
-    public abstract void lookupLeaseSetRemotely(Hash key, Hash fromLocalDest, String dbid);
-
-    /**
-     * Unconditionally lookup using the client's tunnels.
-     *
-     * @param fromLocalDest     use these tunnels for the lookup, or null for
-     *                          exploratory
-     * @param onFindJob         may be null
-     * @param onFailedLookupJob may be null
-     * @since 0.9.59
-     */
-    public abstract void lookupLeaseSetRemotely(Hash key, Job onFindJob, Job onFailedLookupJob,
-            long timeoutMs, Hash fromLocalDest, String dbid);
-
-    /**
-     * Lookup using the client's tunnels
-     * Succeeds even if LS validation fails due to unsupported sig type
-     *
-     * @param fromLocalDest use these tunnels for the lookup, or null for
-     *                      exploratory
-     * @since 0.9.59
-     */
-    public abstract void lookupDestination(Hash key, Job onFinishedJob, long timeoutMs, Hash fromLocalDest,
-            String dbid);
-
-    /**
-     * Lookup locally in netDB and in badDest cache
-     * Succeeds even if LS validation failed due to unsupported sig type
-     *
-     * @since 0.9.59
-     */
-    public abstract Destination lookupDestinationLocally(Hash key, String dbid);
-
-    /**
-     * @return the leaseSet if another leaseSet already existed at that key
-     *
-     * @throws IllegalArgumentException if the data is not valid
-     */
-    public abstract LeaseSet store(Hash key, LeaseSet leaseSet, String dbid) throws IllegalArgumentException;
-
-    /**
-     * @return the routerInfo if another router already existed at that key
-     *
-     * @throws IllegalArgumentException if the data is not valid
-     */
-    public abstract RouterInfo store(Hash key, RouterInfo routerInfo, String dbid) throws IllegalArgumentException;
-
-    /**
-     * @return the old entry if it already existed at that key
-     * @throws IllegalArgumentException if the data is not valid
-     * @since 0.9.59
-     */
-    public DatabaseEntry store(Hash key, DatabaseEntry entry, String dbid) throws IllegalArgumentException {
-        if (entry.getType() == DatabaseEntry.KEY_TYPE_ROUTERINFO)
-            return getSubNetDB(dbid).store(key, (RouterInfo) entry);
-        if (entry.getType() == DatabaseEntry.KEY_TYPE_LEASESET)
-            return getSubNetDB(dbid).store(key, (LeaseSet) entry);
-        throw new IllegalArgumentException("unknown type");
-    }
+    protected abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
 
     public abstract Set<Hash> getAllRouters(String dbid);
     public abstract Set<Hash> getAllRouters();
@@ -224,16 +115,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
     };
 
     /**
-     * Is it permanently negative cached?
-     *
-     * @param key only for Destinations; for RouterIdentities, see Banlist
-     * @since 0.9.59
-     */
-    public boolean isNegativeCachedForever(Hash key, String dbid) {
-        return mainNetDB().isNegativeCachedForever(key);
-    }
-
-    /**
      * @param spk unblinded key
      * @return BlindData or null
      * @since 0.9.59
@@ -247,40 +128,13 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
     }
 
     /**
-     * @param bd new BlindData to put in the cache
-     * @since 0.9.59
-     */
-    public void setBlindData(BlindData bd, String dbid) {
-        mainNetDB().setBlindData(bd);
-    }
-
-    /**
-     * For console ConfigKeyringHelper
-     * 
-     * @since 0.9.59
-     */
-    public List<BlindData> getBlindData(String dbid) {
-        return mainNetDB().getBlindData();
-    }
-
-    /**
      * For console ConfigKeyringHelper
      * 
      * @return true if removed
      * @since 0.9.59
      */
-    public boolean removeBlindData(SigningPublicKey spk, String dbid) {
-        return mainNetDB().removeBlindData(spk);
-    }
-
-    public void lookupLeaseSetRemotely(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid) {
-        mainNetDB().lookupLeaseSetRemotely(key, onFindJob, onFailedLookupJob, timeoutMs, key);
-    }
     public List<String> lookupClientBySigningPublicKey(SigningPublicKey spk) {
         return Collections.emptyList();
-    }
-    public BlindData getBlindData(SigningPublicKey spk, String dbid) {
-        return mainNetDB().getBlindData(spk);
     }
 
     public abstract String getDbidByHash(Hash clientKey);

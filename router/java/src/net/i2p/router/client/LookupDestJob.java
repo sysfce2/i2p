@@ -110,7 +110,7 @@ class LookupDestJob extends JobImpl {
                                 long exp = now + ((bd.getAuthRequired() || bd.getSecretRequired()) ? 365*24*60*60*1000L
                                                                                                    :  90*24*68*60*1000L);
                                 bd.setExpiration(exp);
-                                getContext().netDbSegmentor().setBlindData(bd, toBase32());
+                                getContext().clientNetDb(toBase32()).setBlindData(bd);
                             }
                             h = bd.getBlindedHash();
                             if (_log.shouldDebug())
@@ -185,7 +185,7 @@ class LookupDestJob extends JobImpl {
             if (timeout > 1500)
                 timeout -= 500;
             // TODO tell router this is an encrypted lookup, skip 38 or earlier ffs?
-            getContext().netDbSegmentor().lookupDestination(_hash, done, timeout, _fromLocalDest, toBase32());
+            getContext().clientNetDb(toBase32()).lookupDestination(_hash, done, timeout, _fromLocalDest);
         } else {
             // blinding decode fail
             returnFail(HostReplyMessage.RESULT_DECRYPTION_FAILURE);
@@ -204,10 +204,10 @@ class LookupDestJob extends JobImpl {
         }
         public String getName() { return "LeaseSet Lookup Reply to Client"; }
         public void runJob() {
-            Destination dest = getContext().netDbSegmentor().lookupDestinationLocally(_hash, toBase32());
+            Destination dest = getContext().clientNetDb(toBase32()).lookupDestinationLocally(_hash);
             if (dest == null && _blindData != null) {
                 // TODO store and lookup original hash instead
-                LeaseSet ls = getContext().netDbSegmentor().lookupLeaseSetLocally(_hash, toBase32());
+                LeaseSet ls = getContext().clientNetDb(toBase32()).lookupLeaseSetLocally(_hash);
                 if (ls != null && ls.getType() == DatabaseEntry.KEY_TYPE_ENCRYPTED_LS2) {
                     // already decrypted
                     EncryptedLeaseSet encls = (EncryptedLeaseSet) ls;

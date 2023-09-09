@@ -93,32 +93,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     public Set<Hash> findNearestRouters(Hash key, int maxNumRouters, Set<Hash> peersToIgnore) { return getAllRouters(); }
 
     @Override
-    public Set<Hash> findNearestRouters(Hash key, int maxNumRouters, Set<Hash> peersToIgnore, String dbid) {
-        return findNearestRouters(key, maxNumRouters, peersToIgnore);
-    }
-
-    @Override
-    public DatabaseEntry lookupLocally(Hash key, String dbid) {
-        return lookupLocally(key);
-    }
-
-    @Override
-    public DatabaseEntry lookupLocallyWithoutValidation(Hash key, String dbid) {
-        return lookupLocallyWithoutValidation(key);
-    }
-
-    @Override
-    public void lookupLeaseSet(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid) {
-        lookupLeaseSet(key, onFindJob, onFailedLookupJob, timeoutMs);
-    }
-
-    @Override
-    public void lookupLeaseSet(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, Hash fromLocalDest,
-            String dbid) {
-        lookupLeaseSet(key, onFindJob, onFailedLookupJob, timeoutMs, fromLocalDest);
-    }
-
-    @Override
     public LeaseSet lookupLeaseSetHashIsClient(Hash key) {
         throw new UnsupportedOperationException("Unimplemented method 'lookupLeaseSetHashIsClient'");
     }
@@ -126,47 +100,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     @Override
     public LeaseSet lookupLeaseSetLocally(Hash key, String dbid) {
         throw new UnsupportedOperationException("Unimplemented method 'lookupLeaseSetLocally'");
-    }
-
-    @Override
-    public void lookupRouterInfo(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid) {
-        lookupRouterInfo(key, onFindJob, onFailedLookupJob, timeoutMs);
-    }
-
-    @Override
-    public RouterInfo lookupRouterInfoLocally(Hash key, String dbid) {
-        return lookupRouterInfoLocally(key);
-    }
-
-    @Override
-    public void lookupLeaseSetRemotely(Hash key, Hash fromLocalDest, String dbid) {
-        lookupLeaseSetRemotely(key, fromLocalDest);
-    }
-
-    @Override
-    public void lookupLeaseSetRemotely(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs,
-            Hash fromLocalDest, String dbid) {
-        lookupLeaseSetRemotely(key, onFindJob, onFailedLookupJob, timeoutMs, fromLocalDest);
-    }
-
-    @Override
-    public void lookupDestination(Hash key, Job onFinishedJob, long timeoutMs, Hash fromLocalDest, String dbid) {
-        lookupDestination(key, onFinishedJob, timeoutMs, fromLocalDest);
-    }
-
-    @Override
-    public Destination lookupDestinationLocally(Hash key, String dbid) {
-        return lookupDestinationLocally(key);
-    }
-
-    @Override
-    public LeaseSet store(Hash key, LeaseSet leaseSet, String dbid) throws IllegalArgumentException {
-        return _fndb.store(key, leaseSet);
-    }
-
-    @Override
-    public RouterInfo store(Hash key, RouterInfo routerInfo, String dbid) throws IllegalArgumentException {
-        return _fndb.store(key, routerInfo);
     }
 
     @Override
