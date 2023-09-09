@@ -44,13 +44,16 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * }
      */
     @Override
-    public FloodfillNetworkDatabaseFacade getSubNetDB(String id) {
-        return GetSubNetDB(id);
+    public FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
+        if (id == null)
+            return getSubNetDB(MAIN_DBID);
+        return getSubNetDB(id.toBase32());
     }
 
-    private FloodfillNetworkDatabaseFacade GetSubNetDB(String id) {
+    @Override
+    protected FloodfillNetworkDatabaseFacade getSubNetDB(String id) {
         if (id == null || id.isEmpty()) {
-            return GetSubNetDB(MAIN_DBID);
+            return getSubNetDB(MAIN_DBID);
         }
         if (id.endsWith(".i2p")) {
             if (!id.startsWith("clients_"))
@@ -74,28 +77,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         return subdb;
     }
 
-    public synchronized void startup() {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            // if (!subdb.isInitialized()){
-            subdb.startup();
-            // }
-        }
-    }
-
-    protected void createHandlers() {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            subdb.createHandlers();
-        }
-    }
-
     /**
      * If we are floodfill, turn it off and tell everybody.
      * 
@@ -106,7 +87,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
+                        + ") Shutting down all remaining sub-netDbs",
                         new Exception());
             subdb.shutdown();
         }
@@ -119,21 +100,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * due to timeouts.
      */
     static final long PUBLISH_TIMEOUT = 90 * 1000;
-
-    /**
-     * Send our RI to the closest floodfill. This should always be called from the
-     * floodFillNetDB context.
-     * The caller context cannot be determined from here, so the caller will be
-     * relied on to insure this is only called in the floodfill context.
-     *
-     * @throws IllegalArgumentException if the local router info is invalid
-     */
-    public void publish(RouterInfo localRouterInfo) throws IllegalArgumentException {
-        if (localRouterInfo == null)
-            throw new IllegalArgumentException("localRouterInfo must not be null");
-        if (localRouterInfo.getReceivedBy() == null)
-            mainNetDB().publish(localRouterInfo);
-    }
 
     /**
      * @param type      database store type
@@ -149,40 +115,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
 
     protected PeerSelector createPeerSelector(String dbid) {
-        // for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-        // return subdb.createPeerSelector();
-        // }
         return this.getSubNetDB(dbid).createPeerSelector();
-    }
-
-    /**
-     * Public, called from console. This wakes up the floodfill monitor,
-     * which will rebuild the RI and log in the event log,
-     * and call setFloodfillEnabledFromMonitor which really sets it.
-     */
-    public synchronized void setFloodfillEnabled(boolean yes) {
-        mainNetDB().setFloodfillEnabled(yes);
-    }
-
-    /**
-     * Package private, called from FloodfillMonitorJob. This does not wake up the
-     * floodfill monitor.
-     * 
-     * @since 0.9.34
-     */
-    synchronized void setFloodfillEnabledFromMonitor(boolean yes) {
-        mainNetDB().setFloodfillEnabledFromMonitor(yes);
-    }
-
-    public boolean floodfillEnabled() {
-        return mainNetDB().floodfillEnabled();
-    }
-
-    /**
-     * @param peer may be null, returns false if null
-     */
-    public boolean isFloodfill(RouterInfo peer) {
-        return mainNetDB().isFloodfill(peer);
     }
 
     public List<RouterInfo> getKnownRouterData() {
@@ -195,66 +128,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             rv.addAll(subdb.getKnownRouterData());
         }
         return rv;
-    }
-
-    /**
-     * Lookup using exploratory tunnels.
-     *
-     * Caller should check negative cache and/or banlist before calling.
-     *
-     * Begin a kademlia style search for the key specified, which can take up to
-     * timeoutMs and
-     * will fire the appropriate jobs on success or timeout (or if the kademlia
-     * search completes
-     * without any match)
-     *
-     * @return null always
-     */
-
-    SearchJob search(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, boolean isLease) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            return subdb.search(key, onFindJob, onFailedLookupJob, timeoutMs, isLease);
-        }
-        return null;
-    }
-
-    /**
-     * Lookup using the client's tunnels.
-     *
-     * Caller should check negative cache and/or banlist before calling.
-     *
-     * @param fromLocalDest use these tunnels for the lookup, or null for
-     *                      exploratory
-     * @return null always
-     * @since 0.9.10
-     */
-    SearchJob search(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, boolean isLease,
-            Hash fromLocalDest) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            return subdb.search(key, onFindJob, onFailedLookupJob, timeoutMs, isLease, fromLocalDest);
-        }
-        return null;
-    }
-
-    /**
-     * Must be called by the search job queued by search() on success or failure
-     */
-    void complete(Hash key) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            subdb.complete(key);
-        }
     }
 
     /**
@@ -272,55 +145,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             peers.addAll(subdb.getFloodfillPeers());
         }
         return peers;
-    }
-
-    /** @since 0.7.10 */
-    boolean isVerifyInProgress(Hash h) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            return subdb.isVerifyInProgress(h);
-        }
-        return false;
-    }
-
-    /** @since 0.7.10 */
-    void verifyStarted(Hash h) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            subdb.verifyStarted(h);
-        }
-    }
-
-    /** @since 0.7.10 */
-    void verifyFinished(Hash h) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            subdb.verifyFinished(h);
-        }
-    }
-
-    /**
-     * Search for a newer router info, drop it from the db if the search fails,
-     * unless just started up or have bigger problems.
-     */
-
-    protected void lookupBeforeDropping(Hash peer, RouterInfo info) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
-            subdb.lookupBeforeDropping(peer, info);
-        }
     }
 
     /**
@@ -343,7 +167,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     public DatabaseEntry lookupLocally(Hash key, String dbid) {
         if (dbid == null || dbid.isEmpty()) {
-            DatabaseEntry rv = null;
+            return null;
+            /*DatabaseEntry rv = null;
             for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("(dbid: " + subdb._dbid
@@ -357,7 +182,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             rv = this.lookupLocally(key, MAIN_DBID);
             if (rv != null) {
                 return rv;
-            }
+            }*/
         }
         return this.getSubNetDB(dbid).lookupLocally(key);
     }
@@ -444,10 +269,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             }
         }
         return this.getSubNetDB(dbid).lookupLeaseSetLocally(key);
-    }
-
-    public LeaseSet lookupLeaseSetLocally(Hash key) {
-        return lookupLeaseSetLocally(key, null);
     }
 
     @Override
@@ -609,53 +430,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     @Override
-    public void publish(LeaseSet localLeaseSet, String dbid) {
-        this.getSubNetDB(dbid).publish(localLeaseSet);
-    }
-
-    @Override
-    public void unpublish(LeaseSet localLeaseSet, String dbid) {
-        this.getSubNetDB(dbid).unpublish(localLeaseSet);
-    }
-
-    @Override
-    public void unpublish(LeaseSet localLeaseSet) {
-        if (localLeaseSet == null) {
-            return;
-        }
-        Hash client = localLeaseSet.getReceivedBy();
-        if (client != null)
-            this.getSubNetDB(client.toBase32()).unpublish(localLeaseSet);
-        this.getSubNetDB(null).unpublish(localLeaseSet);
-    }
-
-    @Override
-    public void fail(Hash dbEntry, String dbid) {
-        this.getSubNetDB(dbid).fail(dbEntry);
-    }
-
-    @Override
-    public void fail(Hash dbEntry) {
-        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
-            subdb.fail(dbEntry);
-        }
-    }
-
-    /**
-     * The last time we successfully published our RI.
-     * 
-     * @since 0.9.9
-     */
-    @Override
-    public long getLastRouterInfoPublishTime(String dbid) {
-        return this.getSubNetDB(dbid).getLastRouterInfoPublishTime();
-    }
-
-    public long getLastRouterInfoPublishTime() {
-        return this.mainNetDB().getLastRouterInfoPublishTime();
-    }
-
-    @Override
     public Set<Hash> getAllRouters(String dbid) {
         if (dbid == null || dbid.isEmpty()) {
             return getAllRouters();
@@ -664,14 +438,15 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     public Set<Hash> getAllRouters() {
+        Set<Hash> routers = new HashSet<Hash>();
         for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid
                         + ") Deprecated! Arbitrary selection of this subDb",
                         new Exception());
-            return subdb.getAllRouters();
+            routers.addAll(subdb.getAllRouters());
         }
-        return null;
+        return routers;
     }
 
     @Override
@@ -739,7 +514,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("(dbid: " + subdb._dbid
-                            + ") Deprecated! Arbitrary selection of this subDb",
+                            + ") Deprecated! Collecting RouterInfos from SubDbs",
                             new Exception());
                 rv.addAll(subdb.getRouters());
             }
@@ -794,12 +569,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         return rv;
     }
 
-    /** @since 0.9 */
-    @Override
-    public ReseedChecker reseedChecker() {
-        return mainNetDB().reseedChecker();
-    };
-
     /**
      * Is it permanently negative cached?
      *
@@ -849,25 +618,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public boolean removeBlindData(SigningPublicKey spk, String dbid) {
         return this.getSubNetDB(dbid).removeBlindData(spk);
     }
-
-    /**
-     * Notify the netDB that the routing key changed at midnight UTC
-     *
-     * @since 0.9.50
-     */
-    @Override
-    public void routingKeyChanged() {
-        this.mainNetDB().routingKeyChanged();
-    }
-
-    // @Override
-    /*
-     * public void restart() {
-     * for (String dbid : this._subDBs.keySet()) {
-     * this.getSubNetDB(dbid).restart();
-     * }
-     * }
-     */
 
     @Override
     public FloodfillNetworkDatabaseFacade mainNetDB() {

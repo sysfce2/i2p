@@ -42,6 +42,10 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
         return null;
     }
 
+    public FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid){
+        return null;
+    }
+
     public void restart() {}
     public void shutdown() {}
     public void startup() {
@@ -163,21 +167,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     @Override
     public RouterInfo store(Hash key, RouterInfo routerInfo, String dbid) throws IllegalArgumentException {
         return _fndb.store(key, routerInfo);
-    }
-
-    @Override
-    public void publish(LeaseSet localLeaseSet, String dbid) {
-        _fndb.publish(localLeaseSet);
-    }
-
-    @Override
-    public void unpublish(LeaseSet localLeaseSet, String dbid) {
-        _fndb.unpublish(localLeaseSet);
-    }
-
-    @Override
-    public void fail(Hash dbEntry, String dbid) {
-        _fndb.fail(dbEntry);
     }
 
     @Override

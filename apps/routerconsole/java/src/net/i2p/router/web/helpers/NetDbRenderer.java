@@ -747,7 +747,7 @@ class NetDbRenderer {
             buf.append(hostname);
             buf.append("</div>");
         } else {
-            LeaseSet ls = _context.netDbSegmentor().lookupLeaseSetLocally(hash);
+            LeaseSet ls = _context.mainNetDb().lookupLeaseSetLocally(hash);
             if (ls == null) {
                 // remote lookup
                 LookupWaiter lw = new LookupWaiter();

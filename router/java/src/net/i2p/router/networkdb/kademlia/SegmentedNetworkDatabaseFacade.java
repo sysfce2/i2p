@@ -23,7 +23,8 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
         // super(context, null);
     }
 
-    public abstract FloodfillNetworkDatabaseFacade getSubNetDB(String id);
+    protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String id);
+    public abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash id);
 
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
 
@@ -34,8 +35,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
     public abstract FloodfillNetworkDatabaseFacade exploratoryNetDB();
 
     public abstract FloodfillNetworkDatabaseFacade localNetDB();
-
-    public abstract void startup();
 
     public abstract void shutdown();
 
@@ -78,8 +77,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
 
     public abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
-
-    public abstract LeaseSet lookupLeaseSetLocally(Hash key);
 
     public abstract void lookupRouterInfo(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid);
 
@@ -152,42 +149,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
         if (entry.getType() == DatabaseEntry.KEY_TYPE_LEASESET)
             return getSubNetDB(dbid).store(key, (LeaseSet) entry);
         throw new IllegalArgumentException("unknown type");
-    }
-
-    public LeaseSet store(Hash key, LeaseSet leaseSet) {
-        return store(key, leaseSet, null);
-    }
-
-    public RouterInfo store(Hash key, RouterInfo routerInfo) {
-        return store(key, routerInfo, null);
-    }
-
-    /**
-     * @throws IllegalArgumentException if the local router is not valid
-     */
-    public abstract void publish(RouterInfo localRouterInfo) throws IllegalArgumentException;
-
-    public abstract void publish(LeaseSet localLeaseSet, String dbid);
-
-    public abstract void unpublish(LeaseSet localLeaseSet, String dbid);
-
-    public abstract void unpublish(LeaseSet localLeaseSet);
-
-    public abstract void fail(Hash dbEntry, String dbid);
-
-    public abstract void fail(Hash dbEntry);
-
-    /**
-     * The last time we successfully published our RI.
-     * 
-     * @since 0.9.59
-     */
-    public long getLastRouterInfoPublishTime(String dbid) {
-        return 0;
-    }
-
-    public long getLastRouterInfoPublishTime() {
-        return 0;
     }
 
     public abstract Set<Hash> getAllRouters(String dbid);
@@ -310,15 +271,6 @@ public abstract class SegmentedNetworkDatabaseFacade { // extends FloodfillNetwo
      */
     public boolean removeBlindData(SigningPublicKey spk, String dbid) {
         return mainNetDB().removeBlindData(spk);
-    }
-
-    /**
-     * Notify the netDB that the routing key changed at midnight UTC
-     *
-     * @since 0.9.59
-     */
-    public void routingKeyChanged() {
-        mainNetDB().routingKeyChanged();
     }
 
     public void lookupLeaseSetRemotely(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, String dbid) {

@@ -711,13 +711,13 @@ class ClientMessageEventListener implements I2CPMessageReader.I2CPMessageEventLi
             }
             if (_log.shouldDebug())
                 _log.debug("Publishing: " + ls);
-            _context.netDbSegmentor().publish(ls, _runner.getDestHash().toBase32());
+            _context.clientNetDb(_runner.getDestHash().toBase32()).publish(ls);
             if (type == DatabaseEntry.KEY_TYPE_ENCRYPTED_LS2) {
                 // store the decrypted ls also
                 EncryptedLeaseSet encls = (EncryptedLeaseSet) ls;
                 if (_log.shouldDebug())
                     _log.debug("Storing decrypted: " + encls.getDecryptedLeaseSet());
-                _context.netDbSegmentor().store(dest.getHash(), encls.getDecryptedLeaseSet());
+                _context.netDbSegmentor().getSubNetDB(dest.getHash()).store(dest.getHash(), encls.getDecryptedLeaseSet());
             }
         } catch (IllegalArgumentException iae) {
             if (_log.shouldLog(Log.ERROR))
