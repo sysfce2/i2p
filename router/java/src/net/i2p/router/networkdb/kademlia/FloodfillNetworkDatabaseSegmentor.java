@@ -31,15 +31,22 @@ import net.i2p.util.Log;
  * I2P router, each representing it's own view of the network. There are 3 "Special"
  * netDbs:
  * 
- *  - Main NetDB:
- *  - Multihome NetDB:
- *  - Exploratory NetDB:
+ *  - Main NetDB: This is the netDb we use if or when we become a floodfill, and for
+ *  direct interaction with other routers on the network, such as when we are communicating
+ *  with a floodfill.
+ *  - Multihome NetDB: This is used to stash leaseSets for our own sites when they are
+ *  sent to us by a floodfill, so that we can reply when they are requested back from us
+ *  regardless of our closeness to them in the routing table.
+ *  - Exploratory NetDB: This is used when we want to stash a DatabaseEntry for a key
+ *  during exploration but don't want it to go into the Main NetDB until we do something
+ *  else with it.
  * 
  * And there are an unlimited number of "Client" netDbs. These sub-netDbs are
  * intended to contain only the information required to operate them, and as such
  * most of them are very small, containing only a few LeaseSets belonging to clients.
  * Each one corresponds to a Destination which can recieve information from the
- * netDb, and can be indexed either by it's hash or by it's base32 address.
+ * netDb, and can be indexed either by it's hash or by it's base32 address. This index
+ * is known as the 'dbid' or database id.
  * 
  * Users of this class should strive to always access their sub-netDbs via the
  * explicit DBID of the destination recipient, or using the DBID of the special
