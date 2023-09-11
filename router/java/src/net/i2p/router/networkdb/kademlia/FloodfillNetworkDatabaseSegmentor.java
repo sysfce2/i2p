@@ -22,12 +22,23 @@ import net.i2p.router.RouterContext;
 import net.i2p.router.networkdb.reseed.ReseedChecker;
 import net.i2p.util.Log;
 
+/**
+ * FloodfillNetworkDatabaseSegmentor
+ * 
+ * Default implementation of the SegmentedNetworkDatabaseFacade.
+ * 
+ * This is a 
+ * 
+ * @author idk
+ * @since 0.9.59
+ */
 public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseFacade {
     protected final Log _log;
     private RouterContext _context;
     private Map<String, FloodfillNetworkDatabaseFacade> _subDBs = new HashMap<String, FloodfillNetworkDatabaseFacade>();
     public static final String MAIN_DBID = "main";
     private static final String MULTIHOME_DBID = "multihome";
+    private static final String EXPLORATORY_DBID = "exploratory";
     private final FloodfillNetworkDatabaseFacade _mainDbid;
     private final FloodfillNetworkDatabaseFacade _multihomeDbid;
     private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
@@ -37,11 +48,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         _log = context.logManager().getLog(getClass());
         if (_context == null)
             _context = context;
-        FloodfillNetworkDatabaseFacade subdb = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
-        _subDBs.put(MAIN_DBID, subdb);
         _mainDbid = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
         _multihomeDbid = new FloodfillNetworkDatabaseFacade(_context, MULTIHOME_DBID);
-        _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, "exploratory");
+        _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, EXPLORATORY_DBID);
     }
 
     /*
@@ -58,13 +67,18 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
 
     @Override
     protected FloodfillNetworkDatabaseFacade getSubNetDB(String id) {
-        if (id == null || id.isEmpty()) {
-            return getSubNetDB(MAIN_DBID);
-        }
+        if (id == null || id.isEmpty() || id.equals(MAIN_DBID))
+            return mainNetDB();
+        if (id.equals(MULTIHOME_DBID))
+            return multiHomeNetDB();
+        if (id.equals(EXPLORATORY_DBID))
+            return exploratoryNetDB();
+
         if (id.endsWith(".i2p")) {
             if (!id.startsWith("clients_"))
                 id = "clients_" + id;
         }
+
         FloodfillNetworkDatabaseFacade subdb = _subDBs.get(id);
         if (subdb == null) {
             subdb = new FloodfillNetworkDatabaseFacade(_context, id);
@@ -352,6 +366,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
 
     public List<String> getClients() {
         List<String> rv = new ArrayList<String>();
+        /*rv.add(MAIN_DBID);
+        rv.add(MULTIHOME_DBID);
+        rv.add(EXPLORATORY_DBID);*/
         for (String key : _subDBs.keySet()) {
             if (key != null && !key.isEmpty()) {
                 if (key.startsWith("client"))
@@ -391,7 +408,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
 
     @Override
     public FloodfillNetworkDatabaseFacade exploratoryNetDB() {
-        return this.getSubNetDB("exploratory");
+        return _exploratoryDbid;
     }
 
     @Override
