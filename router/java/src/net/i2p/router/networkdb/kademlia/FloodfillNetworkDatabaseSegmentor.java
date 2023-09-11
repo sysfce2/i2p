@@ -27,7 +27,23 @@ import net.i2p.util.Log;
  * 
  * Default implementation of the SegmentedNetworkDatabaseFacade.
  * 
- * This is a 
+ * This is a datastructure which manages (3+Clients) "sub-netDbs" on behalf of an
+ * I2P router, each representing it's own view of the network. There are 3 "Special"
+ * netDbs:
+ * 
+ *  - Main NetDB:
+ *  - Multihome NetDB:
+ *  - Exploratory NetDB:
+ * 
+ * And there are an unlimited number of "Client" netDbs. These sub-netDbs are
+ * intended to contain only the information required to operate them, and as such
+ * most of them are very small, containing only a few LeaseSets belonging to clients.
+ * Each one corresponds to a Destination which can recieve information from the
+ * netDb, and can be indexed either by it's hash or by it's base32 address.
+ * 
+ * Users of this class should strive to always access their sub-netDbs via the
+ * explicit DBID of the destination recipient, or using the DBID of the special
+ * netDb when it's appropriate to route the netDb entry to one of the special tables.
  * 
  * @author idk
  * @since 0.9.59
@@ -53,11 +69,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, EXPLORATORY_DBID);
     }
 
-    /*
-     * public FloodfillNetworkDatabaseFacade getSubNetDB() {
-     * return this;
-     * }
-     */
     @Override
     public FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
         if (id == null)
