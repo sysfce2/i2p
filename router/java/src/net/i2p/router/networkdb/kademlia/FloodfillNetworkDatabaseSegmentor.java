@@ -53,7 +53,7 @@ import net.i2p.util.Log;
  * netDb when it's appropriate to route the netDb entry to one of the special tables.
  * 
  * @author idk
- * @since 0.9.59
+ * @since 0.9.60
  */
 public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseFacade {
     protected final Log _log;

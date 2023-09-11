@@ -53,7 +53,7 @@ import net.i2p.router.networkdb.reseed.ReseedChecker;
  * See implementation: FloodfillNetworkDatabaseSegmentor
  * 
  * @author idk
- * @since 0.9.59
+ * @since 0.9.60
  */
 public abstract class SegmentedNetworkDatabaseFacade {
     public SegmentedNetworkDatabaseFacade(RouterContext context) {
@@ -127,7 +127,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
         }
         return lss;
     }
-    /** @since 0.9.59 */
+    /** @since 0.9.60 */
     public ReseedChecker reseedChecker() {
         return mainNetDB().reseedChecker();
     };
@@ -145,7 +145,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * For console ConfigKeyringHelper
      * 
      * @return true if removed
-     * @since 0.9.59
+     * @since 0.9.60
      */
     public List<String> lookupClientBySigningPublicKey(SigningPublicKey spk) {
         return Collections.emptyList();
