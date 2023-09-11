@@ -140,7 +140,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                             return;
                         RouterInfo oldri = null;
                         if (_client != null)
-                            oldri = _context.clientNetDb(_client.toBase32()).lookupRouterInfoLocally(key);
+                            oldri = _context.clientNetDb(_client).lookupRouterInfoLocally(key);
                         else
                             oldri = _context.mainNetDb().lookupRouterInfoLocally(key);
                         // only update if RI is newer and non-ff

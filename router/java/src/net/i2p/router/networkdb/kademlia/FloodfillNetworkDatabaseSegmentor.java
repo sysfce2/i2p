@@ -28,6 +28,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private Map<String, FloodfillNetworkDatabaseFacade> _subDBs = new HashMap<String, FloodfillNetworkDatabaseFacade>();
     public static final String MAIN_DBID = "main";
     private static final String MULTIHOME_DBID = "multihome";
+    private final FloodfillNetworkDatabaseFacade _mainDbid;
+    private final FloodfillNetworkDatabaseFacade _multihomeDbid;
+    private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
 
     public FloodfillNetworkDatabaseSegmentor(RouterContext context) {
         super(context);
@@ -36,6 +39,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             _context = context;
         FloodfillNetworkDatabaseFacade subdb = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
         _subDBs.put(MAIN_DBID, subdb);
+        _mainDbid = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
+        _multihomeDbid = new FloodfillNetworkDatabaseFacade(_context, MULTIHOME_DBID);
+        _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, "exploratory");
     }
 
     /*
@@ -188,12 +194,11 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         }
         Hash to = leaseSet.getReceivedBy();
         if (to != null) {
-            String b32 = to.toBase32();
-            FloodfillNetworkDatabaseFacade cndb = _context.clientNetDb(b32);
+            //String b32 = to.toBase32();
+            FloodfillNetworkDatabaseFacade cndb = _context.clientNetDb(to);
             if (_log.shouldLog(Log.DEBUG))
-                _log.debug("store " + key.toBase32() + " to client " + b32);
-            if (b32 != null)
-                return cndb.store(key, leaseSet);
+                _log.debug("store " + key.toBase32() + " to client " + to.toBase32());
+            return cndb.store(key, leaseSet);
         }
         FloodfillNetworkDatabaseFacade fndb = _context.mainNetDb();
         if (_log.shouldLog(Log.DEBUG))
@@ -204,11 +209,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public RouterInfo store(Hash key, RouterInfo routerInfo) {
         Hash to = routerInfo.getReceivedBy();
         if (to != null) {
-            String b32 = to.toBase32();
-            FloodfillNetworkDatabaseFacade cndb = _context.clientNetDb(b32);
+            FloodfillNetworkDatabaseFacade cndb = _context.clientNetDb(to);
             if (_log.shouldLog(Log.DEBUG))
-                _log.debug("store " + key.toBase32() + " to client " + b32);
-            if (b32 != null)
+                _log.debug("store " + key.toBase32() + " to client " + to.toBase32());
+            if (to != null)
                 return cndb.store(key, routerInfo);
         }
         FloodfillNetworkDatabaseFacade fndb = _context.mainNetDb();
@@ -357,42 +361,14 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         return rv;
     }
 
-    /**
-     * @param spk unblinded key
-     * @return BlindData or null
-     * @since 0.9.40
-     */
-    public BlindData getBlindData(SigningPublicKey spk, String dbid) {
-        return this.getSubNetDB(dbid).getBlindData(spk);
-    }
-
-    /**
-     * @param bd new BlindData to put in the cache
-     * @since 0.9.40
-     */
-    /*@Override
-    public void setBlindData(BlindData bd, String dbid) {
-        this.getSubNetDB(dbid).setBlindData(bd);
-    }*/
-
-    /**
-     * For console ConfigKeyringHelper
-     * 
-     * @since 0.9.41
-     */
-    /*@Override
-    public List<BlindData> getBlindData(String dbid) {
-        return this.getSubNetDB(dbid).getBlindData();
-    }*/
-
     @Override
     public FloodfillNetworkDatabaseFacade mainNetDB() {
-        return this.getSubNetDB(MAIN_DBID);
+        return _mainDbid;
     }
 
     @Override
     public FloodfillNetworkDatabaseFacade multiHomeNetDB() {
-        return this.getSubNetDB(MULTIHOME_DBID);
+        return _multihomeDbid;
     }
 
     @Override
@@ -402,32 +378,20 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         return this.getSubNetDB(id);
     }
 
+    @Override
+    public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
+        if (id != null)
+            return getSubNetDB(id.toBase32());
+        return exploratoryNetDB();
+    }
+
     public FloodfillNetworkDatabaseFacade clientNetDB() {
-        return clientNetDB(null);
+        return exploratoryNetDB();
     }
 
     @Override
     public FloodfillNetworkDatabaseFacade exploratoryNetDB() {
         return this.getSubNetDB("exploratory");
-    }
-
-    @Override
-    public FloodfillNetworkDatabaseFacade localNetDB() {
-        return this.getSubNetDB("local");
-    }
-
-    @Override
-    public List<BlindData> getLocalClientsBlindData() {
-        ArrayList<BlindData> rv = new ArrayList<>();
-        for (String subdb : _subDBs.keySet()) {
-            // if (subdb.startsWith("clients_"))
-            // TODO: see if we can access only one subDb at a time when we need
-            // to look up a client by SPK. We mostly need this for managing blinded
-            // and encrypted keys in the Keyring Config UI page. See also
-            // ConfigKeyringHelper
-            rv.addAll(_subDBs.get(subdb).getBlindData());
-        }
-        return rv;
     }
 
     @Override
@@ -471,5 +435,24 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
                 return subdb._dbid;
         }
         return null;
+    }
+
+    @Override
+    public Set<FloodfillNetworkDatabaseFacade> getSubNetDBs() {
+        Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<>();
+        rv.add(mainNetDB());
+        rv.add(multiHomeNetDB());
+        rv.add(exploratoryNetDB());
+        rv.addAll(_subDBs.values());
+        return rv;
+    }
+
+    @Override
+    public List<BlindData> getLocalClientsBlindData() {
+        List<BlindData> rv = new ArrayList<>();
+        for (FloodfillNetworkDatabaseFacade subdb : _subDBs.values()) {
+            rv.addAll(subdb.getBlindData());
+        }
+        return rv;
     }
 }

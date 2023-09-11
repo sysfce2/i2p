@@ -11,6 +11,7 @@ package net.i2p.router.dummy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -123,17 +124,27 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     }
 
     @Override
-    public FloodfillNetworkDatabaseFacade exploratoryNetDB() {
+    public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
         return _fndb;
     }
 
     @Override
-    public FloodfillNetworkDatabaseFacade localNetDB() {
+    public FloodfillNetworkDatabaseFacade exploratoryNetDB() {
         return _fndb;
     }
 
     @Override
     public String getDbidByHash(Hash clientKey) {
         throw new UnsupportedOperationException("Unimplemented method 'lookupLeaseSetHashIsClient'");
+    }
+
+    @Override
+    public List<String> getClients() {
+        throw new UnsupportedOperationException("Unimplemented method 'getClients'");
+    }
+
+    @Override
+    public Set<FloodfillNetworkDatabaseFacade> getSubNetDBs(){
+        throw new UnsupportedOperationException("Unimplemented method 'getSubNetDBs'");
     }
 }
