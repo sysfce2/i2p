@@ -88,11 +88,11 @@ class SearchUpdateReplyFoundJob extends JobImpl implements ReplyJob {
                 switch (entry.getType()) {
                     case DatabaseEntry.KEY_TYPE_ROUTERINFO:
                         RouterInfo ri = (RouterInfo) entry;
-                        getContext().netDbSegmentor().getSubNetDB(ri.getReceivedBy()).store(ri.getHash(), ri);
+                        getContext().netDbSegmentor().getSubNetDB(_facade._dbid).store(ri.getHash(), ri);
                         break;
                     case DatabaseEntry.KEY_TYPE_LEASESET:
                         LeaseSet ls = (LeaseSet) entry;
-                        getContext().netDbSegmentor().getSubNetDB(ls.getReceivedBy()).store(ls.getHash(), ls);
+                        getContext().netDbSegmentor().getSubNetDB(_facade._dbid).store(ls.getHash(), ls);
                         break;
                     default:
                         break;
