@@ -104,11 +104,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     }
 
     @Override
-    public Set<Hash> getAllRouters(String dbid) {
-        return _fndb.getAllRouters();
-    }
-
-    @Override
     public FloodfillNetworkDatabaseFacade mainNetDB() {
         return _fndb;
     }

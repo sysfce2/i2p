@@ -70,43 +70,11 @@ public abstract class SegmentedNetworkDatabaseFacade {
     public abstract void shutdown();
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
     protected abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
-    public abstract Set<Hash> getAllRouters(String dbid);
-    public abstract Set<Hash> getAllRouters();
     public abstract String getDbidByHash(Hash clientKey);
     public abstract Set<FloodfillNetworkDatabaseFacade> getSubNetDBs();
     public abstract List<String> getClients();
-    public int getKnownRouters(String dbid) {
-        return getSubNetDB(dbid).getKnownRouters();
-    }
-    public int getKnownRouters() {
-        return mainNetDB().getKnownRouters();
-    }
-    public int getKnownLeaseSets(String dbid) {
-        return getSubNetDB(dbid).getKnownLeaseSets();
-    }
-    public boolean isInitialized(String dbid) {
-        return getSubNetDB(dbid).isInitialized();
-    }
     public boolean isInitialized() {
         return mainNetDB().isInitialized();
-    }
-    public void rescan(String dbid) {
-        getSubNetDB(dbid).rescan();
-    }
-    /** Debug only - all user info moved to NetDbRenderer in router console */
-    public void renderStatusHTML(Writer out) throws IOException {
-        List<String> clientList = getClients();
-        for (String dbid : clientList) {
-            getSubNetDB(dbid).renderStatusHTML(out);
-        }
-    }
-    /** public for NetDbRenderer in routerconsole */
-    public Set<LeaseSet> getLeases(String dbid) {
-        return getSubNetDB(dbid).getLeases();
-    }
-    /** public for NetDbRenderer in routerconsole */
-    public Set<RouterInfo> getRouters(String dbid) {
-        return getSubNetDB(dbid).getRouters();
     }
     public Set<RouterInfo> getRouters() {
         return mainNetDB().getRouters();
@@ -130,16 +98,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
     /** @since 0.9.60 */
     public ReseedChecker reseedChecker() {
         return mainNetDB().reseedChecker();
-    };
-    /**
-     * For convenience, so users don't have to cast to FNDF, and unit tests using
-     * Dummy NDF will work.
-     *
-     * @return false; FNDF overrides to return actual setting
-     * @since IPv6
-     */
-    public boolean floodfillEnabled() {
-        return mainNetDB().floodfillEnabled();
     };
     /**
      * For console ConfigKeyringHelper
