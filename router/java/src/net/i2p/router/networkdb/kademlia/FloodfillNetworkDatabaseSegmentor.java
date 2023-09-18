@@ -94,7 +94,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * @return     the FloodfillNetworkDatabaseFacade object corresponding to the ID
      */
     @Override
-    public FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
+    protected FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
         if (id == null)
             return getSubNetDB(MAIN_DBID);
         return getSubNetDB(id.toBase32());
@@ -139,6 +139,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * 
      */
     public synchronized void shutdown() {
+        _mainDbid.shutdown();
+        _multihomeDbid.shutdown();
         // shut down every entry in _subDBs
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
             if (_log.shouldLog(Log.DEBUG))

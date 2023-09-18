@@ -61,7 +61,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
 
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String dbid);
-    public abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
+    protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(String dbid);
