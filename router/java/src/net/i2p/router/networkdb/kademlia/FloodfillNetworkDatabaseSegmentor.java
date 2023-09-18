@@ -106,14 +106,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             _subDBs.put(id, subdb);
             subdb.startup();
             subdb.createHandlers();
-            if (subdb.getFloodfillPeers().size() == 0) {
-                List<RouterInfo> ris = mainNetDB().pickRandomFloodfillPeers();
-                for (RouterInfo ri : ris) {
-                    if (_log.shouldLog(_log.DEBUG))
-                        _log.debug("Seeding: " + id + " with " + ris.size() + " peers " + ri.getHash());
-                    subdb.store(ri.getIdentity().getHash(), ri);
-                }
-            }
         }
         return subdb;
     }
