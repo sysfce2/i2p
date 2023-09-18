@@ -69,6 +69,13 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private final FloodfillNetworkDatabaseFacade _multihomeDbid;
     private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
 
+    /**
+     * Construct a new FloodfillNetworkDatabaseSegmentor with the given
+     * RouterContext, containing a default, main netDb and a multihome netDb
+     * and which is prepared to add client netDbs.
+     * 
+     * @since 0.9.60
+     */
     public FloodfillNetworkDatabaseSegmentor(RouterContext context) {
         super(context);
         _log = context.logManager().getLog(getClass());
