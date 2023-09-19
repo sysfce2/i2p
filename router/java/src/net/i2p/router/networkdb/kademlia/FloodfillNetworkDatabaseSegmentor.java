@@ -114,7 +114,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (id.equals(MULTIHOME_DBID))
             return multiHomeNetDB();
         if (id.equals(EXPLORATORY_DBID))
-            return exploratoryNetDB();
+            return clientNetDB();
 
         if (id.endsWith(".i2p")) {
             if (!id.startsWith("clients_"))
@@ -337,7 +337,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * get the client netDb for the given id
+     * get the client netDb for the given id.
+     * Will return the "exploratory(default client)" netDb if
+     * the dbid is null.
      * 
      * @since 0.9.60
      * 
@@ -345,12 +347,14 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     public FloodfillNetworkDatabaseFacade clientNetDB(String id) {
         if (id == null || id.isEmpty())
-            return exploratoryNetDB();
+            return clientNetDB();
         return this.getSubNetDB(id);
     }
 
     /**
      * get the client netDb for the given id
+     * Will return the "exploratory(default client)" netDb if
+     * the dbid is null.
      * 
      * @since 0.9.60
      * 
@@ -359,27 +363,16 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
         if (id != null)
             return getSubNetDB(id.toBase32());
-        return exploratoryNetDB();
+        return clientNetDB();
     }
 
     /**
-     * get the default client netDb
+     * get the default client(exploratory) netDb
      * 
      * @since 0.9.60
      * 
      */
     public FloodfillNetworkDatabaseFacade clientNetDB() {
-        return exploratoryNetDB();
-    }
-
-    /**
-     * get the default client netDb
-     * 
-     * @since 0.9.60
-     * 
-     */
-    @Override
-    public FloodfillNetworkDatabaseFacade exploratoryNetDB() {
         return _exploratoryDbid;
     }
 
@@ -443,7 +436,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<>();
         rv.add(mainNetDB());
         rv.add(multiHomeNetDB());
-        rv.add(exploratoryNetDB());
+        //rv.add(clientNetDB());
         rv.addAll(_subDBs.values());
         return rv;
     }

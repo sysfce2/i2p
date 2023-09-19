@@ -60,13 +60,17 @@ public abstract class SegmentedNetworkDatabaseFacade {
         // super(context, null);
     }
 
+    /**
+     * Get a sub-netDb
+     * 
+     * @since 0.9.60
+     */
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String dbid);
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(String dbid);
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(Hash dbid);
-    public abstract FloodfillNetworkDatabaseFacade exploratoryNetDB();
     public abstract void shutdown();
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
     protected abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
