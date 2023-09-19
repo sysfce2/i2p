@@ -61,28 +61,102 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
 
     /**
-     * Get a sub-netDb
+     * Get a sub-netDb using a string identifier
      * 
      * @since 0.9.60
      */
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String dbid);
+    /**
+     * Get a sub-netDb using a Hash identifier
+     * 
+     * @since 0.9.60
+     */
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
+    /**
+     * Get the main netDb, the one which is used if we're a floodfill
+     * 
+     * @since 0.9.60
+     */
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
+    /**
+     * Get the multihome netDb, the one which is used if we're a floodfill AND we
+     * have a multihome address sent to us
+     * 
+     * @since 0.9.60
+     */
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
+    /**
+     * Get a client netDb for a given client string identifier. Will never
+     * return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(String dbid);
+    /**
+     * Get a client netDb for a given client Hash identifier. Will never
+     * return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(Hash dbid);
+    /**
+     * Shut down the network database and all subDbs.
+     * 
+     * @since 0.9.60
+     */
     public abstract void shutdown();
+    /**
+     * Lookup the leaseSet for a given key in only client dbs.
+     * 
+     * @since 0.9.60
+     */
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
+    /**
+     * Lookup the leaseSet for a given key locally across all dbs if dbid is
+     * null, or locally for the given dbid if it is not null. Use carefully,
+     * this function crosses db boundaries and is intended only for local use.
+     * 
+     * @since 0.9.60
+     */
     protected abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
+    /**
+     * Lookup the dbid for a given hash.
+     * 
+     * @since 0.9.60
+     */
     public abstract String getDbidByHash(Hash clientKey);
+    /**
+     * Get a set of all sub-netDbs.
+     * 
+     * @since 0.9.60
+     */
     public abstract Set<FloodfillNetworkDatabaseFacade> getSubNetDBs();
+    /**
+     * Get a set of all client dbid strings
+     * 
+     * @since 0.9.60
+     */
     public abstract List<String> getClients();
+    /**
+     * Make sure the SNDF is initialized
+     */
     public boolean isInitialized() {
         return mainNetDB().isInitialized();
     }
+    /**
+     * Get a set of all routers
+     * 
+     * @since 0.9.60
+     */
     public Set<RouterInfo> getRouters() {
         return mainNetDB().getRouters();
     }
+
+    /** 
+     * Get a set of all routers known to clients, which should always be zero.
+     * 
+     * @since 0.9.60 
+     */
     public Set<RouterInfo> getRoutersKnownToClients() {
         Set<RouterInfo> ris = new HashSet<>();
         Set<FloodfillNetworkDatabaseFacade> fndfs = getSubNetDBs();
@@ -91,6 +165,12 @@ public abstract class SegmentedNetworkDatabaseFacade {
         }
         return ris;
     }
+
+    /**
+     * Get a set of all leases known to all clients.
+     * 
+     * @since 0.9.60
+     */
     public Set<LeaseSet> getLeasesKnownToClients() {
         Set<LeaseSet> lss = new HashSet<>();
         Set<FloodfillNetworkDatabaseFacade> fndfs = getSubNetDBs();
@@ -99,19 +179,27 @@ public abstract class SegmentedNetworkDatabaseFacade {
         }
         return lss;
     }
-    /** @since 0.9.60 */
+    /**
+     * Check if the mainNetDB needs to reseed
+     *  
+     * @since 0.9.60 
+     * */
     public ReseedChecker reseedChecker() {
         return mainNetDB().reseedChecker();
     };
     /**
      * For console ConfigKeyringHelper
      * 
-     * @return true if removed
      * @since 0.9.60
      */
     public List<String> lookupClientBySigningPublicKey(SigningPublicKey spk) {
         return Collections.emptyList();
     }
+    /**
+     * For console ConfigKeyringHelper
+     * 
+     * @since 0.9.60
+     */
     public List<BlindData> getLocalClientsBlindData() {
         return Collections.emptyList();
     }
