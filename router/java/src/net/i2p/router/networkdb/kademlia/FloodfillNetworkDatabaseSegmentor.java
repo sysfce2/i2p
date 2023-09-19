@@ -436,7 +436,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<>();
         rv.add(mainNetDB());
         rv.add(multiHomeNetDB());
-        //rv.add(clientNetDB());
+        rv.add(clientNetDB());
         rv.addAll(_subDBs.values());
         return rv;
     }
