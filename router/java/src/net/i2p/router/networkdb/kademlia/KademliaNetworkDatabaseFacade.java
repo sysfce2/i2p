@@ -304,6 +304,10 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         return _dbid.startsWith("clients_");
     }
 
+    public boolean isMultihomeDb() {
+        return _dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID);
+    }
+
     public synchronized void startup() {
         _log.info("Starting up the kademlia network database");
         RouterInfo ri = _context.router().getRouterInfo();
