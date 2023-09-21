@@ -100,6 +100,34 @@ public abstract class SegmentedNetworkDatabaseFacade {
      */
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(Hash dbid);
     /**
+     * Create a client netDb for a given client string identifier and return it.
+     * Will never return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public abstract FloodfillNetworkDatabaseFacade createClientNetDB(String dbid);
+    /**
+     * Create a client netDb for a given client Hash identifier and return it.
+     * Will never return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public abstract FloodfillNetworkDatabaseFacade createClientNetDB(Hash dbid);
+    /**
+     * Remove a client netDb for a given client string identifier. Will never
+     * remove the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public abstract void removeClientNetDB(String dbid);
+    /**
+     * Remove a client netDb for a given client Hash identifier. Will never
+     * remove the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public abstract void removeClientNetDB(Hash dbid);
+    /**
      * Shut down the network database and all subDbs.
      * 
      * @since 0.9.60

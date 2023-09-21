@@ -96,7 +96,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     protected FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
         if (id == null)
-            return getSubNetDB(MAIN_DBID);
+            return mainNetDB();
         return getSubNetDB(id.toBase32());
     }
 
@@ -123,12 +123,75 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
 
         FloodfillNetworkDatabaseFacade subdb = _subDBs.get(id);
         if (subdb == null) {
+            subdb = createClientNetDB(id)
+        } else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("(dbid: " + subdb._dbid
+                        + ") Reusing existing sub-netDb");
+        }
+        return subdb;
+    }
+
+    /**
+     * Create a client netDb for a given client string identifier and return it.
+     * Will never return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public FloodfillNetworkDatabaseFacade createClientNetDB(String id) {
+        if (id == null || id.isEmpty() || id.equals(MAIN_DBID) || id.equals(MULTIHOME_DBID) || id.equals(EXPLORATORY_DBID))
+            return clientNetDB();
+        if (id.endsWith(".i2p")) {
+            if (!id.startsWith("clients_"))
+                id = "clients_" + id;
+        }
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Creating client netDb for " + id);
+        FloodfillNetworkDatabaseFacade subdb = _subDBs.get(id);
+        if (subdb == null) {
             subdb = new FloodfillNetworkDatabaseFacade(_context, id);
             _subDBs.put(id, subdb);
             subdb.startup();
             subdb.createHandlers();
         }
         return subdb;
+    }
+    /**
+     * Create a client netDb for a given client Hash identifier and return it.
+     * Will never return the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public FloodfillNetworkDatabaseFacade createClientNetDB(Hash dbid) {
+        if (dbid == null)
+            return clientNetDB();
+        return createClientNetDB(dbid.toBase32());
+    }
+    /**
+     * Remove a client netDb for a given client string identifier. Will never
+     * remove the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public void removeClientNetDB(String id) {
+        if (id == null || id.isEmpty() || id.equals(MAIN_DBID) || id.equals(MULTIHOME_DBID) || id.equals(EXPLORATORY_DBID))
+            return;
+        if (id.endsWith(".i2p")) {
+            if (!id.startsWith("clients_"))
+                id = "clients_" + id;
+        }
+        _subDBs.remove(id);
+    }
+    /**
+     * Remove a client netDb for a given client Hash identifier. Will never
+     * remove the mainNetDB.
+     * 
+     * @since 0.9.60
+     */
+    public void removeClientNetDB(Hash dbid) {
+        if (dbid == null)
+            return;
+        removeClientNetDB(dbid.toBase32());
     }
 
     /**
