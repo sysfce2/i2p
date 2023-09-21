@@ -179,6 +179,7 @@ class ClientConnectionRunner {
             _out = new BufferedOutputStream(_socket.getOutputStream());
             _reader.startReading();
             // TODO need a cleaner for unclaimed items in _messages, but we have no timestamps...
+            _context.netDbSegmentor().createClientNetDB(this.getDestHash());
     }
     
     /**
