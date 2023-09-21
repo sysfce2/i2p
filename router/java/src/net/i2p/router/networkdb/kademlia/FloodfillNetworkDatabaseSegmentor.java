@@ -123,7 +123,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
 
         FloodfillNetworkDatabaseFacade subdb = _subDBs.get(id);
         if (subdb == null) {
-            subdb = createClientNetDB(id)
+            subdb = createClientNetDB(id);
         } else {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid

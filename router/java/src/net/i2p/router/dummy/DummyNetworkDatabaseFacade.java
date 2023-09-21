@@ -124,6 +124,26 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     }
 
     @Override
+    public FloodfillNetworkDatabaseFacade createClientNetDB(String dbid) {
+        throw new UnsupportedOperationException("Unimplemented method 'createClientNetDB'");
+    }
+
+    @Override
+    public FloodfillNetworkDatabaseFacade createClientNetDB(Hash dbid) {
+        throw new UnsupportedOperationException("Unimplemented method 'createClientNetDB'");
+    }
+
+    @Override
+    public void removeClientNetDB(String dbid) {
+        throw new UnsupportedOperationException("Unimplemented method 'removeClientNetDB'");
+    }
+
+    @Override
+    public void removeClientNetDB(Hash dbid) {
+        throw new UnsupportedOperationException("Unimplemented method 'removeClientNetDB'");
+    }
+
+    @Override
     public String getDbidByHash(Hash clientKey) {
         throw new UnsupportedOperationException("Unimplemented method 'lookupLeaseSetHashIsClient'");
     }
