@@ -40,9 +40,9 @@ import net.i2p.util.Log;
  *  - Multihome NetDB: This is used to stash leaseSets for our own sites when they are
  *  sent to us by a floodfill, so that we can reply when they are requested back from us
  *  regardless of our closeness to them in the routing table.
- *  - Exploratory NetDB: This is used when we want to stash a DatabaseEntry for a key
- *  during exploration but don't want it to go into the Main NetDB until we do something
- *  else with it.
+ *  - Exploratory NetDB: This is used when we know we want a client netDb but we don't have
+ *  a hash for it, which should never happen. It is primarily here to debug, if a LeaseSet
+ *  shows up here it means a client netDb wasn't created before it was needed.
  * 
  * And there are an unlimited number of "Client" netDbs. These sub-netDbs are
  * intended to contain only the information required to operate them, and as such
