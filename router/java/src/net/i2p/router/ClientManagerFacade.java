@@ -121,4 +121,11 @@ public abstract class ClientManagerFacade implements Service {
      *  @since 0.9.41
      */
     public void unregisterMetaDest(Destination dest) {}
+
+    /**
+     * get the primary dbid of a client by the dest
+     * 
+     *  @since 0.9.60
+     */
+    public abstract Hash getPrimaryDbid(Hash dest);
 }

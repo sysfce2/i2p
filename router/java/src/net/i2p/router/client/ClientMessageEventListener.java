@@ -83,6 +83,7 @@ class ClientMessageEventListener implements I2CPMessageReader.I2CPMessageEventLi
         _context = context;
         _log = _context.logManager().getLog(ClientMessageEventListener.class);
         _runner = runner;
+        _context.netDbSegmentor().createClientNetDB(_runner.getDestHash());
         _enforceAuth = enforceAuth;
         if ((!_enforceAuth) || !_context.getBooleanProperty(PROP_AUTH))
             _authorized = true;

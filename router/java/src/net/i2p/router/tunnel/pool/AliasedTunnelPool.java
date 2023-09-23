@@ -2,6 +2,7 @@ package net.i2p.router.tunnel.pool;
 
 import java.util.List;
 
+import net.i2p.data.Destination;
 import net.i2p.data.Hash;
 import net.i2p.data.Lease;
 import net.i2p.data.LeaseSet;
@@ -115,7 +116,7 @@ public class AliasedTunnelPool extends TunnelPool {
 
     @Override
     protected LeaseSet locked_buildNewLeaseSet() {
-        LeaseSet ls =  _context.clientNetDb(_aliasOf.getSettings().getDestination()).lookupLeaseSetLocally(_aliasOf.getSettings().getDestination());
+        LeaseSet ls =  _context.clientNetDb(_context.clientManager().getPrimaryDbid(_aliasOf.getSettings().getDestination())).lookupLeaseSetLocally(_aliasOf.getSettings().getDestination());
         if (ls == null)
             return null;
         // copy everything so it isn't corrupted

@@ -49,6 +49,8 @@ public class DummyClientManagerFacade extends ClientManagerFacade {
     public SessionKeyManager getClientSessionKeyManager(Hash _dest) { return null; }
     
     public void requestLeaseSet(Hash dest, LeaseSet set) {}
-    
+    public Hash getPrimaryDbid(Hash dest){
+        return null;
+    }
 }
 

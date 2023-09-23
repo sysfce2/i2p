@@ -220,6 +220,10 @@ public class ClientManagerFacadeImpl extends ClientManagerFacade implements Inte
             return null;
         }
     }
+
+    public Hash getPrimaryDbid(Hash dest) {
+        return _manager.getPrimaryDbid(dest);
+    }
     
     /**
      * Return the client's current manager or null if not connected

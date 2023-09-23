@@ -668,6 +668,23 @@ class ClientManager {
             return null;
         return _runnersByHash.get(destHash);
     }
+
+    /**
+     * 
+     * get the client's primary dbid
+     * 
+     * @param fromDest
+     * 
+     * @since 0.9.60
+     */
+    public Hash getPrimaryDbid(Hash fromDest) {
+        // first, get the runner
+        ClientConnectionRunner runner = getRunner(fromDest);
+        if (runner != null) {
+            return runner.getDestHash();
+        }
+        return null;
+    }
     
     /**
      *  @param id the router's ID for this message
