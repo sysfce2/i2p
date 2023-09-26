@@ -66,10 +66,13 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
     private static final long NEXT_RKEY_LS_ADVANCE_TIME = 10*60*1000;
     private static final int NEXT_FLOOD_QTY = 2;
     
+    public FloodfillNetworkDatabaseFacade(RouterContext context) {
+        this(context, FloodfillNetworkDatabaseSegmentor.MAIN_DBID);
+    }
     public FloodfillNetworkDatabaseFacade(RouterContext context, String dbid) {
         super(context, dbid);
         _activeFloodQueries = new HashMap<Hash, FloodSearchJob>();
-         _verifiesInProgress = new ConcurrentHashSet<Hash>(8);
+        _verifiesInProgress = new ConcurrentHashSet<Hash>(8);
 
         long[] rate = new long[] { 60*60*1000L };
         _context.statManager().createRequiredRateStat("netDb.successTime", "Time for successful lookup (ms)", "NetworkDatabase", new long[] { 60*60*1000l, 24*60*60*1000l });

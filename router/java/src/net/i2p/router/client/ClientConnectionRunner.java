@@ -49,6 +49,8 @@ import net.i2p.router.JobImpl;
 import net.i2p.router.RouterContext;
 import net.i2p.router.crypto.TransientSessionKeyManager;
 import net.i2p.router.crypto.ratchet.RatchetSKM;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor;
 import net.i2p.router.crypto.ratchet.MuxedSKM;
 import net.i2p.util.ConcurrentHashSet;
 import net.i2p.util.I2PThread;
@@ -90,6 +92,8 @@ class ClientConnectionRunner {
     protected I2CPMessageReader _reader;
     /** Used for all sessions, which must all have the same crypto keys */
     private SessionKeyManager _sessionKeyManager;
+    /** Used for leaseSets sent to and recieved from this client */
+    private FloodfillNetworkDatabaseFacade _floodfillNetworkDatabaseFacade;
     /** 
      * This contains the last 10 MessageIds that have had their (non-ack) status 
      * delivered to the client (so that we can be sure only to update when necessary)
@@ -211,7 +215,6 @@ class ClientConnectionRunner {
             _manager.unregisterEncryptedDestination(this, _encryptedLSHash);
         _manager.unregisterConnection(this);
         // netdb may be null in unit tests
-        Hash dbid = getDestHash();
         if (_context.netDbSegmentor() != null) {
             // Note that if the client sent us a destroy message,
             // removeSession() was called just before this, and
@@ -219,11 +222,11 @@ class ClientConnectionRunner {
             for (SessionParams sp : _sessions.values()) {
                 LeaseSet ls = sp.currentLeaseSet;
                 if (ls != null)
-                    _context.clientNetDb(dbid).unpublish(ls);
+                    _context.clientNetDb(getDestHash()).unpublish(ls);
                 // unpublish encrypted LS also
                 ls = sp.currentEncryptedLeaseSet;
                 if (ls != null)
-                    _context.clientNetDb(dbid).unpublish(ls);
+                    _context.clientNetDb(getDestHash()).unpublish(ls);
                 if (!sp.isPrimary)
                     _context.tunnelManager().removeAlias(sp.dest);
             }
@@ -641,6 +644,15 @@ class ClientConnectionRunner {
                     return SessionStatusMessage.STATUS_INVALID;
                 }
             }
+        }
+        // Set up the per-destination FloodfillNetworkDatabaseFacade to prevent clients from being able to
+        // update leaseSet entries in the floodfill netDb
+        if (isPrimary && _floodfillNetworkDatabaseFacade == null) {
+            Hash dbid = getDestHash();
+            if (dbid != null)
+                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, dbid.toBase32());
+            else 
+                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID);
         }
         return _manager.destinationEstablished(this, dest);
     }
@@ -1150,6 +1162,15 @@ class ClientConnectionRunner {
      */
     private final static long REQUEUE_DELAY = 500;
     private static final int MAX_REQUEUE = 60;  // 30 sec.
+
+    /**
+     * Get the FloodfillNetworkDatabaseFacade for this runner.
+     * 
+     * @return _floodfillNetworkDatabaseFacade
+     */
+    public FloodfillNetworkDatabaseFacade getFloodfillNetworkDatabaseFacade() {
+        return this._floodfillNetworkDatabaseFacade;
+    }
     
     private class MessageDeliveryStatusUpdate extends JobImpl {
         private final SessionId _sessId;

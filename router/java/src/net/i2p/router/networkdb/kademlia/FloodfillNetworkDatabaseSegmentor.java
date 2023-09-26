@@ -64,7 +64,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private Map<String, FloodfillNetworkDatabaseFacade> _subDBs = new HashMap<String, FloodfillNetworkDatabaseFacade>();
     public static final String MAIN_DBID = "main";
     public static final String MULTIHOME_DBID = "clients_multihome";
-    private static final String EXPLORATORY_DBID = "clients_exploratory";
+    public static final String EXPLORATORY_DBID = "clients_exploratory";
     private final FloodfillNetworkDatabaseFacade _mainDbid;
     private final FloodfillNetworkDatabaseFacade _multihomeDbid;
     private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
@@ -181,8 +181,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
+                        + ") collecting all floodfill peers across all subDbs");
             peers.addAll(subdb.getFloodfillPeers());
         }
         return peers;
@@ -216,16 +215,11 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("(dbid: " + subdb._dbid
-                            + ") Deprecated! Arbitrary selection of this subDb",
-                            new Exception());
+                            + ") lookupLeaseSetLocally on all subDbs: " + key.toBase32());
                 rv = subdb.lookupLeaseSetLocally(key);
                 if (rv != null) {
                     return rv;
                 }
-            }
-            rv = this.lookupLeaseSetLocally(key, MAIN_DBID);
-            if (rv != null) {
-                return rv;
             }
         }
         return this.getSubNetDB(dbid).lookupLeaseSetLocally(key);
@@ -260,8 +254,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid
-                        + ") Deprecated! Arbitrary selection of this subDb",
-                        new Exception());
+                        + ") collecting routers from all subDbs");
             rv.addAll(subdb.getRouters());
         }
         return rv;

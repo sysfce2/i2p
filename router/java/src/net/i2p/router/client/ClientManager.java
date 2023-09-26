@@ -43,6 +43,7 @@ import net.i2p.router.ClientMessage;
 import net.i2p.router.Job;
 import net.i2p.router.JobImpl;
 import net.i2p.router.RouterContext;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade;
 import net.i2p.util.ConcurrentHashSet;
 import net.i2p.util.I2PThread;
 import net.i2p.util.Log;
@@ -769,6 +770,21 @@ class ClientManager {
         // This is fast and non-blocking, run in-line
         //_ctx.jobQueue().addJob(new HandleJob(msg));
         (new HandleJob(msg)).runJob();
+    }
+
+    /**
+     * get the FloodfillNetworkDatabaseFacade associated with a particular client destination.
+     * This is inside the runner, so it won't be there if the runner isn't ready.
+     * 
+     * @param dest
+     * @return 
+     */
+    public FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Destination dest) {
+        ClientConnectionRunner runner = getRunner(dest);
+        if (runner != null)
+            return runner.getFloodfillNetworkDatabaseFacade();
+        else
+            return null;
     }
 
     private class HandleJob extends JobImpl {
