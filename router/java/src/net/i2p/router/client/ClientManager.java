@@ -44,6 +44,7 @@ import net.i2p.router.Job;
 import net.i2p.router.JobImpl;
 import net.i2p.router.RouterContext;
 import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor;
 import net.i2p.util.ConcurrentHashSet;
 import net.i2p.util.I2PThread;
 import net.i2p.util.Log;
@@ -780,12 +781,16 @@ class ClientManager {
      * @return 
      */
     public FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Hash destHash) {
-        ClientConnectionRunner runner = getRunner(destHash);
-        if (runner != null)
-            return runner.getFloodfillNetworkDatabaseFacade();
-        else{
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
+        if (destHash != null) {
+            if (destHash == FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID)
+                return _ctx.clientNetDb(null);
+            ClientConnectionRunner runner = getRunner(destHash);
+            if (runner != null)
+                return runner.getFloodfillNetworkDatabaseFacade();
+            else{
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
+            }
         }
         return null;
     }
