@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import net.i2p.crypto.EncType;
 import net.i2p.crypto.SigType;
 import net.i2p.data.DataHelper;
+import net.i2p.data.Hash;
 import net.i2p.util.SystemVersion;
 import net.i2p.router.sybil.Analysis;
 import net.i2p.router.web.FormHandler;
@@ -327,7 +328,7 @@ public class NetDbHelper extends FormHandler {
         return getNetDbSummary(null, false);
     }
 
-    public String getNetDbSummary(String client, boolean clientOnly) {
+    public String getNetDbSummary(Hash client, boolean clientOnly) {
         NetDbRenderer renderer = new NetDbRenderer(_context);
         try {
             if (client == null && !clientOnly)
@@ -359,7 +360,7 @@ public class NetDbHelper extends FormHandler {
             } else if (_full == 6) {
                 renderer.renderStatusHTML(_out, _limit, _page, _full, null, true);
             } else if (_clientOnly && client == null) {
-                for (String _client : _context.netDbSegmentor().getClients()) {
+                for (Hash _client : _context.netDbSegmentor().getClients()) {
                     renderer.renderLeaseSetHTML(_out, _debug, _client, clientOnly);
                 }
             } else {
@@ -373,7 +374,7 @@ public class NetDbHelper extends FormHandler {
         return "";
     }
 
-    public String getClientNetDbSummary(String client) {
+    public String getClientNetDbSummary(Hash client) {
         return getNetDbSummary(client, true);
     }
 

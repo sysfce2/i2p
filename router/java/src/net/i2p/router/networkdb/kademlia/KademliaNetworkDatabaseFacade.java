@@ -80,7 +80,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     private NegativeLookupCache _negativeCache;
     protected final int _networkID;
     private final BlindCache _blindCache;
-    protected final String _dbid;
+    protected final Hash _dbid;
     private Hash _localKey;
 
     /** 
@@ -172,7 +172,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     private static final int BUCKET_SIZE = 24;
     private static final int KAD_B = 4;
 
-    public KademliaNetworkDatabaseFacade(RouterContext context, String dbid) {
+    public KademliaNetworkDatabaseFacade(RouterContext context, Hash dbid) {
         _context = context;
         _dbid = dbid;
         _log = _context.logManager().getLog(getClass());
@@ -297,8 +297,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     String getDbDir() {
         if (_dbDir == null) {
             String dbDir = _context.getProperty(PROP_DB_DIR, DEFAULT_DB_DIR);
-            if (!_dbid.equals(FloodfillNetworkDatabaseSegmentor.MAIN_DBID) && _dbid != null) {
-                File subDir = new File(dbDir, _dbid);
+            if (_dbid != FloodfillNetworkDatabaseSegmentor.MAIN_DBID) {
+                File subDir = new File(dbDir, _dbid.toBase32());
                 dbDir = subDir.toString();
             }
             return dbDir; 
@@ -307,11 +307,19 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     }
 
     public boolean isClientDb() {
-        return _dbid.startsWith("clients_");
+        if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
+            return false;
+        if (_dbid == FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID)
+            return false;
+        return true;
     }
 
     public boolean isMultihomeDb() {
-        return _dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID);
+        if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
+            return false;
+        if (_dbid == FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID)
+            return true;
+        return false;
     }
 
     public synchronized void startup() {
@@ -377,7 +385,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
             _log.warn("Operating in quiet mode - not exploring or pushing data proactively, simply reactively");
             _log.warn("This should NOT be used in production");
         }
-        if (_dbid == null || _dbid.equals(FloodfillNetworkDatabaseSegmentor.MAIN_DBID) || _dbid.isEmpty()) {
+        if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID) {
             // periodically update and resign the router's 'published date', which basically
             // serves as a version
             Job plrij = new PublishLocalRouterInfoJob(_context);

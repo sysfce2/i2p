@@ -779,12 +779,28 @@ class ClientManager {
      * @param dest
      * @return 
      */
-    public FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Destination dest) {
-        ClientConnectionRunner runner = getRunner(dest);
+    public FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Hash destHash) {
+        ClientConnectionRunner runner = getRunner(destHash);
         if (runner != null)
             return runner.getFloodfillNetworkDatabaseFacade();
-        else
-            return null;
+        else{
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
+        }
+        return null;
+    }
+
+    /**
+     * get all of the FloodfillNetworkDatabaseFacades for all of the clients.
+     * 
+     * @return
+     */
+    public Set<FloodfillNetworkDatabaseFacade> getClientFloodfillNetworkDatabaseFacades() {
+        Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<FloodfillNetworkDatabaseFacade>();
+        for (ClientConnectionRunner runner : _runners.values()) {
+            rv.add(runner.getFloodfillNetworkDatabaseFacade());
+        }
+        return rv;
     }
 
     private class HandleJob extends JobImpl {

@@ -61,12 +61,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
 
     /**
-     * Get a sub-netDb using a string identifier
-     * 
-     * @since 0.9.60
-     */
-    protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(String dbid);
-    /**
      * Get a sub-netDb using a Hash identifier
      * 
      * @since 0.9.60
@@ -85,13 +79,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
-    /**
-     * Get a client netDb for a given client string identifier. Will never
-     * return the mainNetDB.
-     * 
-     * @since 0.9.60
-     */
-    public abstract FloodfillNetworkDatabaseFacade clientNetDB(String dbid);
     /**
      * Get a client netDb for a given client Hash identifier. Will never
      * return the mainNetDB.
@@ -112,19 +99,11 @@ public abstract class SegmentedNetworkDatabaseFacade {
      */
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
     /**
-     * Lookup the leaseSet for a given key locally across all dbs if dbid is
-     * null, or locally for the given dbid if it is not null. Use carefully,
-     * this function crosses db boundaries and is intended only for local use.
-     * 
-     * @since 0.9.60
-     */
-    protected abstract LeaseSet lookupLeaseSetLocally(Hash key, String dbid);
-    /**
      * Lookup the dbid for a given hash.
      * 
      * @since 0.9.60
      */
-    public abstract String getDbidByHash(Hash clientKey);
+    public abstract Hash getDbidByHash(Hash clientKey);
     /**
      * Get a set of all sub-netDbs.
      * 
@@ -136,7 +115,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * 
      * @since 0.9.60
      */
-    public abstract List<String> getClients();
+    public abstract List<Hash> getClients();
     /**
      * Make sure the SNDF is initialized
      */
@@ -192,7 +171,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * 
      * @since 0.9.60
      */
-    public List<String> lookupClientBySigningPublicKey(SigningPublicKey spk) {
+    public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
         return Collections.emptyList();
     }
     /**

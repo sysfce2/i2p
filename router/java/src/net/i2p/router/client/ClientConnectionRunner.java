@@ -93,7 +93,7 @@ class ClientConnectionRunner {
     /** Used for all sessions, which must all have the same crypto keys */
     private SessionKeyManager _sessionKeyManager;
     /** Used for leaseSets sent to and recieved from this client */
-    private FloodfillNetworkDatabaseFacade _floodfillNetworkDatabaseFacade;
+    private final FloodfillNetworkDatabaseFacade _floodfillNetworkDatabaseFacade;
     /** 
      * This contains the last 10 MessageIds that have had their (non-ack) status 
      * delivered to the client (so that we can be sure only to update when necessary)
@@ -152,6 +152,11 @@ class ClientConnectionRunner {
     public ClientConnectionRunner(RouterContext context, ClientManager manager, Socket socket) {
         _context = context;
         _log = _context.logManager().getLog(ClientConnectionRunner.class);
+        Hash dbid = getDestHash();
+        if (dbid != null)
+            _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, dbid);
+        else 
+            _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID);
         _manager = manager;
         _socket = socket;
         // unused for fastReceive
@@ -160,6 +165,8 @@ class ClientConnectionRunner {
         _alreadyProcessed = new ArrayList<MessageId>();
         _acceptedPending = new ConcurrentHashSet<MessageId>();
         _messageId = new AtomicInteger(_context.random().nextInt());
+        // Set up the per-destination FloodfillNetworkDatabaseFacade to prevent clients from being able to
+        // update leaseSet entries in the floodfill netDb
     }
     
     private static final AtomicInteger __id = new AtomicInteger();
@@ -644,15 +651,6 @@ class ClientConnectionRunner {
                     return SessionStatusMessage.STATUS_INVALID;
                 }
             }
-        }
-        // Set up the per-destination FloodfillNetworkDatabaseFacade to prevent clients from being able to
-        // update leaseSet entries in the floodfill netDb
-        if (isPrimary && _floodfillNetworkDatabaseFacade == null) {
-            Hash dbid = getDestHash();
-            if (dbid != null)
-                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, dbid.toBase32());
-            else 
-                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID);
         }
         return _manager.destinationEstablished(this, dest);
     }

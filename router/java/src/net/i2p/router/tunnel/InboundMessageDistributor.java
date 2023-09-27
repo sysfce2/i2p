@@ -242,7 +242,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                 // Handling of client tunnel messages need explicit handling
                 // in the context of the client subDb.
                 if (_client != null) {
-                    String dbid = _context.netDbSegmentor().getDbidByHash(_client);
+                    Hash dbid = _context.netDbSegmentor().getDbidByHash(_client);
                     if (dbid == null) {
                         // This error shouldn't occur.  All clients should have their own netDb.
                         if (_log.shouldLog(Log.ERROR))
