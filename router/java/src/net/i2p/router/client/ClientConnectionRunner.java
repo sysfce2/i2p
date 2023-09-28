@@ -1182,7 +1182,9 @@ class ClientConnectionRunner {
                 _log.debug("initial subDb creation failed for dbid: " + this.getDestHash() + " using null-client db instead.");
             return _context.clientNetDb(null);
         }
-
+        FloodfillNetworkDatabaseSegmentor fnds = (FloodfillNetworkDatabaseSegmentor) _context.netDbSegmentor();
+        if (! fnds.useSubDbs())
+            return _context.netDb();
         return this._floodfillNetworkDatabaseFacade;
     }
     
