@@ -111,11 +111,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     }
 
     @Override
-    public Hash getDbidByHash(Hash clientKey) {
-        throw new UnsupportedOperationException("Unimplemented method 'lookupLeaseSetHashIsClient'");
-    }
-
-    @Override
     public List<Hash> getClients() {
         throw new UnsupportedOperationException("Unimplemented method 'getClients'");
     }

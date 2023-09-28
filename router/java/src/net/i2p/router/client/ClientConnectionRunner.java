@@ -93,7 +93,7 @@ class ClientConnectionRunner {
     /** Used for all sessions, which must all have the same crypto keys */
     private SessionKeyManager _sessionKeyManager;
     /** Used for leaseSets sent to and recieved from this client */
-    private final FloodfillNetworkDatabaseFacade _floodfillNetworkDatabaseFacade;
+    private FloodfillNetworkDatabaseFacade _floodfillNetworkDatabaseFacade;
     /** 
      * This contains the last 10 MessageIds that have had their (non-ack) status 
      * delivered to the client (so that we can be sure only to update when necessary)
@@ -152,11 +152,6 @@ class ClientConnectionRunner {
     public ClientConnectionRunner(RouterContext context, ClientManager manager, Socket socket) {
         _context = context;
         _log = _context.logManager().getLog(ClientConnectionRunner.class);
-        Hash dbid = getDestHash();
-        if (dbid != null)
-            _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, dbid);
-        else 
-            _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID);
         _manager = manager;
         _socket = socket;
         // unused for fastReceive
@@ -218,6 +213,8 @@ class ClientConnectionRunner {
         _acceptedPending.clear();
         if (_sessionKeyManager != null)
             _sessionKeyManager.shutdown();
+        if (_floodfillNetworkDatabaseFacade != null)
+            _floodfillNetworkDatabaseFacade.shutdown();
         if (_encryptedLSHash != null)
             _manager.unregisterEncryptedDestination(this, _encryptedLSHash);
         _manager.unregisterConnection(this);
@@ -574,6 +571,18 @@ class ClientConnectionRunner {
     public int sessionEstablished(SessionConfig config) {
         Destination dest = config.getDestination();
         Hash destHash = dest.calculateHash();
+        if (destHash != null){
+            if (_log.shouldLog(Log.DEBUG)) {
+                _log.debug("Initializing sub-netDb for client" + destHash);
+            }
+            _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, destHash);
+            _floodfillNetworkDatabaseFacade.startup();
+        } else {
+            if (_log.shouldLog(Log.DEBUG)) {
+                _log.debug("Initializing sub-netDb for unknown client" + dest);
+            }
+            _floodfillNetworkDatabaseFacade = null;
+        }
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("SessionEstablished called for destination " + destHash);
         if (_sessions.size() > MAX_SESSIONS)
@@ -600,7 +609,6 @@ class ClientConnectionRunner {
             _dontSendMSM = "none".equals(opts.getProperty(I2PClient.PROP_RELIABILITY, "").toLowerCase(Locale.US));
             _dontSendMSMOnReceive = Boolean.parseBoolean(opts.getProperty(I2PClient.PROP_FAST_RECEIVE));
         }
-
         // Set up the
         // per-destination session key manager to prevent rather easy correlation
         // based on the specified encryption types in the config
@@ -1167,6 +1175,14 @@ class ClientConnectionRunner {
      * @return _floodfillNetworkDatabaseFacade
      */
     public FloodfillNetworkDatabaseFacade getFloodfillNetworkDatabaseFacade() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getFloodfillNetworkDatabaseFacade for dbid: " + this.getDestHash());
+        if (_floodfillNetworkDatabaseFacade == null) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("initial subDb creation failed for dbid: " + this.getDestHash() + " using null-client db instead.");
+            return _context.clientNetDb(null);
+        }
+
         return this._floodfillNetworkDatabaseFacade;
     }
     

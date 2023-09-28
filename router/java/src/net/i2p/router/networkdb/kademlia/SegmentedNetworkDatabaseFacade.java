@@ -99,12 +99,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      */
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
     /**
-     * Lookup the dbid for a given hash.
-     * 
-     * @since 0.9.60
-     */
-    public abstract Hash getDbidByHash(Hash clientKey);
-    /**
      * Get a set of all sub-netDbs.
      * 
      * @since 0.9.60

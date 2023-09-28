@@ -134,8 +134,12 @@ class NetDbRenderer {
         if (allClients) {
             netdb = _context.netDb();
         }else{
-            if (client != null)
+            if (client != null) {
+                Log _log = _context.logManager().getLog(NetDbRenderer.class);
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("client netdb for: " + client);
                 netdb = _context.clientNetDb(client);
+            }
             else
                 netdb = _context.netDb();
         }
@@ -619,8 +623,12 @@ class NetDbRenderer {
         if (clientsOnly){
             netdb = _context.netDb();
         }else{
-            if (client != null)
+            if (client != null) {
+                Log _log = _context.logManager().getLog(NetDbRenderer.class);
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("client netdb for: " + client);
                 netdb = _context.clientNetDb(client);
+            }
             else
                 netdb = _context.netDb();
         }
