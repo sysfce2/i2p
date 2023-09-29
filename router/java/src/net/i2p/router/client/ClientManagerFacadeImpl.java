@@ -296,7 +296,7 @@ public class ClientManagerFacadeImpl extends ClientManagerFacade implements Inte
      * get the FloodfillNetworkDatabaseFacade associated with a particular client destination.
      * This is inside the runner, so it won't be there if the runner isn't ready.
      * 
-     * @param dest
+     * @param destHash destination hash associated with the client who's subDb we're looking for
      * @return 
      */
     @Override
