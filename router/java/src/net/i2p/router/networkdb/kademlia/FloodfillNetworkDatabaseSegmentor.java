@@ -105,14 +105,15 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * 
      */
     public synchronized void shutdown() {
+        if (_log.shouldLog(Log.DEBUG))
+                _log.debug("shutdown called from FNDS, shutting down all remaining sub-netDbs");
         _mainDbid.shutdown();
         _multihomeDbid.shutdown();
         // shut down every entry in _subDBs
         for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("(dbid: " + subdb._dbid
-                        + ") Shutting down all remaining sub-netDbs",
-                        new Exception());
+                        + ") Shutting down all remaining subDbs");
             subdb.shutdown();
         }
     }
@@ -127,9 +128,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         List<RouterInfo> rv = new ArrayList<RouterInfo>();
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
             if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Called from FNDS, will be combined with all other subDbs",
-                        new Exception());
+                _log.debug("getKnownRouterData Called from FNDS,"+subdb._dbid+", will be combined with all other subDbs");
             rv.addAll(subdb.getKnownRouterData());
         }
         return rv;
@@ -143,11 +142,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * @since 0.9.60
      */
     public List<Hash> getFloodfillPeers() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getFloodfillPeers collecting all floodfill peers across all subDbs");
         List<Hash> peers = new ArrayList<Hash>();
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") collecting all floodfill peers across all subDbs");
             peers.addAll(subdb.getFloodfillPeers());
         }
         return peers;
@@ -176,12 +174,11 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     //@Override
     protected LeaseSet lookupLeaseSetLocally(Hash key, Hash dbid) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("lookupLeaseSetLocally on all subDbs: " + key.toBase32());
         if (dbid == null) {
             LeaseSet rv = null;
             for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-                if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("(dbid: " + subdb._dbid
-                            + ") lookupLeaseSetLocally on all subDbs: " + key.toBase32());
                 rv = subdb.lookupLeaseSetLocally(key);
                 if (rv != null) {
                     return rv;
@@ -201,6 +198,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (_mainDbid == null)
             return false;
         boolean rv = mainNetDB().isInitialized();
+        if (!rv)
+            return rv;
         for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
             rv = subdb.isInitialized();
             if (!rv) {
@@ -218,11 +217,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     @Override
     public Set<RouterInfo> getRouters() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getRouters called from FNDS, collecting routers from all subDbs");
         Set<RouterInfo> rv = new HashSet<>();
         for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") collecting routers from all subDbs");
             rv.addAll(subdb.getRouters());
         }
         return rv;
@@ -317,11 +315,11 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     @Override
     public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
+        if (_log.shouldDebug())
+            _log.debug("looked up clientNetDB: " + id);
         if (!useSubDbs())
             return mainNetDB();
         if (id != null){
-            if (_log.shouldDebug())
-                _log.debug("looked up clientNetDB: " + id);
             FloodfillNetworkDatabaseFacade fndf = getSubNetDB(id);
             if (fndf != null)
                 return fndf;

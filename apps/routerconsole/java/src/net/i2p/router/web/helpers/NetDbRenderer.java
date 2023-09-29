@@ -137,7 +137,7 @@ class NetDbRenderer {
             if (client != null) {
                 Log _log = _context.logManager().getLog(NetDbRenderer.class);
                 if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("client netdb for: " + client);
+                    _log.debug("client subdb for: " + client);
                 netdb = _context.clientNetDb(client);
             }
             else
@@ -626,7 +626,7 @@ class NetDbRenderer {
             if (client != null) {
                 Log _log = _context.logManager().getLog(NetDbRenderer.class);
                 if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("client netdb for: " + client);
+                    _log.debug("client subdb for: " + client);
                 netdb = _context.clientNetDb(client);
             }
             else

@@ -573,13 +573,13 @@ class ClientConnectionRunner {
         Hash destHash = dest.calculateHash();
         if (destHash != null){
             if (_log.shouldLog(Log.DEBUG)) {
-                _log.debug("Initializing sub-netDb for client" + destHash);
+                _log.debug("Initializing subDb for client" + destHash);
             }
             _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, destHash);
             _floodfillNetworkDatabaseFacade.startup();
         } else {
             if (_log.shouldLog(Log.DEBUG)) {
-                _log.debug("Initializing sub-netDb for unknown client" + dest);
+                _log.debug("Initializing subDb for unknown client" + dest);
             }
             _floodfillNetworkDatabaseFacade = null;
         }
@@ -1176,7 +1176,7 @@ class ClientConnectionRunner {
      */
     public FloodfillNetworkDatabaseFacade getFloodfillNetworkDatabaseFacade() {
         if (_log.shouldLog(Log.DEBUG))
-            _log.debug("getFloodfillNetworkDatabaseFacade for dbid: " + this.getDestHash());
+            _log.debug("getFloodfillNetworkDatabaseFacade is getting the subDb for dbid: " + this.getDestHash());
         if (_floodfillNetworkDatabaseFacade == null) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("initial subDb creation failed for dbid: " + this.getDestHash() + " using null-client db instead.");

@@ -783,7 +783,7 @@ class ClientManager {
     public FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Hash destHash) {
         if (destHash != null) {
             if (_log.shouldLog(Log.DEBUG))
-                _log.debug("Getting sub-netDb for desthash: " + destHash);
+                _log.debug("Getting subDb for desthash: " + destHash);
             if (destHash == FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID)
                 return _ctx.clientNetDb(null);
             ClientConnectionRunner runner = getRunner(destHash);
