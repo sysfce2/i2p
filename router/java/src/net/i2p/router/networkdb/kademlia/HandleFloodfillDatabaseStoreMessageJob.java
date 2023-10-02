@@ -134,12 +134,7 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 if (!ls.getReceivedAsReply())
                     ls.setReceivedAsPublished();
                 if (_facade.isClientDb())
-                    if (_facade.matchClientKey(key))
-                        // In the client subDb context, the only local key to worry about
-                        // is the key for this client.
-                        blockStore = true;
-                    else
-                        blockStore = false;
+                    blockStore = false;
                 else if (getContext().clientManager().isLocal(key))
                     // Non-client context
                     if (_facade.floodfillEnabled() && (_fromHash != null))
