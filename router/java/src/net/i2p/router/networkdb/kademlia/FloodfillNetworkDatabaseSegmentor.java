@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import net.i2p.I2PException;
 import net.i2p.data.BlindData;
 import net.i2p.data.Hash;
 import net.i2p.data.LeaseSet;
@@ -12,6 +14,7 @@ import net.i2p.data.SigningPublicKey;
 import net.i2p.data.router.RouterInfo;
 import net.i2p.router.RouterContext;
 import net.i2p.util.Log;
+import net.i2p.util.RandomSource;
 
 /**
  * FloodfillNetworkDatabaseSegmentor
@@ -54,11 +57,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private RouterContext _context;
     private static final String PROP_NETDB_ISOLATION = "router.netdb.isolation";
     public static final Hash MAIN_DBID = null;
-    public static final Hash MULTIHOME_DBID = null;
-    public static final Hash EXPLORATORY_DBID = Hash.FAKE_HASH;
+    public static final Hash MULTIHOME_DBID = Hash.FAKE_HASH;
     private final FloodfillNetworkDatabaseFacade _mainDbid;
     private final FloodfillNetworkDatabaseFacade _multihomeDbid;
-    private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
 
     /**
      * Construct a new FloodfillNetworkDatabaseSegmentor with the given
@@ -74,7 +75,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             _context = context;
         _mainDbid = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
         _multihomeDbid = new FloodfillNetworkDatabaseFacade(_context, MULTIHOME_DBID);
-        _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, EXPLORATORY_DBID);
     }
 
     public boolean useSubDbs() {
@@ -324,7 +324,13 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             if (fndf != null)
                 return fndf;
         }
-        return clientNetDB();
+        try {
+            return clientNetDB();
+        } catch (I2PException e) {
+            if (_log.shouldWarn())
+                _log.warn("clientNetDB: " + e.getMessage());
+        }
+        return mainNetDB();
     }
 
     /**
@@ -333,10 +339,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * @since 0.9.60
      * 
      */
-    public FloodfillNetworkDatabaseFacade clientNetDB() {
+    public FloodfillNetworkDatabaseFacade clientNetDB() throws I2PException {
         if (!useSubDbs())
             return mainNetDB();
-        return _exploratoryDbid;
+        throw new I2PException("client netDb should not be called without a dbid");
     }
 
     /**
@@ -396,7 +402,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         }
         rv.add(mainNetDB());
         rv.add(multiHomeNetDB());
-        rv.add(clientNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
         return rv;
     }
@@ -409,7 +414,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             rv.add(mainNetDB());
             return rv;
         }
-        rv.add(clientNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
         return rv;
     }
