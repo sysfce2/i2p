@@ -1175,6 +1175,8 @@ class ClientConnectionRunner {
      * @return _floodfillNetworkDatabaseFacade
      */
     public FloodfillNetworkDatabaseFacade getFloodfillNetworkDatabaseFacade() {
+        if (_context.netDbSegmentor().useSubDbs())
+            return _context.netDb();
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("getFloodfillNetworkDatabaseFacade is getting the subDb for dbid: " + this.getDestHash());
         if (_floodfillNetworkDatabaseFacade == null) {
@@ -1182,7 +1184,6 @@ class ClientConnectionRunner {
                 _log.debug("initial subDb creation failed for dbid: " + this.getDestHash() + " using null-client db instead.");
             return _context.clientNetDb(null);
         }
-
         return this._floodfillNetworkDatabaseFacade;
     }
     
