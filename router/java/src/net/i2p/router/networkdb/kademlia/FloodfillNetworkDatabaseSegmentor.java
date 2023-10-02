@@ -77,7 +77,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, EXPLORATORY_DBID);
     }
 
-    public boolean useSubDbs() {
+    private boolean useSubDbs() {
         return _context.getProperty(PROP_NETDB_ISOLATION, true);
     }
 
