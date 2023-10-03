@@ -54,11 +54,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private RouterContext _context;
     private static final String PROP_NETDB_ISOLATION = "router.netdb.isolation";
     public static final Hash MAIN_DBID = null;
-    public static final Hash MULTIHOME_DBID = null;
-    public static final Hash EXPLORATORY_DBID = Hash.FAKE_HASH;
+    public static final Hash MULTIHOME_DBID = Hash.FAKE_HASH;
     private final FloodfillNetworkDatabaseFacade _mainDbid;
     private final FloodfillNetworkDatabaseFacade _multihomeDbid;
-    private final FloodfillNetworkDatabaseFacade _exploratoryDbid;
 
     /**
      * Construct a new FloodfillNetworkDatabaseSegmentor with the given
@@ -74,7 +72,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             _context = context;
         _mainDbid = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
         _multihomeDbid = new FloodfillNetworkDatabaseFacade(_context, MULTIHOME_DBID);
-        _exploratoryDbid = new FloodfillNetworkDatabaseFacade(_context, EXPLORATORY_DBID);
     }
 
     public boolean useSubDbs() {
@@ -91,9 +88,9 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     protected FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
         if (!useSubDbs())
-            return mainNetDB();
-        if (id == null)
-            return mainNetDB();
+            return _mainDbid;
+        //if (id == null)
+            //return _mainDbid;
         return _context.clientManager().getClientFloodfillNetworkDatabaseFacade(id);
     }
 
@@ -197,7 +194,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public boolean isInitialized() {
         if (_mainDbid == null)
             return false;
-        boolean rv = mainNetDB().isInitialized();
+        boolean rv = _mainDbid.isInitialized();
         if (!rv)
             return rv;
         for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
@@ -301,7 +298,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     public FloodfillNetworkDatabaseFacade multiHomeNetDB() {
         if (!useSubDbs())
-            return mainNetDB();
+            return _mainDbid;
         return _multihomeDbid;
     }
 
@@ -318,7 +315,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (_log.shouldDebug())
             _log.debug("looked up clientNetDB: " + id);
         if (!useSubDbs())
-            return mainNetDB();
+            return _mainDbid;
         if (id != null){
             FloodfillNetworkDatabaseFacade fndf = getSubNetDB(id);
             if (fndf != null)
@@ -335,8 +332,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     public FloodfillNetworkDatabaseFacade clientNetDB() {
         if (!useSubDbs())
-            return mainNetDB();
-        return _exploratoryDbid;
+            return _mainDbid;
+        return _mainDbid;
     }
 
     /**
@@ -391,10 +388,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             return Collections.emptySet();
         Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<>();
         if (!useSubDbs()) {
-            rv.add(mainNetDB());
+            rv.add(_mainDbid);
             return rv;
         }
-        rv.add(mainNetDB());
+        rv.add(_mainDbid);
         rv.add(multiHomeNetDB());
         rv.add(clientNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
@@ -406,7 +403,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             return Collections.emptySet();
         Set<FloodfillNetworkDatabaseFacade> rv = new HashSet<>();
         if (!useSubDbs()) {
-            rv.add(mainNetDB());
+            rv.add(_mainDbid);
             return rv;
         }
         rv.add(clientNetDB());

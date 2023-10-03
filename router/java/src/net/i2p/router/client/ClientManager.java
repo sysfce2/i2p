@@ -784,16 +784,14 @@ class ClientManager {
         if (destHash != null) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Getting subDb for desthash: " + destHash);
-            if (destHash == FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID)
-                return _ctx.clientNetDb(null);
             ClientConnectionRunner runner = getRunner(destHash);
-            if (runner != null){
+            if (runner != null) {
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("ClientManager got a runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
                 return runner.getFloodfillNetworkDatabaseFacade();
             } else {
-                if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
+                if (_log.shouldLog(Log.ERROR))
+                    _log.error("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
             }
         }
         return null;

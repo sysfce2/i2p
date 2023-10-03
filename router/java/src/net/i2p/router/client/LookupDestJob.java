@@ -91,11 +91,7 @@ class LookupDestJob extends JobImpl {
                         try {
                             bd = Blinding.decode(context, b);
                             SigningPublicKey spk = bd.getUnblindedPubKey();
-                            BlindData bd2;
-                            if (_fromLocalDest == null)
-                                bd2 = getContext().netDb().getBlindData(spk);
-                            else
-                                bd2 = getContext().clientNetDb(_fromLocalDest).getBlindData(spk);
+                            BlindData bd2 = _runner.getFloodfillNetworkDatabaseFacade().getBlindData(spk);
                             if (bd2 != null) {
                                 // BlindData from database may have privkey or secret
                                 // check if we need it but don't have it
@@ -114,7 +110,7 @@ class LookupDestJob extends JobImpl {
                                 long exp = now + ((bd.getAuthRequired() || bd.getSecretRequired()) ? 365*24*60*60*1000L
                                                                                                    :  90*24*68*60*1000L);
                                 bd.setExpiration(exp);
-                                getContext().clientNetDb(_fromLocalDest).setBlindData(bd);
+                                _runner.getFloodfillNetworkDatabaseFacade().setBlindData(bd);
                             }
                             h = bd.getBlindedHash();
                             if (_log.shouldDebug())
@@ -208,10 +204,10 @@ class LookupDestJob extends JobImpl {
         }
         public String getName() { return "LeaseSet Lookup Reply to Client"; }
         public void runJob() {
-            Destination dest = getContext().clientNetDb(_fromLocalDest).lookupDestinationLocally(_hash);
+            Destination dest = _runner.getFloodfillNetworkDatabaseFacade().lookupDestinationLocally(_hash);
             if (dest == null && _blindData != null) {
                 // TODO store and lookup original hash instead
-                LeaseSet ls = getContext().clientNetDb(_fromLocalDest).lookupLeaseSetLocally(_hash);
+                LeaseSet ls = _runner.getFloodfillNetworkDatabaseFacade().lookupLeaseSetLocally(_hash);
                 if (ls != null && ls.getType() == DatabaseEntry.KEY_TYPE_ENCRYPTED_LS2) {
                     // already decrypted
                     EncryptedLeaseSet encls = (EncryptedLeaseSet) ls;

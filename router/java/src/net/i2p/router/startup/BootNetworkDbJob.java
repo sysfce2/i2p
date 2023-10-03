@@ -23,6 +23,5 @@ class BootNetworkDbJob extends JobImpl {
     public void runJob() {
         getContext().netDb().startup();
         getContext().multihomeNetDb().startup();
-        getContext().clientNetDb(null).startup();
     }
 }

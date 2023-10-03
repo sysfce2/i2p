@@ -578,8 +578,8 @@ class ClientConnectionRunner {
             _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, destHash);
             _floodfillNetworkDatabaseFacade.startup();
         } else {
-            if (_log.shouldLog(Log.DEBUG)) {
-                _log.debug("Initializing subDb for unknown client" + dest);
+            if (_log.shouldLog(Log.ERROR)) {
+                _log.error("Initializing subDb for unknown client" + dest, new Exception());
             }
             _floodfillNetworkDatabaseFacade = null;
         }
@@ -1175,14 +1175,23 @@ class ClientConnectionRunner {
      * @return _floodfillNetworkDatabaseFacade
      */
     public FloodfillNetworkDatabaseFacade getFloodfillNetworkDatabaseFacade() {
-        if (_context.netDbSegmentor().useSubDbs())
+        if (!_context.netDbSegmentor().useSubDbs())
             return _context.netDb();
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("getFloodfillNetworkDatabaseFacade is getting the subDb for dbid: " + this.getDestHash());
         if (_floodfillNetworkDatabaseFacade == null) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("initial subDb creation failed for dbid: " + this.getDestHash() + " using null-client db instead.");
-            return _context.clientNetDb(null);
+            if (_log.shouldLog(Log.WARN))
+                _log.warn("getFloodfillNetworkDatabaseFacade is null for runner", new Exception());
+            if (this.getDestHash() != null) {
+                if (_log.shouldLog(Log.WARN))
+                    _log.warn("initial subDb creation failed for dbid: " + this.getDestHash() + " creating one on-the-fly instead.", new Exception());
+                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, this.getDestHash());
+                _floodfillNetworkDatabaseFacade.startup();
+            } else {
+                if (_log.shouldLog(Log.ERROR))
+                    _log.error("on the fly subDb creation failed for subdb, returning main netDb instead.", new Exception());
+                return _context.netDb();
+            }
         }
         return this._floodfillNetworkDatabaseFacade;
     }
