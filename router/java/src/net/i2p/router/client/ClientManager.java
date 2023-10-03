@@ -784,6 +784,8 @@ class ClientManager {
         if (destHash != null) {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Getting subDb for desthash: " + destHash);
+            if (destHash == FloodfillNetworkDatabaseSegmentor.EXPLORATORY_DBID)
+                return _ctx.clientNetDb(null);
             ClientConnectionRunner runner = getRunner(destHash);
             if (runner != null){
                 if (_log.shouldLog(Log.DEBUG))
