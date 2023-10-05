@@ -106,13 +106,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
                 _log.debug("shutdown called from FNDS, shutting down all remaining sub-netDbs");
         _mainDbid.shutdown();
         _multihomeDbid.shutdown();
-        // shut down every entry in _subDBs
-        for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("(dbid: " + subdb._dbid
-                        + ") Shutting down all remaining subDbs");
-            subdb.shutdown();
-        }
     }
 
     /**
@@ -205,25 +198,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         }
         return rv;
     }
-
-    /**
-     * list of the RouterInfo objects for all known peers
-     * 
-     * @since 0.9.60
-     * 
-     */
-    @Override
-    public Set<RouterInfo> getRouters() {
-        if (_log.shouldLog(Log.DEBUG))
-            _log.debug("getRouters called from FNDS, collecting routers from all subDbs");
-        Set<RouterInfo> rv = new HashSet<>();
-        for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
-            rv.addAll(subdb.getRouters());
-        }
-        return rv;
-    }
-
-
 
     /**
      * list of the RouterInfo objects for all known peers known to clients(in subDbs) only
@@ -319,19 +293,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             if (fndf != null)
                 return fndf;
         }
-        return clientNetDB();
-    }
-
-    /**
-     * get the default client(exploratory) netDb
-     * 
-     * @since 0.9.60
-     * 
-     */
-    public FloodfillNetworkDatabaseFacade clientNetDB() {
-        if (!useSubDbs())
-            return _mainDbid;
-        return _mainDbid;
+        return mainNetDB();
     }
 
     /**
@@ -375,7 +337,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * get all the subDbs and return them in a Set.
+     * get all the subDbs and return them in a Set. This includes the main netDb
+     * and the possible-multihomes netDb
      * 
      * @since 0.9.60
      * 
@@ -391,11 +354,17 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         }
         rv.add(_mainDbid);
         rv.add(multiHomeNetDB());
-        rv.add(clientNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
         return rv;
     }
 
+    /**
+     * get all the subDbs and return them in a Set. This only includes subDbs associated
+     * with specific clients, unless subDbs are disabled in which case it only contains the
+     * main netDB
+     * 
+     * @return
+     */
     private Set<FloodfillNetworkDatabaseFacade> getClientSubNetDBs() {
         if (!_mainDbid.isInitialized())
             return Collections.emptySet();
@@ -404,7 +373,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             rv.add(_mainDbid);
             return rv;
         }
-        rv.add(clientNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
         return rv;
     }

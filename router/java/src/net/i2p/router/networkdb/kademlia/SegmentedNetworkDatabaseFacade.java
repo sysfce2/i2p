@@ -18,6 +18,7 @@ import net.i2p.router.Job;
 import net.i2p.router.NetworkDatabaseFacade;
 import net.i2p.router.RouterContext;
 import net.i2p.router.networkdb.reseed.ReseedChecker;
+import net.i2p.util.Log;
 
 /**
  * SegmentedNetworkDatabaseFacade
@@ -126,13 +127,21 @@ public abstract class SegmentedNetworkDatabaseFacade {
     public boolean isInitialized() {
         return mainNetDB().isInitialized();
     }
+    
     /**
-     * Get a set of all routers
+     * list of the RouterInfo objects for all known peers in all subDbs
+     * which is mostly pointless because they should normally reject them
+     * anyway
      * 
      * @since 0.9.60
+     * 
      */
     public Set<RouterInfo> getRouters() {
-        return mainNetDB().getRouters();
+        Set<RouterInfo> rv = new HashSet<>();
+        for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
+            rv.addAll(subdb.getRouters());
+        }
+        return rv;
     }
 
     /** 
