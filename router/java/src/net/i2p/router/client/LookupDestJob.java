@@ -185,7 +185,7 @@ class LookupDestJob extends JobImpl {
             if (timeout > 1500)
                 timeout -= 500;
             // TODO tell router this is an encrypted lookup, skip 38 or earlier ffs?
-            getContext().clientNetDb(_fromLocalDest).lookupDestination(_hash, done, timeout, _fromLocalDest);
+            _runner.getFloodfillNetworkDatabaseFacade().lookupDestination(_hash, done, timeout, _fromLocalDest);
         } else {
             // blinding decode fail
             returnFail(HostReplyMessage.RESULT_DECRYPTION_FAILURE);

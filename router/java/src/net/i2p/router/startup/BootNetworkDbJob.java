@@ -22,6 +22,7 @@ class BootNetworkDbJob extends JobImpl {
     
     public void runJob() {
         getContext().netDb().startup();
-        getContext().multihomeNetDb().startup();
+        if (getContext().netDbSegmentor().useSubDbs())
+            getContext().multihomeNetDb().startup();
     }
 }

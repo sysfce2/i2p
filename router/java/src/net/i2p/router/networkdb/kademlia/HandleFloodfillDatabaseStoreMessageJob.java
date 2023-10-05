@@ -150,7 +150,8 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     getContext().statManager().addRateData("netDb.storeLocalLeaseSetAttempt", 1, 0);
                     // throw rather than return, so that we send the ack below (prevent easy attack)
                     dontBlamePeer = true;
-                    getContext().multihomeNetDb().store(key, ls);
+                    if (getContext().netDbSegmentor().useSubDbs())
+                        getContext().multihomeNetDb().store(key, ls);
                     throw new IllegalArgumentException("(dbid: " + _facade._dbid
                                                        + ") Peer attempted to store local leaseSet: "
                                                        + key.toBase32());

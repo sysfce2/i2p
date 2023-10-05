@@ -297,8 +297,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     @Override
     public FloodfillNetworkDatabaseFacade multiHomeNetDB() {
-        if (!useSubDbs())
-            return _mainDbid;
         return _multihomeDbid;
     }
 
