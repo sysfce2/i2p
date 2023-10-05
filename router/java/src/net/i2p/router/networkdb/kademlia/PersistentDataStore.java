@@ -399,7 +399,7 @@ public class PersistentDataStore extends TransientDataStore {
 
         private void setNetDbReady() {
             // Only the floodfill netDb needs to call Router::setNetDbReady()
-            if (_facade._dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
+            if (!_facade.isClientDb())
                 _context.router().setNetDbReady();
         }
 

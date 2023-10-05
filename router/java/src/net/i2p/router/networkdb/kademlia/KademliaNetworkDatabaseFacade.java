@@ -309,7 +309,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     public boolean isClientDb() {
         if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
             return false;
-        if (_dbid == FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID)
+        if (_dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID))
             return false;
         return true;
     }
@@ -317,7 +317,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     public boolean isMultihomeDb() {
         if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
             return false;
-        if (_dbid == FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID)
+        if (_dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID))
             return true;
         return false;
     }
@@ -385,7 +385,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
             _log.warn("Operating in quiet mode - not exploring or pushing data proactively, simply reactively");
             _log.warn("This should NOT be used in production");
         }
-        if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID) {
+        if (!isClientDb()) {
             // periodically update and resign the router's 'published date', which basically
             // serves as a version
             Job plrij = new PublishLocalRouterInfoJob(_context);
