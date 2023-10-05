@@ -1180,18 +1180,9 @@ class ClientConnectionRunner {
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("getFloodfillNetworkDatabaseFacade is getting the subDb for dbid: " + this.getDestHash());
         if (_floodfillNetworkDatabaseFacade == null) {
-            if (_log.shouldLog(Log.WARN))
-                _log.warn("getFloodfillNetworkDatabaseFacade is null for runner", new Exception());
-            if (this.getDestHash() != null) {
-                if (_log.shouldLog(Log.WARN))
-                    _log.warn("initial subDb creation failed for dbid: " + this.getDestHash() + " creating one on-the-fly instead.", new Exception());
-                _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, this.getDestHash());
-                _floodfillNetworkDatabaseFacade.startup();
-            } else {
-                if (_log.shouldLog(Log.ERROR))
-                    _log.error("on the fly subDb creation failed for subdb, returning main netDb instead.", new Exception());
-                return _context.netDb();
-            }
+            if (_log.shouldLog(Log.ERROR))
+                _log.error("getFloodfillNetworkDatabaseFacade is null for runner", new Exception());
+            return _context.netDb();
         }
         return this._floodfillNetworkDatabaseFacade;
     }
