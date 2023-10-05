@@ -225,11 +225,11 @@ class ClientConnectionRunner {
             // _sessions will be empty.
             for (SessionParams sp : _sessions.values()) {
                 LeaseSet ls = sp.currentLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 // unpublish encrypted LS also
                 ls = sp.currentEncryptedLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 if (!sp.isPrimary)
                     _context.tunnelManager().removeAlias(sp.dest);
@@ -466,11 +466,11 @@ class ClientConnectionRunner {
                 // Tell client manger
                 _manager.unregisterSession(id, sp.dest);
                 LeaseSet ls = sp.currentLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 // unpublish encrypted LS also
                 ls = sp.currentEncryptedLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 isPrimary = sp.isPrimary;
                 if (isPrimary)
@@ -491,11 +491,11 @@ class ClientConnectionRunner {
                     _log.info("Destroying remaining client subsession " + sp.sessionId);
                 _manager.unregisterSession(sp.sessionId, sp.dest);
                 LeaseSet ls = sp.currentLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 // unpublish encrypted LS also
                 ls = sp.currentEncryptedLeaseSet;
-                if (ls != null)
+                if (ls != null && getFloodfillNetworkDatabaseFacade() != null)
                     getFloodfillNetworkDatabaseFacade().unpublish(ls);
                 _context.tunnelManager().removeAlias(sp.dest);
                 synchronized(this) {
