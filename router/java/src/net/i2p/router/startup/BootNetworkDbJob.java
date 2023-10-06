@@ -10,6 +10,7 @@ package net.i2p.router.startup;
 
 import net.i2p.router.JobImpl;
 import net.i2p.router.RouterContext;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseSegmentor;
 
 /** start up the network database */
 class BootNetworkDbJob extends JobImpl {
@@ -21,8 +22,6 @@ class BootNetworkDbJob extends JobImpl {
     public String getName() { return "Boot Network Database"; }
     
     public void runJob() {
-        getContext().netDb().startup();
-        if (getContext().netDbSegmentor().useSubDbs())
-            getContext().multihomeNetDb().startup();
+        getContext().netDbSegmentor().startup();
     }
 }

@@ -214,7 +214,8 @@ class ClientConnectionRunner {
         if (_sessionKeyManager != null)
             _sessionKeyManager.shutdown();
         if (_floodfillNetworkDatabaseFacade != null)
-            _floodfillNetworkDatabaseFacade.shutdown();
+            if (_floodfillNetworkDatabaseFacade.isClientDb())
+                _floodfillNetworkDatabaseFacade.shutdown();
         if (_encryptedLSHash != null)
             _manager.unregisterEncryptedDestination(this, _encryptedLSHash);
         _manager.unregisterConnection(this);

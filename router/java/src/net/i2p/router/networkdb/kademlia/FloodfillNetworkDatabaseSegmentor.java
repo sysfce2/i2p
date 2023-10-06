@@ -93,17 +93,32 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * If we are floodfill, turn it off and tell everybody.
-     * Shut down all known subDbs.
+     * If we are floodfill, turn it off and tell everybody for the _mainDbid and the
+     * _multihomeDbid
      * 
      * @since 0.9.60
      * 
      */
     public synchronized void shutdown() {
         if (_log.shouldLog(Log.DEBUG))
-                _log.debug("shutdown called from FNDS, shutting down all remaining sub-netDbs");
+            _log.debug("shutdown called from FNDS, shutting down main and multihome db");
         _mainDbid.shutdown();
-        _multihomeDbid.shutdown();
+        if (useSubDbs())
+            _multihomeDbid.shutdown();
+    }
+
+    /**
+     * Start up the floodfill for the _mainDbid and the _multihomeDbid
+     * 
+     * @since 0.9.60
+     * 
+     */
+    public synchronized void startup() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("startup called from FNDS, starting up main and multihome db");
+        _mainDbid.startup();
+        if (useSubDbs())
+            _multihomeDbid.startup();
     }
 
     /**
@@ -204,7 +219,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     public Set<RouterInfo> getRoutersKnownToClients() {
         Set<RouterInfo> rv = new HashSet<>();
-        for (Hash key : getClients()) {
+        for (Hash key : _context.clientManager().getPrimaryHashes()) {
             FloodfillNetworkDatabaseFacade sndb = this.getSubNetDB(key);
             if (sndb != null) {
                 Set<RouterInfo> rv2 = sndb.getRouters();
@@ -223,28 +238,13 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     public Set<LeaseSet> getLeasesKnownToClients() {
         Set<LeaseSet> rv = new HashSet<>();
-        for (Hash key : getClients()) {
+        for (Hash key : _context.clientManager().getPrimaryHashes()) {
             FloodfillNetworkDatabaseFacade sndb = this.getSubNetDB(key);
             if (sndb != null) {
                 Set<LeaseSet> rv2 = sndb.getLeases();
                 if (rv2 != null)
                     rv.addAll(rv2);
             }
-        }
-        return rv;
-    }
-
-    /**
-     * list all of the dbids of all known client subDbs
-     * 
-     * @since 0.9.60
-     * 
-     */
-    public List<Hash> getClients() {
-        List<Hash> rv = new ArrayList<Hash>();
-        Set<FloodfillNetworkDatabaseFacade> subNetDBs = getClientSubNetDBs();
-        for (FloodfillNetworkDatabaseFacade subdb : subNetDBs) {
-            rv.add(subdb._dbid);
         }
         return rv;
     }
@@ -302,7 +302,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     @Override
     public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
         List<Hash> rv = new ArrayList<>();
-        for (Hash subdb : getClients()) {
+        for (Hash subdb : _context.clientManager().getPrimaryHashes()) {
             FloodfillNetworkDatabaseFacade fndf = _context.clientManager().getClientFloodfillNetworkDatabaseFacade(subdb);
             if (fndf == null)
                 continue;

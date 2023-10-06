@@ -319,4 +319,17 @@ public class ClientManagerFacadeImpl extends ClientManagerFacade implements Inte
         else
             return Collections.emptySet();
     }
+
+    /**
+     * get all the primary hashes for all the clients and return them as a set
+     * 
+     * @return
+     */
+    @Override
+    public Set<Hash> getPrimaryHashes() {
+        if (_manager != null)
+            return _manager.getPrimaryHashes();
+        else
+            return Collections.emptySet();
+    }    
 }

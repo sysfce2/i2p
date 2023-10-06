@@ -785,14 +785,9 @@ class ClientManager {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Getting subDb for desthash: " + destHash);
             ClientConnectionRunner runner = getRunner(destHash);
-            if (runner != null) {
-                if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("ClientManager got a runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
-                return runner.getFloodfillNetworkDatabaseFacade();
-            } else {
-                if (_log.shouldLog(Log.ERROR))
-                    _log.error("ClientManager got a null runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
-            }
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("ClientManager got a runner in getClientFloodfillNetworkDatabaseFacade for " + destHash);
+            return runner.getFloodfillNetworkDatabaseFacade();
         }
         return null;
     }
@@ -808,6 +803,18 @@ class ClientManager {
             if (runner != null)
                 rv.add(runner.getFloodfillNetworkDatabaseFacade());
         }
+        return rv;
+    }
+
+    /**
+     * get all the primary hashes for all the clients and return them as a set
+     * 
+     * @return
+     */
+    public Set<Hash> getPrimaryHashes() {
+        Set<Hash> rv = new HashSet<Hash>();
+        for (ClientConnectionRunner runner : _runners.values())
+            rv.add(runner.getDestHash());
         return rv;
     }
 

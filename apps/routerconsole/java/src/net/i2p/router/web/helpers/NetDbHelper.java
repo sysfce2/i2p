@@ -362,7 +362,7 @@ public class NetDbHelper extends FormHandler {
             } else if (_full == 6) {
                 renderer.renderStatusHTML(_out, _limit, _page, _full, null, true);
             } else if (_clientOnly && client == null) {
-                for (Hash _client : _context.netDbSegmentor().getClients()) {
+                for (Hash _client : _context.clientManager().getPrimaryHashes()) {
                     renderer.renderLeaseSetHTML(_out, _debug, _client, clientOnly);
                 }
             } else {

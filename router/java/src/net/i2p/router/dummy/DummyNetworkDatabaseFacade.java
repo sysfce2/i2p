@@ -111,11 +111,6 @@ public class DummyNetworkDatabaseFacade extends SegmentedNetworkDatabaseFacade {
     }
 
     @Override
-    public List<Hash> getClients() {
-        throw new UnsupportedOperationException("Unimplemented method 'getClients'");
-    }
-
-    @Override
     public Set<FloodfillNetworkDatabaseFacade> getSubNetDBs(){
         throw new UnsupportedOperationException("Unimplemented method 'getSubNetDBs'");
     }

@@ -129,7 +129,7 @@ public abstract class ClientManagerFacade implements Service {
      * 
      * @param destHash destination hash associated with the client who's subDb we're looking for
      * 
-     * @return a client-isolated FNDF
+     * @return non-null FloodfillNetworkDatabaseFacade
      * 
      * @since 0.9.60
      */
@@ -138,9 +138,18 @@ public abstract class ClientManagerFacade implements Service {
     /**
      * get all of the FloodfillNetworkDatabaseFacades for all of the clients.
      * 
-     * @return a set of all client-isolated FNDFs
+     * @return non-null set of FloodfillNetworkDatabaseFacades
      * 
      * @since 0.9.60
      */
     public abstract Set<FloodfillNetworkDatabaseFacade> getClientFloodfillNetworkDatabaseFacades();
+
+    /**
+     * get a set of all primary hashes
+     * 
+     * @return non-null set of Hashes
+     * 
+     * @since 0.9.60
+     */
+    public abstract Set<Hash> getPrimaryHashes();
 }

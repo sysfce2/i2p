@@ -98,11 +98,17 @@ public abstract class SegmentedNetworkDatabaseFacade {
      */
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(Hash dbid);
     /**
-     * Shut down the network database and all subDbs.
+     * Shut down the network databases
      * 
      * @since 0.9.60
      */
     public abstract void shutdown();
+    /**
+     * Start up the network databases
+     * 
+     * @since 0.9.60
+     */
+    public abstract void startup();
     /**
      * Lookup the leaseSet for a given key in only client dbs.
      * 
@@ -115,12 +121,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * @since 0.9.60
      */
     public abstract Set<FloodfillNetworkDatabaseFacade> getSubNetDBs();
-    /**
-     * Get a set of all client dbid strings
-     * 
-     * @since 0.9.60
-     */
-    public abstract List<Hash> getClients();
     /**
      * Make sure the SNDF is initialized
      */
