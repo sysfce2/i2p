@@ -219,13 +219,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     public Set<RouterInfo> getRoutersKnownToClients() {
         Set<RouterInfo> rv = new HashSet<>();
-        for (Hash key : _context.clientManager().getPrimaryHashes()) {
-            FloodfillNetworkDatabaseFacade sndb = this.getSubNetDB(key);
-            if (sndb != null) {
-                Set<RouterInfo> rv2 = sndb.getRouters();
-                if (rv2 != null)
-                    rv.addAll(rv2);
-            }
+        for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
+            Set<RouterInfo> rv2 = subdb.getRouters();
+            if (rv2 != null)
+                rv.addAll(rv2);
         }
         return rv;
     }
@@ -238,13 +235,10 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     public Set<LeaseSet> getLeasesKnownToClients() {
         Set<LeaseSet> rv = new HashSet<>();
-        for (Hash key : _context.clientManager().getPrimaryHashes()) {
-            FloodfillNetworkDatabaseFacade sndb = this.getSubNetDB(key);
-            if (sndb != null) {
-                Set<LeaseSet> rv2 = sndb.getLeases();
-                if (rv2 != null)
-                    rv.addAll(rv2);
-            }
+        for (FloodfillNetworkDatabaseFacade fndf : getClientSubNetDBs()) {
+            Set<LeaseSet> rv2 = fndf.getLeases();
+            if (rv2 != null)
+                rv.addAll(rv2);
         }
         return rv;
     }
