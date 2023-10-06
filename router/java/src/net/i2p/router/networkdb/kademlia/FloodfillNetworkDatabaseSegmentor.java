@@ -89,8 +89,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     protected FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
         if (!useSubDbs())
             return _mainDbid;
-        //if (id == null)
-            //return _mainDbid;
         return _context.clientManager().getClientFloodfillNetworkDatabaseFacade(id);
     }
 
@@ -150,8 +148,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      */
     @Override
     public LeaseSet lookupLeaseSetHashIsClient(Hash key) {
-        Hash dbid = matchDbid(key);
-        return lookupLeaseSetLocally(key, dbid);
+        return lookupLeaseSetLocally(key, null);
     }
 
     /**
@@ -320,20 +317,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             }
         }
         return rv;
-    }
-
-    /**
-     * Return the dbid that is associated with the supplied client LS key
-     *
-     * @param clientKey The LS key of the subDb context
-     * @since 0.9.60
-     */
-    private Hash matchDbid(Hash clientKey) {
-        for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-            if (subdb.matchClientKey(clientKey))
-                return subdb._dbid;
-        }
-        return null;
     }
 
     /**
