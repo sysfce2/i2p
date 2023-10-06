@@ -306,6 +306,12 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         return _dbDir;
     }
 
+    /**
+     * Check if the database is a client DB.
+     *
+     * @return  true if the database is a client DB, false otherwise
+     * @since 0.9.60
+     */
     public boolean isClientDb() {
         // This is a null check in disguise, don't use .equals() here.
         // FNDS.MAIN_DBID is always null. and if _dbid is also null it is not a client Db
@@ -316,6 +322,13 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         return true;
     }
 
+    
+    /**
+     * Checks if the current database is a multihome database.
+     *
+     * @return  true if the current database is a multihome database, false otherwise.
+     * @since 0.9.60
+     */
     public boolean isMultihomeDb() {
         // This is a null check in disguise, don't use .equals() here.
         // FNDS.MAIN_DBID is always null, and if _dbid is null it is not the multihome Db
