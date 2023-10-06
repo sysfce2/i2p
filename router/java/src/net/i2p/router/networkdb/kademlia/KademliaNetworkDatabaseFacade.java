@@ -365,27 +365,29 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         }
         
         if (!QUIET) {
-            // fill the search queue with random keys in buckets that are too small
-            // Disabled since KBucketImpl.generateRandomKey() is b0rked,
-            // and anyway, we want to search for a completely random key,
-            // not a random key for a particular kbucket.
-            // _context.jobQueue().addJob(new ExploreKeySelectorJob(_context, this));
-            if (_exploreJob == null)
-                _exploreJob = new StartExplorersJob(_context, this);
-            // fire off a group of searches from the explore pool
-            // Don't start it right away, so we don't send searches for random keys
-            // out our 0-hop exploratory tunnels (generating direct connections to
-            // one or more floodfill peers within seconds of startup).
-            // We're trying to minimize the ff connections to lessen the load on the 
-            // floodfills, and in any case let's try to build some real expl. tunnels first.
-            // No rush, it only runs every 30m.
-            _exploreJob.getTiming().setStartAfter(now + EXPLORE_JOB_DELAY);
-            _context.jobQueue().addJob(_exploreJob);
+            if (!isClientDb() && !isMultihomeDb()) {
+                // fill the search queue with random keys in buckets that are too small
+                // Disabled since KBucketImpl.generateRandomKey() is b0rked,
+                // and anyway, we want to search for a completely random key,
+                // not a random key for a particular kbucket.
+                // _context.jobQueue().addJob(new ExploreKeySelectorJob(_context, this));
+                if (_exploreJob == null)
+                    _exploreJob = new StartExplorersJob(_context, this);
+                // fire off a group of searches from the explore pool
+                // Don't start it right away, so we don't send searches for random keys
+                // out our 0-hop exploratory tunnels (generating direct connections to
+                // one or more floodfill peers within seconds of startup).
+                // We're trying to minimize the ff connections to lessen the load on the 
+                // floodfills, and in any case let's try to build some real expl. tunnels first.
+                // No rush, it only runs every 30m.
+                _exploreJob.getTiming().setStartAfter(now + EXPLORE_JOB_DELAY);
+                _context.jobQueue().addJob(_exploreJob);
+            }
         } else {
             _log.warn("Operating in quiet mode - not exploring or pushing data proactively, simply reactively");
             _log.warn("This should NOT be used in production");
         }
-        if (!isClientDb()) {
+        if (!isClientDb() && !isMultihomeDb()) {
             // periodically update and resign the router's 'published date', which basically
             // serves as a version
             Job plrij = new PublishLocalRouterInfoJob(_context);
@@ -1063,7 +1065,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
                     rv.setReceivedAsReply();
                 }
                 if (leaseSet.getReceivedAsPublished()) {
-                    rv.setReceivedAsPublished(true);
+                    rv.setReceivedAsPublished();
                 }
                 return rv;
             }
