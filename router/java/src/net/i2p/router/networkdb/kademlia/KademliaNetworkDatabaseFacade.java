@@ -307,6 +307,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     }
 
     public boolean isClientDb() {
+        // This is a null check in disguise, don't use .equals() here.
+        // FNDS.MAIN_DBID is always null. and if _dbid is also null it is not a client Db
         if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
             return false;
         if (_dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID))
@@ -315,6 +317,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
     }
 
     public boolean isMultihomeDb() {
+        // This is a null check in disguise, don't use .equals() here.
+        // FNDS.MAIN_DBID is always null, and if _dbid is null it is not the multihome Db
         if (_dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID)
             return false;
         if (_dbid.equals(FloodfillNetworkDatabaseSegmentor.MULTIHOME_DBID))

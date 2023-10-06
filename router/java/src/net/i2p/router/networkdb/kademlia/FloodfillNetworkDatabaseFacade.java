@@ -126,7 +126,7 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
     @Override
     protected void createHandlers() {
        // Only initialize the handlers for the flooodfill netDb.
-       if (super._dbid == FloodfillNetworkDatabaseSegmentor.MAIN_DBID) {
+       if (!isClientDb()) {
             if (_log.shouldInfo())
                 _log.info("[dbid: " + super._dbid +  "] Initializing the message handlers");
             _context.inNetMessagePool().registerHandlerJobBuilder(DatabaseLookupMessage.MESSAGE_TYPE, new FloodfillDatabaseLookupMessageHandler(_context, this));
