@@ -74,12 +74,14 @@ public abstract class SegmentedNetworkDatabaseFacade {
     /**
      * Get a sub-netDb using a Hash identifier
      * 
+     * @return client subDb for hash, or null if it does not exist
      * @since 0.9.60
      */
     protected abstract FloodfillNetworkDatabaseFacade getSubNetDB(Hash dbid);
     /**
      * Get the main netDb, the one which is used if we're a floodfill
      * 
+     * @return may be null if main netDb is not initialized
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
@@ -87,6 +89,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * Get the multihome netDb, the one which is used if we're a floodfill AND we
      * have a multihome address sent to us
      * 
+     * @return may be null if the multihome netDb is not initialized
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
@@ -94,6 +97,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * Get a client netDb for a given client Hash identifier. Will never
      * return the mainNetDB.
      * 
+     * @return may be null if the client netDb does not exist
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade clientNetDB(Hash dbid);
@@ -112,29 +116,35 @@ public abstract class SegmentedNetworkDatabaseFacade {
     /**
      * Lookup the leaseSet for a given key in only client dbs.
      * 
+     * @return may be null
      * @since 0.9.60
      */
     public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
     /**
      * Get a set of all sub-netDbs.
      * 
+     * @return all the sub netDbs including the main
      * @since 0.9.60
      */
     public abstract Set<FloodfillNetworkDatabaseFacade> getSubNetDBs();
     /**
-     * Make sure the SNDF is initialized
+     * Make sure the SNDF is initialized. This is overridden in
+     * FloodfillNetworkDatabaseSegmentor so that it will be false until
+     * *all* required subDbs are initialized.
+     * 
+     * @return true if the netDbs are initialized
+     * @since 0.9.60
      */
     public boolean isInitialized() {
         return mainNetDB().isInitialized();
     }
     
     /**
-     * list of the RouterInfo objects for all known peers in all subDbs
-     * which is mostly pointless because they should normally reject them
-     * anyway
+     * list all of the RouterInfo objects known to all of the subDbs including
+     * the main subDb.
      * 
+     * @return all of the RouterInfo objects known to all of the netDbs. non-null
      * @since 0.9.60
-     * 
      */
     public Set<RouterInfo> getRouters() {
         Set<RouterInfo> rv = new HashSet<>();
@@ -145,8 +155,11 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
 
     /** 
-     * Get a set of all routers known to clients, which should always be zero.
+     * list of the RouterInfo objects for all known peers in all client
+     * subDbs which is mostly pointless because they should normally reject
+     * them anyway.
      * 
+     * @return non-null all the routerInfos in all of the client netDbs *only*
      * @since 0.9.60 
      */
     public Set<RouterInfo> getRoutersKnownToClients() {
@@ -159,8 +172,11 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
 
     /**
-     * Get a set of all leases known to all clients.
+     * Get a set of all leases known to all clients. These will be
+     * leaseSets for destinations that the clients communicate with
+     * and the leaseSet of the client itself.
      * 
+     * @return non-null. all the leaseSets known to all of the client netDbs
      * @since 0.9.60
      */
     public Set<LeaseSet> getLeasesKnownToClients() {
@@ -173,7 +189,8 @@ public abstract class SegmentedNetworkDatabaseFacade {
     }
     /**
      * Check if the mainNetDB needs to reseed
-     *  
+     * 
+     * @return non-null.
      * @since 0.9.60 
      * */
     public ReseedChecker reseedChecker() {
@@ -182,6 +199,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
     /**
      * For console ConfigKeyringHelper
      * 
+     * @return non-null
      * @since 0.9.60
      */
     public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
@@ -190,6 +208,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
     /**
      * For console ConfigKeyringHelper
      * 
+     * @return non-null
      * @since 0.9.60
      */
     public List<BlindData> getLocalClientsBlindData() {

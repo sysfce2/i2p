@@ -83,7 +83,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * If the ID is null, the main database is returned.
      *
      * @param  id  the ID of the FloodfillNetworkDatabaseFacade object to retrieve
-     * @return     the FloodfillNetworkDatabaseFacade object corresponding to the ID
+     * @return     the FloodfillNetworkDatabaseFacade object corresponding to the ID or null if it does not exist.
      */
     @Override
     protected FloodfillNetworkDatabaseFacade getSubNetDB(Hash id) {
@@ -125,7 +125,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * list of the RouterInfo objects for all known peers;
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     public List<RouterInfo> getKnownRouterData() {
         List<RouterInfo> rv = new ArrayList<RouterInfo>();
@@ -143,6 +143,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * List is not sorted and not shuffled.
      * 
      * @since 0.9.60
+     * @return non-null
      */
     public List<Hash> getFloodfillPeers() {
         if (_log.shouldLog(Log.DEBUG))
@@ -159,6 +160,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * but the client dbid is not.
      *
      * @param key The LS key for client.
+     * @return may be null
      * @since 0.9.60
      */
     @Override
@@ -171,8 +173,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * if a DBID is not provided, the clients will all be checked, and the
      * first value will be used.
      * 
+     * @return may be null
      * @since 0.9.60
-     * 
      */
     //@Override
     protected LeaseSet lookupLeaseSetLocally(Hash key, Hash dbid) {
@@ -194,7 +196,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * Check if all of the known subDbs are initialized
      * 
      * @since 0.9.60
-     * 
+     * @return true if the mainNetdb and all known client netDbs are initialized
      */
     public boolean isInitialized() {
         if (_mainDbid == null)
@@ -215,7 +217,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * list of the RouterInfo objects for all known peers known to clients(in subDbs) only
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     public Set<RouterInfo> getRoutersKnownToClients() {
         Set<RouterInfo> rv = new HashSet<>();
@@ -231,7 +233,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * list of the LeaseSet objects for all known peers known to clients(in subDbs) only
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     public Set<LeaseSet> getLeasesKnownToClients() {
         Set<LeaseSet> rv = new HashSet<>();
@@ -247,7 +249,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * get the main netDb, which is the one we will use if we are a floodfill
      * 
      * @since 0.9.60
-     * 
+     * @return may be null
      */
     @Override
     public FloodfillNetworkDatabaseFacade mainNetDB() {
@@ -258,7 +260,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * get the multiHome netDb, which is especially for handling multihomes
      * 
      * @since 0.9.60
-     * 
+     * @return may be null
      */
     @Override
     public FloodfillNetworkDatabaseFacade multiHomeNetDB() {
@@ -271,7 +273,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * the dbid is null.
      * 
      * @since 0.9.60
-     * 
+     * @return may be null if the client netDb does not exist
      */
     @Override
     public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
@@ -288,10 +290,11 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * look up the dbid of the client with the given signing public key
+     * look up the dbid of the client or clients with the given signing
+     * public key
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     @Override
     public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
@@ -318,7 +321,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * and the possible-multihomes netDb
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     @Override
     public Set<FloodfillNetworkDatabaseFacade> getSubNetDBs() {
@@ -340,7 +343,8 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * with specific clients, unless subDbs are disabled in which case it only contains the
      * main netDB
      * 
-     * @return
+     * @since 0.9.60
+     * @return non-null
      */
     private Set<FloodfillNetworkDatabaseFacade> getClientSubNetDBs() {
         if (!_mainDbid.isInitialized())
@@ -358,7 +362,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
      * list of the BlindData objects for all known clients
      * 
      * @since 0.9.60
-     * 
+     * @return non-null
      */
     @Override
     public List<BlindData> getLocalClientsBlindData() {

@@ -128,9 +128,7 @@ public abstract class ClientManagerFacade implements Service {
      * This is inside the runner, so it won't be there if the runner isn't ready.
      * 
      * @param destHash destination hash associated with the client who's subDb we're looking for
-     * 
      * @return non-null FloodfillNetworkDatabaseFacade
-     * 
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade getClientFloodfillNetworkDatabaseFacade(Hash destHash);
@@ -139,7 +137,6 @@ public abstract class ClientManagerFacade implements Service {
      * get all of the FloodfillNetworkDatabaseFacades for all of the clients.
      * 
      * @return non-null set of FloodfillNetworkDatabaseFacades
-     * 
      * @since 0.9.60
      */
     public abstract Set<FloodfillNetworkDatabaseFacade> getClientFloodfillNetworkDatabaseFacades();
@@ -148,7 +145,6 @@ public abstract class ClientManagerFacade implements Service {
      * get a set of all primary hashes
      * 
      * @return non-null set of Hashes
-     * 
      * @since 0.9.60
      */
     public abstract Set<Hash> getPrimaryHashes();
