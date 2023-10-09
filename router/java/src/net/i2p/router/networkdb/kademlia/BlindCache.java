@@ -80,7 +80,6 @@ class BlindCache {
             PERSIST_FILE = "router.blindcache.dat";
             _dbid = "main";
         }
-        
     }
 
     /**
@@ -182,7 +181,7 @@ class BlindCache {
      */
     public void setBlinded(Destination dest, SigType blindedType, String secret) {
         if (_log.shouldLog(Log.DEBUG))
-            _log.debug("setting blinded data for " + dest + " sigtype " + blindedType.toString() + " in blind cache for " + _dbid);
+            _log.debug("setting blinded data for " + dest + " sigtype " + blindedType + " in blind cache for " + _dbid);
         SigningPublicKey spk = dest.getSigningPublicKey();
         BlindData bd = _cache.get(spk);
         if (bd != null) {
