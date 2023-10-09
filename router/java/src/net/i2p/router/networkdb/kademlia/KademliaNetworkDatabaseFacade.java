@@ -184,7 +184,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
             _reseedChecker = null;
         else
             _reseedChecker = new ReseedChecker(context);
-        _blindCache = new BlindCache(context);
+        _blindCache = new BlindCache(context, dbid);
         
         _localKey = null;
         if (_log.shouldLog(Log.DEBUG))

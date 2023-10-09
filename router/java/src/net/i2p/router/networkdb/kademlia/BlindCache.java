@@ -43,7 +43,7 @@ class BlindCache {
     private final ConcurrentHashMap<Hash, BlindData> _hashCache;
     private boolean _changed;
 
-    private static final String PERSIST_FILE = "router.blindcache.dat";
+    private final String PERSIST_FILE;
 
     /**
      *  Caller MUST call startup() to load persistent cache from disk
@@ -53,6 +53,21 @@ class BlindCache {
         _cache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _reverseCache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _hashCache = new ConcurrentHashMap<Hash, BlindData>(32);
+        PERSIST_FILE = "router.blindcache.dat";
+    }
+
+    /**
+     *  Caller MUST call startup() to load persistent cache from disk
+     */
+    public BlindCache(RouterContext ctx, Hash subDb) {
+        _context = ctx;
+        _cache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
+        _reverseCache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
+        _hashCache = new ConcurrentHashMap<Hash, BlindData>(32);
+        if (subDb == null)
+            PERSIST_FILE = "router." + subDb.toString() + ".blindcache.dat";
+        else
+            PERSIST_FILE = "router.blindcache.dat";
     }
 
     /**
