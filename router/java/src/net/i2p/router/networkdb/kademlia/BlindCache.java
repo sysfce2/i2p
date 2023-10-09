@@ -35,6 +35,7 @@ import net.i2p.util.SecureFileOutputStream;
 class BlindCache {
 
     private final RouterContext _context;
+    private final Log _log;
     // unblinded key
     private final ConcurrentHashMap<SigningPublicKey, BlindData> _cache;
     // blinded key
@@ -44,16 +45,19 @@ class BlindCache {
     private boolean _changed;
 
     private final String PERSIST_FILE;
+    private final String _dbid;
 
     /**
      *  Caller MUST call startup() to load persistent cache from disk
      */
     public BlindCache(RouterContext ctx) {
         _context = ctx;
+        _log = _context.logManager().getLog(getClass());
         _cache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _reverseCache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _hashCache = new ConcurrentHashMap<Hash, BlindData>(32);
         PERSIST_FILE = "router.blindcache.dat";
+        _dbid = "";
     }
 
     /**
@@ -61,19 +65,30 @@ class BlindCache {
      */
     public BlindCache(RouterContext ctx, Hash subDb) {
         _context = ctx;
+        _log = _context.logManager().getLog(getClass());
         _cache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _reverseCache = new ConcurrentHashMap<SigningPublicKey, BlindData>(32);
         _hashCache = new ConcurrentHashMap<Hash, BlindData>(32);
-        if (subDb == null)
+        if (subDb != null){
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Loading blind cache for " + subDb);
             PERSIST_FILE = "router." + subDb.toString() + ".blindcache.dat";
-        else
+            _dbid = subDb.toString();
+        } else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Loading blind cache for main netdb");
             PERSIST_FILE = "router.blindcache.dat";
+            _dbid = "main";
+        }
+        
     }
 
     /**
      *  May be restarted by calling startup() again.
      */
     public synchronized void shutdown() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("stopping the blind cache for " + _dbid);
         if (_changed)
             store();
         _cache.clear();
@@ -82,6 +97,8 @@ class BlindCache {
     }
 
     public synchronized void startup() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("starting the blind cache for " + _dbid);
         load();
     }
 
@@ -94,6 +111,8 @@ class BlindCache {
      *  @return the unblinded or blinded hash
      */
     public Hash getHash(Destination dest) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting hash for dest" + dest + " out of blind cache for " + _dbid);
         Hash rv = getBlindedHash(dest);
         if (rv != null)
             return rv;
@@ -109,6 +128,8 @@ class BlindCache {
      *  @return the blinded hash or h
      */
     public Hash getHash(Hash h) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting hash for hash" + h + " out of blind cache for " + _dbid);
         BlindData bd = _hashCache.get(h);
         if (bd != null)
             return bd.getBlindedHash();
@@ -124,6 +145,8 @@ class BlindCache {
      *  @return the blinded hash or null if not blinded
      */
     public Hash getBlindedHash(Destination dest) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting blinded hash for dest" + dest + " out of blind cache for " + _dbid);
         BlindData bd = _cache.get(dest.getSigningPublicKey());
         if (bd != null)
             return bd.getBlindedHash();
@@ -140,6 +163,8 @@ class BlindCache {
      *  @throws IllegalArgumentException on various errors
      */
     public Hash getBlindedHash(SigningPublicKey spk) {
+       if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting hash for SPK" + spk + " out of blind cache for " + _dbid); 
         BlindData bd = _cache.get(spk);
         if (bd == null)
             bd = new BlindData(_context, spk, Blinding.getDefaultBlindedType(spk.getType()), null);
@@ -156,6 +181,8 @@ class BlindCache {
      *  @throws IllegalArgumentException on various errors
      */
     public void setBlinded(Destination dest, SigType blindedType, String secret) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("setting blinded data for " + dest + " sigtype " + blindedType.toString() + " in blind cache for " + _dbid);
         SigningPublicKey spk = dest.getSigningPublicKey();
         BlindData bd = _cache.get(spk);
         if (bd != null) {
@@ -177,6 +204,8 @@ class BlindCache {
      *  @throws IllegalArgumentException on various errors
      */
     public void setBlinded(Destination dest) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("setting blinded data for " + dest + " in blind cache for " + _dbid);
         SigningPublicKey spk = dest.getSigningPublicKey();
         BlindData bd = _cache.get(spk);
         if (bd != null) {
@@ -189,6 +218,8 @@ class BlindCache {
      *  Persists immediately if secret or privkey is non-null
      */
     public void addToCache(BlindData bd) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("adding BlindData to cache " + bd + " for " + _dbid);
         storeInCache(bd);
         if (bd.getSecret() != null || bd.getAuthPrivKey() != null) {
             store();
@@ -201,6 +232,8 @@ class BlindCache {
      *  @since 0.9.41 from addToCache()
      */
     private void storeInCache(BlindData bd) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("storing BlindData in cache" + bd + " for " + _dbid);
         _cache.put(bd.getUnblindedPubKey(), bd);
         _reverseCache.put(bd.getBlindedPubKey(), bd);
         Destination dest = bd.getDestination();
@@ -212,6 +245,8 @@ class BlindCache {
      *  The cached data or null
      */
     public BlindData getData(Destination dest) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting blind data for dest " + dest + " out of blind cache for " + _dbid);
         BlindData rv = getData(dest.getSigningPublicKey());
         if (rv != null) {
             Destination d = rv.getDestination();
@@ -229,6 +264,8 @@ class BlindCache {
      *  @param spk the unblinded public key
      */
     public BlindData getData(SigningPublicKey spk) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting blind data for SPK " + spk + " out of blind cache for " + _dbid);
         SigType type = spk.getType();
         if (type != SigType.EdDSA_SHA512_Ed25519 &&
             type != SigType.RedDSA_SHA512_Ed25519)
@@ -242,6 +279,8 @@ class BlindCache {
      *  @param spk the blinded public key
      */
     public BlindData getReverseData(SigningPublicKey spk) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting blind data for SPK " + spk + " out of blind cache for " + _dbid);
         SigType type = spk.getType();
         if (type != SigType.RedDSA_SHA512_Ed25519)
             return null;
@@ -253,6 +292,8 @@ class BlindCache {
      *
      */
     public synchronized void rollover() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("rollover in blind cache " + _dbid);
         _reverseCache.clear();
         for (BlindData bd : _cache.values()) {
             _reverseCache.put(bd.getBlindedPubKey(), bd);
@@ -265,6 +306,8 @@ class BlindCache {
      *  @since 0.9.41
      */
     public synchronized List<BlindData> getData() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("getting blind data out of blind cache for " + _dbid);
         List<BlindData> rv = new ArrayList<BlindData>(_cache.size());
         rv.addAll(_cache.values());
         return rv;
@@ -279,6 +322,8 @@ class BlindCache {
      *  @since 0.9.41
      */
     public boolean removeBlindData(SigningPublicKey spk) {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("removing blind data for SPK" + spk + " out of blind cache for " + _dbid);
         boolean rv = false;
         BlindData bd = _cache.remove(spk);
         if (bd != null) {
@@ -301,6 +346,8 @@ class BlindCache {
      *  if negative, it's a negative expiration date.
      */
     private synchronized void load() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("loading blind data for " + _dbid);
         File file = new File(_context.getConfigDir(), PERSIST_FILE);
         if (!file.exists())
             return;
@@ -345,6 +392,8 @@ class BlindCache {
     }
 
     private synchronized void store() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("storing blind data for " + _dbid);
         if (_cache.isEmpty())
             return;
         Log log = _context.logManager().getLog(BlindCache.class);
