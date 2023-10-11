@@ -276,7 +276,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         _exploreKeys.clear();
         if (_negativeCache != null)
             _negativeCache.clear();
-        blindCache().shutdown();
+        if (isMainDb())
+            blindCache().shutdown();
     }
     
     public synchronized void restart() {
@@ -287,7 +288,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         }
         _ds.restart();
         _exploreKeys.clear();
-        blindCache().startup();
+        if (isMainDb())
+            blindCache().startup();
 
         _initialized = true;
         
@@ -377,7 +379,8 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
             throw new RuntimeException("Unable to initialize netdb storage", ioe);
         }
         _negativeCache = new NegativeLookupCache(_context);
-        blindCache().startup();
+        if (isMainDb())
+            blindCache().startup();
         
         createHandlers();
         
