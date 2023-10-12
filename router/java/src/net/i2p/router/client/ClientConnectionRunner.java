@@ -1192,7 +1192,6 @@ class ClientConnectionRunner {
         if (_floodfillNetworkDatabaseFacade == null) {
             if (_log.shouldLog(Log.WARN))
                 _log.warn("getFloodfillNetworkDatabaseFacade is null for runner");
-            return _context.netDb();
         }
         return this._floodfillNetworkDatabaseFacade;
     }

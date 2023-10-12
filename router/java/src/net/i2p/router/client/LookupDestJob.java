@@ -22,6 +22,7 @@ import net.i2p.data.i2cp.I2CPMessageException;
 import net.i2p.data.i2cp.SessionId;
 import net.i2p.router.JobImpl;
 import net.i2p.router.RouterContext;
+import net.i2p.router.networkdb.kademlia.FloodfillNetworkDatabaseFacade;
 import net.i2p.util.Log;
 
 /**
@@ -185,7 +186,12 @@ class LookupDestJob extends JobImpl {
             if (timeout > 1500)
                 timeout -= 500;
             // TODO tell router this is an encrypted lookup, skip 38 or earlier ffs?
-            _runner.getFloodfillNetworkDatabaseFacade().lookupDestination(_hash, done, timeout, _fromLocalDest);
+            FloodfillNetworkDatabaseFacade fndf = _runner.getFloodfillNetworkDatabaseFacade();
+            if (fndf != null)
+                fndf.lookupDestination(_hash, done, timeout, _fromLocalDest);
+            else
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("fndf is null in lookup for " + _hash);
         } else {
             // blinding decode fail
             returnFail(HostReplyMessage.RESULT_DECRYPTION_FAILURE);
