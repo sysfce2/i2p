@@ -180,12 +180,12 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         _peerSelector = createPeerSelector();
         _publishingLeaseSets = new HashMap<Hash, RepublishLeaseSetJob>(8);
         _activeRequests = new HashMap<Hash, SearchJob>(8);
-        if (!isMainDb()){
+        if (!isMainDb()) {
             _reseedChecker = null;
-            _blindCache = new BlindCache(context);
-        }else{
-            _reseedChecker = new ReseedChecker(context);
             _blindCache = null;
+        } else {
+            _reseedChecker = new ReseedChecker(context);
+            _blindCache = new BlindCache(context);
         }
         _localKey = null;
         if (_log.shouldLog(Log.DEBUG))
@@ -224,6 +224,14 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
         return _reseedChecker;
     }
 
+    /**
+     * We still always use a single blind cache in the main Db(for now),
+     * see issue #421 on i2pgit.org/i2p-hackers/i2p.i2p for details.
+     * This checks if we're the main DB already and returns our blind
+     * cache if we are. If not, it looks up the main Db and gets it.
+     * 
+     * @return
+     */
     protected BlindCache blindCache() {
         if (isMainDb())
             return _blindCache;
