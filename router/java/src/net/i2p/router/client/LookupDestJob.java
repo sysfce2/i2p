@@ -274,6 +274,11 @@ class LookupDestJob extends JobImpl {
      * @return
      */
     private FloodfillNetworkDatabaseFacade getRequiredFloodfillNetworkDatabaseFacade() {
+        if (_runner.getDestHash() == null) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("destHash is null in runner in lookup for " + _hash + " using the main DB instead");
+            return getContext().netDb();
+        }
         FloodfillNetworkDatabaseFacade fndf = _runner.getFloodfillNetworkDatabaseFacade();
         if (fndf == null){
             fndf = getContext().netDb();
