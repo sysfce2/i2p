@@ -252,11 +252,21 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
      *  @since 0.7.11
      */
     boolean shouldThrottleLookup(Hash from, TunnelId id) {
+        if (isClientDb()) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Lookup for:" + from + " sent to a client DB: "+_dbid.toString()+", bypassing throttle");
+            return false;
+        }
         // null before startup
         return _lookupThrottler == null || _lookupThrottler.shouldThrottle(from, id);
     }
 
     boolean shouldThrottleBurstLookup(Hash from, TunnelId id) {
+        if (isClientDb()) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Lookup for:" + from + " sent to a client DB: "+_dbid.toString()+", bypassing throttle");
+            return false;
+        }
         // null before startup
         return _lookupThrottlerBurst == null || _lookupThrottlerBurst.shouldThrottle(from, id);
     }
