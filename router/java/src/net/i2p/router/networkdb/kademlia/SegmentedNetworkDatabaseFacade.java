@@ -67,9 +67,7 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * @return true if using subDbs, false if not
      * @since 0.9.60
      */
-    public boolean useSubDbs() {
-        return false;
-    }
+    //public abstract boolean useSubDbs();
 
     /**
      * Get a sub-netDb using a Hash identifier

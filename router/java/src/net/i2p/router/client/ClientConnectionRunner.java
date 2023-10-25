@@ -646,7 +646,7 @@ class ClientConnectionRunner {
                 }
             }
         }
-        if (isPrimary && _floodfillNetworkDatabaseFacade == null && _context.netDbSegmentor().useSubDbs()) {
+        if (isPrimary && _floodfillNetworkDatabaseFacade == null) {
             if (_log.shouldDebug())
                 _log.debug("Initializing subDb for client" + destHash);
             _floodfillNetworkDatabaseFacade = new FloodfillNetworkDatabaseFacade(_context, destHash);

@@ -888,7 +888,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
             _log.error("locally published leaseSet is not valid?", iae);
             throw iae;
         }
-        if (!_context.netDbSegmentor().useSubDbs()){
+        //if (!_context.netDbSegmentor().useSubDbs()){
             String dbid = "main netDb";
             if (isClientDb()) {
                 dbid = "client netDb: " + _dbid;
@@ -906,7 +906,7 @@ public abstract class KademliaNetworkDatabaseFacade extends NetworkDatabaseFacad
                 if (_log.shouldLog(Log.INFO))
                     _log.info("[" + dbid + "]" + "Local client LS key initialized to: " + _localKey);
             }
-        }
+        //}
         if (!_context.clientManager().shouldPublishLeaseSet(h))
             return;
         // If we're exiting, don't publish.
