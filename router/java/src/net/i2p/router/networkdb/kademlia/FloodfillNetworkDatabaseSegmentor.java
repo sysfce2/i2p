@@ -268,12 +268,13 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * get the client netDb for the given id
-     * Will return the "exploratory(default client)" netDb if
-     * the dbid is null.
+     * Get the client netDb for the given id.
+     * Will return the main netDb if
+     * the dbid is null or the client db is not found.
      * 
+     * @param id may be null
+     * @return non-null
      * @since 0.9.60
-     * @return may be null if the client netDb does not exist
      */
     @Override
     public FloodfillNetworkDatabaseFacade clientNetDB(Hash id) {
@@ -286,7 +287,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             if (fndf != null)
                 return fndf;
         }
-        return mainNetDB();
+        return _mainDbid;
     }
 
     /**

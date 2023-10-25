@@ -375,7 +375,18 @@ public class RouterContext extends I2PAppContext {
     public SegmentedNetworkDatabaseFacade netDbSegmentor() { return _netDb; }
     public FloodfillNetworkDatabaseFacade netDb() { return _netDb.mainNetDB(); }
     public FloodfillNetworkDatabaseFacade multihomeNetDb() { return _netDb.multiHomeNetDB(); }
+
+    /**
+     * Get the client netDb for the given id.
+     * Will return the main netDb if
+     * the dbid is null or the client db is not found.
+     * 
+     * @param id may be null
+     * @return non-null
+     * @since 0.9.60
+     */
     public FloodfillNetworkDatabaseFacade clientNetDb(Hash id) { return _netDb.clientNetDB(id); }
+
     /**
      * The actual driver of the router, where all jobs are enqueued and processed.
      */
