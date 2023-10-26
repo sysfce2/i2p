@@ -54,9 +54,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     private RouterContext _context;
     private static final String PROP_NETDB_ISOLATION = "router.netdb.isolation";
     public static final Hash MAIN_DBID = null;
-    public static final Hash MULTIHOME_DBID = Hash.FAKE_HASH;
     private final FloodfillNetworkDatabaseFacade _mainDbid;
-    private final FloodfillNetworkDatabaseFacade _multihomeDbid;
 
     /**
      * Construct a new FloodfillNetworkDatabaseSegmentor with the given
@@ -71,7 +69,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (_context == null)
             _context = context;
         _mainDbid = new FloodfillNetworkDatabaseFacade(_context, MAIN_DBID);
-        _multihomeDbid = new FloodfillNetworkDatabaseFacade(_context, MULTIHOME_DBID);
     }
 
     public boolean useSubDbs() {
@@ -103,8 +100,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("shutdown called from FNDS, shutting down main and multihome db");
         _mainDbid.shutdown();
-        if (useSubDbs())
-            _multihomeDbid.shutdown();
     }
 
     /**
@@ -117,8 +112,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("startup called from FNDS, starting up main and multihome db");
         _mainDbid.startup();
-        if (useSubDbs())
-            _multihomeDbid.startup();
     }
 
     /**
@@ -257,17 +250,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * get the multiHome netDb, which is especially for handling multihomes
-     * 
-     * @since 0.9.60
-     * @return may be null
-     */
-    @Override
-    public FloodfillNetworkDatabaseFacade multiHomeNetDB() {
-        return _multihomeDbid;
-    }
-
-    /**
      * get the client netDb for the given id
      * Will return the "exploratory(default client)" netDb if
      * the dbid is null.
@@ -333,7 +315,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             return rv;
         }
         rv.add(_mainDbid);
-        rv.add(multiHomeNetDB());
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
         return rv;
     }
@@ -368,7 +349,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public List<BlindData> getLocalClientsBlindData() {
         List<BlindData> rv = new ArrayList<>();
         for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-            rv.addAll(subdb.getBlindData());
         }
         return rv;
     }
