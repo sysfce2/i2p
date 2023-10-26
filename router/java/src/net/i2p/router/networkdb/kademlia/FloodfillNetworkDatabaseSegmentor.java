@@ -23,17 +23,15 @@ import net.i2p.util.Log;
  * are identified by the hash of the primary session belonging to the client who "owns"
  * a particular sub-netDb.
  * 
- * There are 3 "Special" netDbs which have non-hash names:
+ * There is one "Special" netDb which has a non-hash name. This is used for the operation of
+ * router itself and not clients, in particular when acting as a floodfill:
  * 
  *  - Main NetDB: This is the netDb we use if or when we become a floodfill, and for
  *  direct interaction with other routers on the network, such as when we are communicating
  *  with a floodfill.
- *  - Multihome NetDB: This is used to stash leaseSets for our own sites when they are
- *  sent to us by a floodfill, so that we can reply when they are requested back from us
- *  regardless of our closeness to them in the routing table.
- *  - Exploratory NetDB: This is used when we want to stash a DatabaseEntry for a key
- *  during exploration but don't want it to go into the Main NetDB until we do something
- *  else with it.
+ * 
+ * It is possible that it may be advantageous some day to have other netDb's for specific use
+ * cases, but that is not the purpose of this class at this time.
  * 
  * And there are an unlimited number of "Client" netDbs. These sub-netDbs are
  * intended to contain only the information required to operate them, and as such
