@@ -347,6 +347,7 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     public List<BlindData> getLocalClientsBlindData() {
         List<BlindData> rv = new ArrayList<>();
         for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
+            rv.addAll(subdb.getBlindData());
         }
         return rv;
     }
