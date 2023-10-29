@@ -195,15 +195,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * */
     public ReseedChecker reseedChecker() {
         return mainNetDB().reseedChecker();
-    };
-    /**
-     * For console ConfigKeyringHelper
-     * 
-     * @return non-null
-     * @since 0.9.60
-     */
-    public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
-        return Collections.emptyList();
     }
     /**
      * For console ConfigKeyringHelper

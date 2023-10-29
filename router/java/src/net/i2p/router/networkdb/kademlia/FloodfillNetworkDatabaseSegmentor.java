@@ -290,33 +290,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * look up the dbid of the client or clients with the given signing
-     * public key
-     * 
-     * @since 0.9.60
-     * @return non-null
-     */
-    @Override
-    public List<Hash> lookupClientBySigningPublicKey(SigningPublicKey spk) {
-        List<Hash> rv = new ArrayList<>();
-        for (Hash subdb : _context.clientManager().getPrimaryHashes()) {
-            FloodfillNetworkDatabaseFacade fndf = _context.clientManager().getClientFloodfillNetworkDatabaseFacade(subdb);
-            if (fndf == null)
-                continue;
-            // if (subdb.startsWith("clients_"))
-            // TODO: see if we can access only one subDb at a time when we need
-            // to look up a client by SPK. We mostly need this for managing blinded
-            // and encrypted keys in the Keyring Config UI page. See also
-            // ConfigKeyringHelper
-            BlindData bd = fndf.getBlindData(spk);
-            if (bd != null) {
-                rv.add(subdb);
-            }
-        }
-        return rv;
-    }
-
-    /**
      * get all the subDbs and return them in a Set. This includes the main netDb
      * and the possible-multihomes netDb
      * 
@@ -355,21 +328,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
             return rv;
         }
         rv.addAll(_context.clientManager().getClientFloodfillNetworkDatabaseFacades());
-        return rv;
-    }
-
-    /**
-     * list of the BlindData objects for all known clients
-     * 
-     * @since 0.9.60
-     * @return non-null
-     */
-    @Override
-    public List<BlindData> getLocalClientsBlindData() {
-        List<BlindData> rv = new ArrayList<>();
-        for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-            rv.addAll(subdb.getBlindData());
-        }
         return rv;
     }
 }
