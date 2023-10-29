@@ -122,61 +122,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * list of the RouterInfo objects for all known peers;
-     * 
-     * @since 0.9.60
-     * @return non-null
-     */
-    public List<RouterInfo> getKnownRouterData() {
-        List<RouterInfo> rv = new ArrayList<RouterInfo>();
-        for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("getKnownRouterData Called from FNDS,"+subdb._dbid+", will be combined with all other subDbs");
-            rv.addAll(subdb.getKnownRouterData());
-        }
-        return rv;
-    }
-
-    /**
-     * list of the Hashes of currently known floodfill peers;
-     * Returned list will not include our own hash.
-     * List is not sorted and not shuffled.
-     * 
-     * @since 0.9.60
-     * @return non-null
-     */
-    public List<Hash> getFloodfillPeers() {
-        if (_log.shouldLog(Log.DEBUG))
-            _log.debug("getFloodfillPeers collecting all floodfill peers across all subDbs");
-        List<Hash> peers = new ArrayList<Hash>();
-        for (FloodfillNetworkDatabaseFacade subdb : getSubNetDBs()) {
-            peers.addAll(subdb.getFloodfillPeers());
-        }
-        return peers;
-    }
-
-    /**
-     * Check if all of the known subDbs are initialized
-     * 
-     * @since 0.9.60
-     * @return true if the mainNetdb and all known client netDbs are initialized
-     */
-    public boolean isInitialized() {
-        if (_mainDbid == null)
-            return false;
-        boolean rv = _mainDbid.isInitialized();
-        if (!rv)
-            return rv;
-        for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-            rv = subdb.isInitialized();
-            if (!rv) {
-                break;
-            }
-        }
-        return rv;
-    }
-
-    /**
      * list of the RouterInfo objects for all known peers known to clients(in subDbs) only
      * 
      * @since 0.9.60
