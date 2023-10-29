@@ -114,13 +114,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      */
     public abstract void startup();
     /**
-     * Lookup the leaseSet for a given key in only client dbs.
-     * 
-     * @return may be null
-     * @since 0.9.60
-     */
-    public abstract LeaseSet lookupLeaseSetHashIsClient(Hash key);
-    /**
      * Get a set of all sub-netDbs.
      * 
      * @return all the sub netDbs including the main

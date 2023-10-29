@@ -156,43 +156,6 @@ public class FloodfillNetworkDatabaseSegmentor extends SegmentedNetworkDatabaseF
     }
 
     /**
-     * Lookup using the client's tunnels when the client LS key is know
-     * but the client dbid is not.
-     *
-     * @param key The LS key for client.
-     * @return may be null
-     * @since 0.9.60
-     */
-    @Override
-    public LeaseSet lookupLeaseSetHashIsClient(Hash key) {
-        return lookupLeaseSetLocally(key, null);
-    }
-
-    /**
-     * Lookup using the client's tunnels when the client LS key is known.
-     * if a DBID is not provided, the clients will all be checked, and the
-     * first value will be used.
-     * 
-     * @return may be null
-     * @since 0.9.60
-     */
-    //@Override
-    protected LeaseSet lookupLeaseSetLocally(Hash key, Hash dbid) {
-        if (_log.shouldLog(Log.DEBUG))
-            _log.debug("lookupLeaseSetLocally on all subDbs: " + key.toBase32());
-        if (dbid == null) {
-            LeaseSet rv = null;
-            for (FloodfillNetworkDatabaseFacade subdb : getClientSubNetDBs()) {
-                rv = subdb.lookupLeaseSetLocally(key);
-                if (rv != null) {
-                    return rv;
-                }
-            }
-        }
-        return this.getSubNetDB(dbid).lookupLeaseSetLocally(key);
-    }
-
-    /**
      * Check if all of the known subDbs are initialized
      * 
      * @since 0.9.60
