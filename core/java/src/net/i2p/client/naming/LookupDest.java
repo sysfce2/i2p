@@ -96,21 +96,24 @@ public class LookupDest {
         return rv;
     }
 
-    private static boolean deleteHostname(I2PAppContext ctx, String hostname) {
+    private static Destination deleteHostname(I2PAppContext ctx, String hostname) {
         try {
-            Destination dest = lookupHostname(I2PAppContext.getGlobalContext(), hostname);
+            Destination dest = lookupHostname(ctx, hostname);
             if (dest == null)
                 System.err.println("Destination not found!");
             else {
-                NamingService ns = I2PAppContext.getGlobalContext().namingService();
-                if (ns != null)
-                    return ns.remove(hostname, dest);
+                NamingService ns = ctx.namingService();
+                if (ns != null) {
+                    boolean deleted = ns.remove(hostname, dest);
+                    if (deleted)
+                        return dest;
+                }
                 System.err.print("ns is null");
             }
         } catch (I2PSessionException ise) {
             ise.printStackTrace();
         }
-        return false;
+        return null;
     }
 
     /**
@@ -158,12 +161,14 @@ public class LookupDest {
             } catch (I2PSessionException ise) {
                 ise.printStackTrace();
             }
-        }
-        if (args[0].length() == 2) {
-            if (args[0] == "-d") { 
-                deleteHostname(I2PAppContext.getGlobalContext(), args[1]);
+        } else {
+            if (args[0].equals("-d")) { 
+                Destination deletedDest = deleteHostname(I2PAppContext.getGlobalContext(), args[1]);
+                if (deletedDest != null)
+                    System.out.println("deleted hostname: " + args[1] + " corresponding to: " + deletedDest.toBase64());
+                else
+                    System.err.println("hostname not found!");
             }
         }
-
     }
 }
