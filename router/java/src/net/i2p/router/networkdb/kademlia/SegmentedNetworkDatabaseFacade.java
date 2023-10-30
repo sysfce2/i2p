@@ -60,16 +60,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
     public SegmentedNetworkDatabaseFacade(RouterContext context) {
         // super(context, null);
     }
-    
-    /**
-     * Determine whether to use subDb defenses at all or to use the extant FNDF/RAP/RAR defenses
-     * 
-     * @return true if using subDbs, false if not
-     * @since 0.9.60
-     */
-    public boolean useSubDbs() {
-        return false;
-    }
 
     /**
      * Get a sub-netDb using a Hash identifier
@@ -85,14 +75,6 @@ public abstract class SegmentedNetworkDatabaseFacade {
      * @since 0.9.60
      */
     public abstract FloodfillNetworkDatabaseFacade mainNetDB();
-    /**
-     * Get the multihome netDb, the one which is used if we're a floodfill AND we
-     * have a multihome address sent to us
-     * 
-     * @return may be null if the multihome netDb is not initialized
-     * @since 0.9.60
-     */
-    public abstract FloodfillNetworkDatabaseFacade multiHomeNetDB();
     /**
      * Get a client netDb for a given client Hash identifier. Will never
      * return the mainNetDB.

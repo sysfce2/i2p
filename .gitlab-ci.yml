@@ -64,15 +64,15 @@ test:ant:
 # It's cached for later jobs
 build_docker:
     stage: build
-    image: docker:19.03.12
+    image: docker:24.0.6
     services:
-        - docker:19.03.12-dind
+        - docker:24.0.6-dind
     script:
         # Try to load latest branch image from local tar or from registry
         - docker load -i ci-exports/$CI_COMMIT_REF_SLUG.tar || docker pull $CI_REGISTRY_IMAGE:latest || true
         - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:latest .
         - mkdir -p ci-exports/
-        - docker save $CI_REGISTRY_IMAGE:latest > ci-exports/$CI_COMMIT_REF_SLUG.tar
+        - echo docker save $CI_REGISTRY_IMAGE:latest > ci-exports/$CI_COMMIT_REF_SLUG.tar
     variables:
         # When using dind service, we need to instruct docker to talk with
         # the daemon started inside of the service. The daemon is available
@@ -90,7 +90,7 @@ build_docker:
         # container, thanks to volume mount from config.toml
         DOCKER_TLS_CERTDIR: "/certs"
         # Use TLS https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
-        DOCKER_HOST: tcp://docker:2376
+        # DOCKER_HOST: tcp://docker:2376
     cache:
         # The same key should be used across branches
         key: "$CI_COMMIT_REF_SLUG"
