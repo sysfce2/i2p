@@ -70,7 +70,6 @@ class BuildHandler implements Runnable {
     private volatile boolean _isRunning;
     private final Object _startupLock = new Object();
     private ExplState _explState = ExplState.NONE;
-    private final String MIN_VERSION_HONOR_CAPS = "0.9.58";
 
     private enum ExplState { NONE, IB, OB, BOTH }
 
