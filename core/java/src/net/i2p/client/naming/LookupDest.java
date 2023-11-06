@@ -96,19 +96,33 @@ public class LookupDest {
         return rv;
     }
 
+    static boolean deleteHostname2(I2PAppContext ctx, String hostname) throws I2PSessionException {
+        I2PClient client = new I2PSimpleClient();
+        Properties opts = getOpts(ctx);
+        I2PSession session = null;
+        try {
+            session = client.createSession(null, opts);
+            session.connect();
+            return session.deleteDest(hostname);
+        } catch(I2PSessionException ise) {
+            ise.printStackTrace();
+            return false;
+        } finally {
+            if (session != null)
+                session.destroySession();
+        }
+    }
+
     private static Destination deleteHostname(I2PAppContext ctx, String hostname) {
         try {
             Destination dest = lookupHostname(ctx, hostname);
             if (dest == null)
                 System.err.println("Destination not found!");
             else {
-                NamingService ns = ctx.namingService();
-                if (ns != null) {
-                    boolean deleted = ns.remove(hostname, dest);
-                    if (deleted)
-                        return dest;
+                boolean named = deleteHostname2(ctx, hostname);
+                if (named) {
+                    return dest;
                 }
-                System.err.print("ns is null");
             }
         } catch (I2PSessionException ise) {
             ise.printStackTrace();
@@ -151,8 +165,9 @@ public class LookupDest {
             System.err.println("Usage: LookupDest -d hostname");
             System.exit(1);
         }
-        if (args[0].length() == 1) {
+        if (args.length == 1) {
             try {
+                System.err.println("looking up hostname: " + args[0]);
                 Destination dest = lookupHostname(I2PAppContext.getGlobalContext(), args[0]);
                 if (dest == null)
                     System.err.println("Destination not found!");
@@ -163,11 +178,12 @@ public class LookupDest {
             }
         } else {
             if (args[0].equals("-d")) { 
+                System.err.println("deleting hostname: " + args[1]);
                 Destination deletedDest = deleteHostname(I2PAppContext.getGlobalContext(), args[1]);
                 if (deletedDest != null)
                     System.out.println("deleted hostname: " + args[1] + " corresponding to: " + deletedDest.toBase64());
                 else
-                    System.err.println("hostname not found!");
+                    System.err.println("hostname not found, not deleted.");
             }
         }
     }

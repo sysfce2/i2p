@@ -409,6 +409,7 @@ public interface I2PSession {
      *  @return null on failure
      */
     public Destination lookupDest(String name, long maxWait) throws I2PSessionException;
+    public boolean deleteDest(String name);// { return false; }
 
     /**
      *  Ask the router to lookup a Destination by hostname.

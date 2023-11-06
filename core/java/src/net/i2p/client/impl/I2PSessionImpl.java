@@ -1663,6 +1663,10 @@ public abstract class I2PSessionImpl implements I2PSession, I2CPMessageReader.I2
         return lookupDest(h, 10*1000);
     }
 
+    public boolean deleteDest(String h) {
+        return _context.namingService().remove(h);
+    }
+
     /**
      *  Blocking.
      *  @param maxWait ms
