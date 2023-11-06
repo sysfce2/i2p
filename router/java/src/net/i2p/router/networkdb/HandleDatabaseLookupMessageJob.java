@@ -119,8 +119,8 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
             // to avoid anonymity vulnerabilities.
             // As this is complex, lots of comments follow...
 
-            boolean isLocal = getContext().clientManager().isLocal(ls.getHash());
-            boolean shouldPublishLocal = isLocal && getContext().clientManager().shouldPublishLeaseSet(searchKey);
+            //boolean isLocal = getContext().clientManager().isLocal(ls.getHash());
+            //boolean shouldPublishLocal = isLocal && getContext().clientManager().shouldPublishLeaseSet(searchKey);
         
             // Only answer a request for a LeaseSet if it has been published
             // to us, or, if its local, if we would have published to ourselves
@@ -142,7 +142,7 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
                     _log.info("We have the published LS " + searchKey + ", answering query");
                 getContext().statManager().addRateData("netDb.lookupsMatchedReceivedPublished", 1);
                 sendData(searchKey, ls, fromKey, toTunnel);
-            } else if (shouldPublishLocal && answerAllQueries()) {
+            } else if (answerAllQueries()) {
                 // We are floodfill, and this is our local leaseset, and we publish it.
                 // Only send it out if it is in our estimated keyspace.
                 // For this, we do NOT use their dontInclude list as it can't be trusted
@@ -170,7 +170,7 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
                 // Lie, pretend we don't have it
                 if (_log.shouldLog(Log.INFO))
                     _log.info("We have LS " + searchKey +
-                            ", NOT answering query - local? " + isLocal + " shouldPublish? " + shouldPublishLocal +
+                            ", NOT answering query - " + " shouldPublish? " + answerAllQueries() +
                             " RAP? " + ls.getReceivedAsPublished() + " RAR? " + ls.getReceivedAsReply());
                 getContext().statManager().addRateData("netDb.lookupsMatchedRemoteNotClosest", 1);
                 Set<Hash> routerHashSet = getNearestRouters(lookupType);
