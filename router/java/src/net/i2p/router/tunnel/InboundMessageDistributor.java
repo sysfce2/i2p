@@ -138,11 +138,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                             return;
                         if (!ri.isValid())
                             return;
-                        RouterInfo oldri = null;
-                        if (_client != null)
-                            oldri = _context.clientNetDb(_client).lookupRouterInfoLocally(key);
-                        else
-                            oldri = _context.netDb().lookupRouterInfoLocally(key);
+                        RouterInfo oldri = _context.netDb().lookupRouterInfoLocally(key);
                         // only update if RI is newer and non-ff
                         if (oldri != null && oldri.getPublished() < ri.getPublished() &&
                             !FloodfillNetworkDatabaseFacade.isFloodfill(ri)) {
@@ -271,7 +267,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                         if (dsm.getEntry().isLeaseSet()) {
                             if (_log.shouldLog(Log.INFO))
                                 _log.info("[client: " + _clientNickname + "] Saving LS DSM from client tunnel.");
-                            FloodfillDatabaseStoreMessageHandler _FDSMH = new FloodfillDatabaseStoreMessageHandler(_context, _context.clientNetDb(_client));
+                            FloodfillDatabaseStoreMessageHandler _FDSMH = new FloodfillDatabaseStoreMessageHandler(_context, (FloodfillNetworkDatabaseFacade) _context.clientNetDb(_client));
                             Job j = _FDSMH.createJob(msg, null, null);
                             j.runJob();
                             if (sz > 0) {
@@ -403,7 +399,7 @@ class InboundMessageDistributor implements GarlicMessageReceiver.CloveReceiver {
                                         // ToDo: This should actually have a try and catch.
                                         if (_log.shouldLog(Log.INFO))
                                             _log.info("Store the LS in the correct dbid subDb: " + _client.toBase32());
-                                        FloodfillDatabaseStoreMessageHandler _FDSMH = new FloodfillDatabaseStoreMessageHandler(_context, _context.clientNetDb(_client));
+                                        FloodfillDatabaseStoreMessageHandler _FDSMH = new FloodfillDatabaseStoreMessageHandler(_context, (FloodfillNetworkDatabaseFacade) _context.clientNetDb(_client));
                                         Job j = _FDSMH.createJob(data, null, null);
                                         j.runJob();
                                         if (sz > 0) {
