@@ -227,26 +227,6 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         }
     }
 
-    /* TODO: figure out how this should work
-    private boolean chanceOfFloodingOurOwn(int percent) {
-        if (percent < 0) {
-            // make percent equal to 1-peer.failedLookupRate by retrieving it from the stats
-            RateStat percentRate = _context.statManager().getRate("netDb.failedLookupRate");
-            if (percentRate != null)
-                percent = (1-(int)percentRate.getLifetimeAverageValue())*100;
-            else {
-                _log.warn("chanceOfFloodingOurOwn() could not find netDb.failedLookupRate");
-                return false;
-            }
-        }
-        // if the router has been up for at least an hour
-        if (_context.router().getUptime() > 60*60*1000) {
-            // then 30% of the time return true
-            return Math.random() < (percent / 100.0f);
-        }
-        return false;
-    }*/
-
     /**
      *  Increments and tests.
      *  @since 0.7.11
