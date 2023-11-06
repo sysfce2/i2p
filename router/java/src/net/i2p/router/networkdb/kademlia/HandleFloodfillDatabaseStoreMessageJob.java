@@ -135,7 +135,7 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     ls.setReceivedAsPublished();
                 if (_facade.isClientDb())
                     blockStore = false;
-                else if (getContext().clientManager().isLocal(key))
+                else
                     // Non-client context
                     if (_facade.floodfillEnabled() && (_fromHash != null))
                         blockStore = false;
@@ -144,17 +144,12 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                         // We should never get here, the 'floodfill' netDb doesn't
                         // store LS when FloodFill is disabled.
                         blockStore = true;
-                else
-                    blockStore = false;
                 if (blockStore) {
-                    getContext().statManager().addRateData("netDb.storeLocalLeaseSetAttempt", 1, 0);
+                    getContext().statManager().addRateData("netDb.storeLeaseNonFloodfillSetAttempt", 1, 0);
                     // If we're using subdbs, store the leaseSet in the multihome DB.
                     // otherwise, throw rather than return, so that we send the ack below (prevent easy attack)
                     dontBlamePeer = true;
-                    //if (getContext().netDbSegmentor().useSubDbs())
-                        //getContext().multihomeNetDb().store(key, ls);
-                    //else
-                        throw new IllegalArgumentException("(dbid: " + _facade._dbid
+                    throw new IllegalArgumentException("(dbid: " + _facade._dbid
                                                        + ") Peer attempted to store local leaseSet: "
                                                        + key.toBase32());
                 }
