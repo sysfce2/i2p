@@ -215,13 +215,9 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         // of the flooding - instead, send them to a random floodfill peer so *they* can flood 'em out.
         // perhaps statistically adjust this so we are the source every 1/N times... or something.
         if (floodfillEnabled() && (ds.getType() == DatabaseEntry.KEY_TYPE_ROUTERINFO)) {
-            //if (!chanceOfFloodingOurOwn(-1)) {
-                flood(ds);
-                if (onSuccess != null)
-                    _context.jobQueue().addJob(onSuccess);
-            //} else {
-            //    _context.jobQueue().addJob(new FloodfillStoreJob(_context, this, key, ds, onSuccess, onFailure, sendTimeout, toIgnore));
-            //} Less sure I should do this this time around. TODO: figure out how this should adjust
+            flood(ds);
+            if (onSuccess != null)
+                _context.jobQueue().addJob(onSuccess);
         } else {
             _context.jobQueue().addJob(new FloodfillStoreJob(_context, this, key, ds, onSuccess, onFailure, sendTimeout, toIgnore));
         }
