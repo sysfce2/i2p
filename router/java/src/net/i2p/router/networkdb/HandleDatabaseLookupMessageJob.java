@@ -118,9 +118,6 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
             // We have to be very careful here to decide whether or not to send out the leaseSet,
             // to avoid anonymity vulnerabilities.
             // As this is complex, lots of comments follow...
-
-            //boolean isLocal = getContext().clientManager().isLocal(ls.getHash());
-            //boolean shouldPublishLocal = isLocal && getContext().clientManager().shouldPublishLeaseSet(searchKey);
         
             // Only answer a request for a LeaseSet if it has been published
             // to us, or, if its local, if we would have published to ourselves
