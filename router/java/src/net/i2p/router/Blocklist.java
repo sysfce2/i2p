@@ -369,7 +369,7 @@ public class Blocklist {
     private void banlistRouter(Hash peer, String reason, String comment) {
         if (expireInterval() > 0)
             _context.banlist().banlistRouter(peer, reason, comment,
-                                             _context.banlist().BANLIST_CODE_HARD, null,
+                                             _context.banlist().BANLIST_CODE_FOREVER, null,
                                              _context.clock().now() + expireInterval());
         else
             _context.banlist().banlistRouterForever(peer, reason, comment);
@@ -1284,7 +1284,7 @@ public class Blocklist {
     private void banlistRouter( Hash peer, String reason, String reasonComment, long duration) {
         if (duration > 0)
             _context.banlist().banlistRouter(peer, reason, reasonComment,
-                                             _context.banlist().BANLIST_CODE_HARD, null,
+                                             _context.banlist().BANLIST_CODE_FOREVER, null,
                                              System.currentTimeMillis()+expireInterval());
         else
             _context.banlist().banlistRouterForever(peer, reason, reasonComment);
