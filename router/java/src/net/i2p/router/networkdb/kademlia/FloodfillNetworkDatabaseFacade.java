@@ -95,7 +95,7 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         // for ISJ
         _context.statManager().createRateStat("netDb.RILookupDirect", "Was an iterative RI lookup sent directly?", "NetworkDatabase", rate);
         // No need to start the FloodfillMonitorJob for client subDb.
-        if (!isMainDb())
+        if (isClientDb())
             _ffMonitor = null;
         else
             _ffMonitor = new FloodfillMonitorJob(_context, this);
@@ -107,7 +107,7 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         super.startup();
         if (_ffMonitor != null)
             _context.jobQueue().addJob(_ffMonitor);
-        if (!isMainDb()) {
+        if (isClientDb()) {
             isFF = false;
         } else {
             isFF = _context.getBooleanProperty(FloodfillMonitorJob.PROP_FLOODFILL_PARTICIPANT);
@@ -116,7 +116,7 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         }
 
         long down = _context.router().getEstimatedDowntime();
-        if (!_context.commSystem().isDummy() && isMainDb() &&
+        if (!_context.commSystem().isDummy() && !isClientDb() &&
             (down == 0 || (!isFF && down > 30*60*1000) || (isFF && down > 24*60*60*1000))) {
             // refresh old routers
             Job rrj = new RefreshRoutersJob(_context, this);
@@ -128,7 +128,7 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
     @Override
     protected void createHandlers() {
        // Only initialize the handlers for the flooodfill netDb.
-       if (isMainDb()) {
+       if (!isClientDb()) {
             if (_log.shouldInfo())
                 _log.info("[dbid: " + super._dbid +  "] Initializing the message handlers");
             _context.inNetMessagePool().registerHandlerJobBuilder(DatabaseLookupMessage.MESSAGE_TYPE, new FloodfillDatabaseLookupMessageHandler(_context, this));
@@ -215,37 +215,13 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         // of the flooding - instead, send them to a random floodfill peer so *they* can flood 'em out.
         // perhaps statistically adjust this so we are the source every 1/N times... or something.
         if (floodfillEnabled() && (ds.getType() == DatabaseEntry.KEY_TYPE_ROUTERINFO)) {
-            //if (!chanceOfFloodingOurOwn(-1)) {
-                flood(ds);
-                if (onSuccess != null)
-                    _context.jobQueue().addJob(onSuccess);
-            //} else {
-            //    _context.jobQueue().addJob(new FloodfillStoreJob(_context, this, key, ds, onSuccess, onFailure, sendTimeout, toIgnore));
-            //} Less sure I should do this this time around. TODO: figure out how this should adjust
+            flood(ds);
+            if (onSuccess != null)
+                _context.jobQueue().addJob(onSuccess);
         } else {
             _context.jobQueue().addJob(new FloodfillStoreJob(_context, this, key, ds, onSuccess, onFailure, sendTimeout, toIgnore));
         }
     }
-
-    /* TODO: figure out how this should work
-    private boolean chanceOfFloodingOurOwn(int percent) {
-        if (percent < 0) {
-            // make percent equal to 1-peer.failedLookupRate by retrieving it from the stats
-            RateStat percentRate = _context.statManager().getRate("netDb.failedLookupRate");
-            if (percentRate != null)
-                percent = (1-(int)percentRate.getLifetimeAverageValue())*100;
-            else {
-                _log.warn("chanceOfFloodingOurOwn() could not find netDb.failedLookupRate");
-                return false;
-            }
-        }
-        // if the router has been up for at least an hour
-        if (_context.router().getUptime() > 60*60*1000) {
-            // then 30% of the time return true
-            return Math.random() < (percent / 100.0f);
-        }
-        return false;
-    }*/
 
     /**
      *  Increments and tests.
@@ -288,11 +264,6 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         }
         flood(ds);
         return true;
-    }
-
-    public int minFloodfillPeers() {
-        int mfp = _context.getProperty(MINIMUM_SUBDB_PEERS, 0);
-        return mfp;
     }
 
     /**
@@ -440,13 +411,6 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
         }
     }
 
-    @Override
-    protected PeerSelector createPeerSelector() { 
-        if (_peerSelector != null)
-            return _peerSelector;
-        return new FloodfillPeerSelector(_context);
-    }
-    
     /**
      *  Public, called from console. This wakes up the floodfill monitor,
      *  which will rebuild the RI and log in the event log,
@@ -526,14 +490,11 @@ public class FloodfillNetworkDatabaseFacade extends KademliaNetworkDatabaseFacad
      * @return null always
      * @since 0.9.10
      */
-    // ToDo: With repect to segmented netDb clients, this framework needs
-    // refinement.  A client with a segmented netDb can not use exploratory
-    // tunnels.  The return messages will not have sufficient information
-    // to be directed back to the clientmaking the query.
     SearchJob search(Hash key, Job onFindJob, Job onFailedLookupJob, long timeoutMs, boolean isLease,
                      Hash fromLocalDest) {
         //if (true) return super.search(key, onFindJob, onFailedLookupJob, timeoutMs, isLease);
         if (key == null) throw new IllegalArgumentException("searchin for nothin, eh?");
+        if (fromLocalDest == null && isClientDb()) throw new IllegalArgumentException("client subDbs cannot use exploratory tunnels");
         boolean isNew = false;
         FloodSearchJob searchJob;
         synchronized (_activeFloodQueries) {
