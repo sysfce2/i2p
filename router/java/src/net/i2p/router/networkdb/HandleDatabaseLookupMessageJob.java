@@ -124,10 +124,9 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
 
             // answerAllQueries: We are floodfill
             // getReceivedAsPublished:
-            //    false for local
-            //    false for received over a tunnel
-            //    false for received in response to our lookups
-            //    true for received in a DatabaseStoreMessage unsolicited
+            //    false for received over a tunnel(goes to client subDB)
+            //    false for received in response to our lookups(goes to client subDB)
+            //    true for received in a DatabaseStoreMessage unsolicited(goes to main Db)
             if (ls.getReceivedAsPublished()) {
                 // Answer anything that was stored to us directly
                 // (i.e. "received as published" - not the result of a query, or received
@@ -144,26 +143,16 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
                 // Only send it out if it is in our estimated keyspace.
                 // For this, we do NOT use their dontInclude list as it can't be trusted
                 // (i.e. it could mess up the closeness calculation)
-                Set<Hash> closestHashes = getContext().netDb().findNearestRouters(searchKey, 
-                                                                            CLOSENESS_THRESHOLD, null);
-                if (weAreClosest(closestHashes)) {
-                    // It's in our keyspace, so give it to them
-                    if (_log.shouldLog(Log.INFO))
-                        _log.info("We have local LS " + searchKey + ", answering query, in our keyspace");
-                    getContext().statManager().addRateData("netDb.lookupsMatchedLocalClosest", 1);
-                    sendData(searchKey, ls, fromKey, toTunnel);
-                } else {
-                    // Lie, pretend we don't have it
-                    if (_log.shouldLog(Log.INFO))
-                        _log.info("We have local LS " + searchKey + ", NOT answering query, out of our keyspace");
-                    getContext().statManager().addRateData("netDb.lookupsMatchedLocalNotClosest", 1);
-                    Set<Hash> routerHashSet = getNearestRouters(lookupType);
-                    sendClosest(searchKey, routerHashSet, fromKey, toTunnel);
-                }
+                if (_log.shouldLog(Log.INFO))
+                    _log.info("We have local LS " + searchKey + ", answering query, in our keyspace");
+                getContext().statManager().addRateData("netDb.lookupsMatchedLocalClosest", 1);
+                sendData(searchKey, ls, fromKey, toTunnel);
             } else {
                 // It was not published to us (we looked it up, for example)
-                // or it's local and we aren't floodfill,
+                // or it's local and we aren't floodfill
+                //   ^(It will normally be in a client subDB unless it was published back to us, which will be handled above)
                 // or it's local and we don't publish it.
+                //   ^(It will begin in a client subDB and the client is unpublished so it shouldn't show up in the main DB at all)
                 // Lie, pretend we don't have it
                 if (_log.shouldLog(Log.INFO))
                     _log.info("We have LS " + searchKey +
@@ -247,10 +236,6 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
         return getContext().netDb().findNearestRouters(_message.getSearchKey(), 
                                                        MAX_ROUTERS_RETURNED, 
                                                        dontInclude);
-    }
-
-    private boolean weAreClosest(Set<Hash> routerHashSet) {
-        return routerHashSet.contains(_us);
     }
     
     private void sendData(Hash key, DatabaseEntry data, Hash toPeer, TunnelId replyTunnel) {
