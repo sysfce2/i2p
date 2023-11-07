@@ -134,7 +134,13 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 if (!ls.getReceivedAsReply())
                     ls.setReceivedAsPublished();
                 if (_facade.isClientDb())
-                    blockStore = false;
+                    if (getContext().clientNetDb(ls.getReceivedBy()).equals(_facade)) {
+                        if (_log.shouldLog(Log.WARN))
+                            _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
+                        blockStore = true;
+                    } else {
+                        blockStore = false;
+                    }
                 else
                     // Non-client context
                     if (_facade.floodfillEnabled() && (_fromHash != null))
