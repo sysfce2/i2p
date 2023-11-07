@@ -227,9 +227,11 @@ public class Blocklist {
         // but it's important to have this initialized before we read in the netdb.
         //job.getTiming().setStartAfter(_context.clock().now() + 30*1000);
         _context.jobQueue().addJob(job);
-        Job cleanupJob = new CleanupJob();
-        cleanupJob.getTiming().setStartAfter(_context.clock().now() + expireInterval());
-        _context.jobQueue().addJob(cleanupJob);
+        if (expireInterval() > 0) {
+            Job cleanupJob = new CleanupJob();
+            cleanupJob.getTiming().setStartAfter(_context.clock().now() + expireInterval());
+            _context.jobQueue().addJob(cleanupJob);
+        }
     }
 
     /**
@@ -278,21 +280,12 @@ public class Blocklist {
             return "Expire blocklist at user-defined interval of " + expireInterval();
         }
         public void runJob() {
-            int jobInterval;
-
-            if (expireInterval() > 0) {
-                clear();
-                _lastExpired = System.currentTimeMillis();
-                jobInterval = expireInterval();
-                if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("Expiring blocklist entrys at" + _lastExpired);
-            } else {
-                // Set the next job interval to 15 minutes when expireInterval disabled
-                jobInterval = 15 * 60 * 1000;
-            }
-
+            clear();
+            _lastExpired = System.currentTimeMillis();
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Expiring blocklist entrys at" + _lastExpired);
             // schedule the next one
-            super.requeue(jobInterval);
+            super.requeue(expireInterval());
         }
     }
 
