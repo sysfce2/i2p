@@ -72,19 +72,8 @@ public class FloodfillDatabaseLookupMessageHandler implements HandlerJobBuilder 
             _context.statManager().addRateData("netDb.lookupsDroppedDueToPriorBan", 1);
             return null;
         }
-        boolean ourRI = dlm.getSearchKey() != null && dlm.getSearchKey().equals(_context.routerHash());
-        if (!_context.netDb().floodfillEnabled() && (dlm.getReplyTunnel() == null && !ourRI)) {
-            if (_log.shouldLog(Log.WARN)) 
-                _log.warn("[dbid: " + _facade._dbid
-                          + "] Dropping " + dlm.getSearchType()
-                          + " lookup request for " + dlm.getSearchKey()
-                          + " (we are not a floodfill), reply was to: "
-                          + dlm.getFrom() + " tunnel: " + dlm.getReplyTunnel());
-            _context.statManager().addRateData("netDb.nonFFLookupsDropped", 1);
-            return null;
-        }
         if (!_facade.shouldThrottleLookup(dlm.getFrom(), dlm.getReplyTunnel())
-                || _context.routerHash().equals(dlm.getFrom())) {
+                || _context.routerHash().equals(dlm.getSearchKey())) {
             Job j = new HandleFloodfillDatabaseLookupMessageJob(_context, dlm, from, fromHash, _msgIDBloomXor);
             // if (false) {
             // // might as well inline it, all the heavy lifting is queued up in later jobs,
