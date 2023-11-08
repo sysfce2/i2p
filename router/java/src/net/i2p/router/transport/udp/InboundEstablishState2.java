@@ -331,7 +331,7 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
 
         if (mismatchMessage != null) {
             _context.banlist().banlistRouter(h, "IP mismatch", null,
-                                             _context.banlist().BANLIST_CODE_FOREVER,
+                                             //_context.banlist().BANLIST_CODE_FOREVER,
                                              null, _context.clock().now() + 2*60*60*1000);
             if (ri.verifySignature())
                 _context.blocklist().add(_aliceIP);
