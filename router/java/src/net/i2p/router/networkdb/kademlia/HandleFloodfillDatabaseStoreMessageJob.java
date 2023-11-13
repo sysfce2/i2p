@@ -283,7 +283,8 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     throw new IllegalArgumentException("Peer attempted to store our RouterInfo");
                 }
                 // If we're in the client netDb context, log a warning since
-                // it should be rare that RI DSM are handled in the client context.
+                // it be that all RI DSM are handled in the main netDb context.
+                // This is probably impossible but log it if we ever see it so it can be investigated.
                 if (_facade.isClientDb() && _log.shouldWarn())
                     _log.warn("[dbid: " + _facade._dbid
                               + "]:  Handling RI dbStore in client netDb context of router " + key.toBase64());
