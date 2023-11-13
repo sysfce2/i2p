@@ -109,15 +109,13 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 //          In this role, the only LeaseSet that should be rejected
                 //          is its own LeaseSet.
                 //
-                //          ToDo: Currently, the 'floodfill' netDb will be excluded
+                //          Currently, the 'floodfill' netDb will be excluded
                 //          from directly receiving a client LeaseSet, due to the
                 //          way the selection of FloodFill routers are selected
                 //          when flooding a LS.
                 //          But even if the host router does not directly receive the
                 //          LeaseSets of the clients it hosts, those LeaseSets will
                 //          usually be flooded back to it.
-                //          Is this enough, or do we need to pierce the segmentation
-                //          under certain conditions?
 
                 LeaseSet ls = (LeaseSet) entry;
                 // If this was received as a response to a query,
