@@ -98,9 +98,11 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 //          and handled as a normal LS.
                 // Role #2) The 'floodfill' netDb when the router is *NOT* an I2P
                 //          network Floodfill.
-                //          In this case, the 'floodfill' netDb only stores RouterInfo.
-                //          There is no use case for the 'floodfill' netDb to store any
-                //          LeaseSets when the router is not a FloodFill.
+                //          In this case, the 'floodfill' netDb primarily stores RouterInfos.
+                //          However, there are a number of normal cases where it might contain
+                //          one or more LeaseSets:
+                //            1. We used to be a floodfill but aren't anymore
+                //            2. We performed a lookup without an active session locally(It won't be RAP)
                 // Role #3) Client netDb should only receive LeaseSets from their
                 //          tunnels.  And clients will only publish their LeaseSet
                 //          out their client tunnel.
@@ -116,11 +118,6 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 //          usually be flooded back to it.
                 //          Is this enough, or do we need to pierce the segmentation
                 //          under certain conditions?
-                //
-                //          ToDo: What considerations are needed for multihoming?
-                //          with multihoming, it's really important to prevent the
-                //          client netDb from storing the other guy's LeaseSet.
-                //          It will confuse us badly.
 
                 LeaseSet ls = (LeaseSet) entry;
                 // If this was received as a response to a query,
@@ -134,6 +131,8 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 if (!ls.getReceivedAsReply())
                     ls.setReceivedAsPublished();
                 if (_facade.isClientDb()) {
+                    // This is where we deal with what happens if a client subDB tries to store
+                    // a leaseSet which it is the owner/publisher of.
                     if (getContext().clientNetDb(ls.getReceivedBy()).equals(_facade)) {
                         if (_log.shouldLog(Log.WARN))
                             _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
@@ -143,13 +142,13 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     }
                 }
                 if (blockStore) {
-                    getContext().statManager().addRateData("netDb.storeLeaseNonFloodfillSetAttempt", 1, 0);
+                    getContext().statManager().addRateData("netDb.storeLocalLeaseSetToLocalClient", 1, 0);
                     // If we're using subdbs, store the leaseSet in the multihome DB.
                     // otherwise, throw rather than return, so that we send the ack below (prevent easy attack)
                     dontBlamePeer = true;
                     throw new IllegalArgumentException("(dbid: " + _facade._dbid
                                                        + ") Peer attempted to store local leaseSet: "
-                                                       + key.toBase32());
+                                                       + key.toBase32() + " to client subDB " + _facade + "which is it's own publisher");
                 }
                 //boolean oldrar = ls.getReceivedAsReply();
                 //boolean oldrap = ls.getReceivedAsPublished();
