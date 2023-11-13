@@ -119,13 +119,15 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
             // to avoid anonymity vulnerabilities.
             // As this is complex, lots of comments follow...
         
-            // Only answer a request for a LeaseSet if it has been published
-            // to us, or, if its local, if we would have published to ourselves
+            // If we are not Floodfill, only answer a request for a LeaseSet if it has been
+            // published to us.
+            // If we are Floodfill, answer all queries.
 
             // answerAllQueries: We are floodfill
             // getReceivedAsPublished:
-            //    false for received over a tunnel(goes to client subDB)
-            //    false for received in response to our lookups(goes to client subDB)
+            //    false for received over a client tunnel(if associated with a client, goes to client subDB)
+            //    false for received in response to our lookups(if associated with a client, goes to client subDB)
+            //      unassociated Lookups still go to the main netDb
             //    true for received in a DatabaseStoreMessage unsolicited(goes to main Db)
             if (ls.getReceivedAsPublished() || answerAllQueries()) {
                 //* Answer anything that was stored to us directly.
