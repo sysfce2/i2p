@@ -133,7 +133,7 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                 // See ../HDLMJ for more info
                 if (!ls.getReceivedAsReply())
                     ls.setReceivedAsPublished();
-                if (_facade.isClientDb())
+                if (_facade.isClientDb()) {
                     if (getContext().clientNetDb(ls.getReceivedBy()).equals(_facade)) {
                         if (_log.shouldLog(Log.WARN))
                             _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
@@ -141,15 +141,7 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     } else {
                         blockStore = false;
                     }
-                else
-                    // Non-client context
-                    if (_facade.floodfillEnabled() && (_fromHash != null))
-                        blockStore = false;
-                    else
-                        // FloodFill disabled, but in the 'floodfill' netDb context.
-                        // We should never get here, the 'floodfill' netDb doesn't
-                        // store LS when FloodFill is disabled.
-                        blockStore = true;
+                }
                 if (blockStore) {
                     getContext().statManager().addRateData("netDb.storeLeaseNonFloodfillSetAttempt", 1, 0);
                     // If we're using subdbs, store the leaseSet in the multihome DB.
