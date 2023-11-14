@@ -115,21 +115,13 @@ public class HandleDatabaseLookupMessageJob extends JobImpl {
         if (DatabaseEntry.isLeaseSet(type) &&
             (lookupType == DatabaseLookupMessage.Type.ANY || lookupType == DatabaseLookupMessage.Type.LS)) {
             LeaseSet ls = (LeaseSet) dbe;
-            // We have to be very careful here to decide whether or not to send out the leaseSet,
-            // to avoid anonymity vulnerabilities.
-            // As this is complex, lots of comments follow...
-        
-            // If we are not Floodfill, only answer a request for a LeaseSet if it has been
-            // published to us.
-            // If we are Floodfill, answer all queries.
+            // Answer any request for a LeaseSet if it has been published to us.
 
             // answerAllQueries: We are floodfill
             // getReceivedAsPublished:
             //    false for received over a client tunnel(if associated with a client, goes to client subDB)
-            //    false for received in response to our lookups(if associated with a client, goes to client subDB)
-            //      unassociated Lookups still go to the main netDb
             //    true for received in a DatabaseStoreMessage unsolicited(goes to main Db)
-            if (ls.getReceivedAsPublished() || answerAllQueries()) {
+            if (ls.getReceivedAsPublished()) {
                 //* Answer anything that was stored to us directly.
                 //(i.e. "received as published" - not the result of a query).
                 //* Answer all queries if we are a floodfill.
