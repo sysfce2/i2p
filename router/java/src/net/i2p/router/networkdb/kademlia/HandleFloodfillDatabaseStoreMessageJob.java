@@ -130,9 +130,7 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     // a leaseSet which it is the owner/publisher of.
                     // Look up a ls hash in the netDbSegmentor, and compare it to the _facade that we have.
                     // If they are equal, reject the store.
-                    if ((getContext().netDbSegmentor().clientNetDB(ls.getHash())).equals(_facade)) {
-                        if (_log.shouldLog(Log.WARN))
-                            _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
+                    if (getContext().netDbSegmentor().clientNetDB(ls.getHash()).equals(_facade)) {
                         getContext().statManager().addRateData("netDb.storeLocalLeaseSetToLocalClient", 1, 0);
                         dontBlamePeer = true;
                         throw new IllegalArgumentException("(dbid: " + _facade._dbid
