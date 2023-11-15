@@ -76,7 +76,6 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
         // set if invalid store but not his fault
         boolean dontBlamePeer = false;
         boolean wasNew = false;
-        boolean blockStore = false;
         RouterInfo prevNetDb = null;
         Hash key = _message.getKey();
         DatabaseEntry entry = _message.getEntry();
@@ -131,24 +130,16 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                     // a leaseSet which it is the owner/publisher of.
                     // Look up a ls hash in the netDbSegmentor, and compare it to the _facade that we have.
                     // If they are equal, reject the store.
-                    NetworkDatabaseFacade cfndf =  getContext().netDbSegmentor().clientNetDB(ls.getHash());
-                    if (cfndf == null) {
-                        blockStore = false;
-                    } else if (((FloodfillNetworkDatabaseFacade) cfndf).equals(_facade)) {
+                    if ((getContext().netDbSegmentor().clientNetDB(ls.getHash())).equals(_facade)) {
                         if (_log.shouldLog(Log.WARN))
                             _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
-                        blockStore = true;
-                    } else {
-                        blockStore = false;
+                        getContext().statManager().addRateData("netDb.storeLocalLeaseSetToLocalClient", 1, 0);
+                        // if we're working inside a client DB and recieve 
+                        dontBlamePeer = true;
+                        throw new IllegalArgumentException("(dbid: " + _facade._dbid
+                            + ") Peer attempted to store local leaseSet: "
+                            + key.toBase32() + " to client subDB " + _facade + "which is it's own publisher");
                     }
-                }
-                if (blockStore) {
-                    getContext().statManager().addRateData("netDb.storeLocalLeaseSetToLocalClient", 1, 0);
-                    // if we're working inside a client DB and recieve 
-                    dontBlamePeer = true;
-                    throw new IllegalArgumentException("(dbid: " + _facade._dbid
-                                                       + ") Peer attempted to store local leaseSet: "
-                                                       + key.toBase32() + " to client subDB " + _facade + "which is it's own publisher");
                 }
                 //boolean oldrar = ls.getReceivedAsReply();
                 //boolean oldrap = ls.getReceivedAsPublished();
