@@ -134,7 +134,6 @@ class HandleFloodfillDatabaseStoreMessageJob extends JobImpl {
                         if (_log.shouldLog(Log.WARN))
                             _log.warn("Attempt to store the leaseSet associated with our own client sub DB");
                         getContext().statManager().addRateData("netDb.storeLocalLeaseSetToLocalClient", 1, 0);
-                        // if we're working inside a client DB and recieve 
                         dontBlamePeer = true;
                         throw new IllegalArgumentException("(dbid: " + _facade._dbid
                             + ") Peer attempted to store local leaseSet: "
