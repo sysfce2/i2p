@@ -359,8 +359,11 @@ public class TunnelPoolManager implements TunnelManagerFacade {
         TunnelPool pool = _clientInboundPools.get(client); 
         if (pool != null)
             return pool.getSettings();
-        else
+        else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("No inbound tunnel pool found for " + client);
             return null;
+        }
     }
 
     public TunnelPoolSettings getOutboundSettings(Hash client) { 
