@@ -549,177 +549,36 @@ public class RouterConsoleRunner implements RouterApp {
         ServletHandler rootServletHandler = null;
         List<Connector> connectors = new ArrayList<Connector>(4);
         try {
-            int boundAddresses = 0;
             SortedSet<String> addresses = Addresses.getAllAddresses();
             boolean hasIPV4 = addresses.contains("0.0.0.0");
             boolean hasIPV6 = addresses.contains("0:0:0:0:0:0:0:0");
+            List<String> hosts = new ArrayList<String>(2);
 
-            // add standard listeners
-            int lport = 0;
-            if (_listenPort != null) {
-                try {
-                    lport = Integer.parseInt(_listenPort);
-                } catch (NumberFormatException nfe) {}
-                if (lport <= 0)
-                    System.err.println("Bad routerconsole port " + _listenPort);
-            }
-            if (lport > 0) {
-                List<String> hosts = new ArrayList<String>(2);
-                StringTokenizer tok = new StringTokenizer(_listenHost, " ,");
-                while (tok.hasMoreTokens()) {
-                    String host = tok.nextToken().trim();
-                    try {
-                        // Test before we add the connector, because Jetty 6 won't start if any of the
-                        // connectors are bad
-                        if ((!hasIPV6) && Addresses.isIPv6Address(host))
-                            throw new IOException("IPv6 addresses unsupported");
-                        if ((!hasIPV4) && Addresses.isIPv4Address(host))
-                            throw new IOException("IPv4 addresses unsupported");
-                        ServerSocket testSock = null;
-                        try {
-                            // On Windows, this was passing and Jetty was still failing,
-                            // possibly due to %scope_id ???
-                            // https://issues.apache.org/jira/browse/ZOOKEEPER-667
-                            // so do exactly what Jetty does in SelectChannelConnector.open()
-                            testSock = new ServerSocket();
-                            InetSocketAddress isa = new InetSocketAddress(host, 0);
-                            testSock.bind(isa);
-                        } finally {
-                            if (testSock != null) try { testSock.close(); } catch (IOException ioe) {}
-                        }
-                        HttpConfiguration httpConfig = new HttpConfiguration();
-                        // number of acceptors, (default) number of selectors
-                        ServerConnector lsnr = new ServerConnector(_server, 1, 0,
-                                                                   new HttpConnectionFactory(httpConfig));
-                        //lsnr.setUseDirectBuffers(false);  // default true seems to be leaky
-                        lsnr.setHost(host);
-                        lsnr.setPort(lport);
-                        lsnr.setIdleTimeout(90*1000);  // default 10 sec
-                        lsnr.setName("ConsoleSocket");   // all with same name will use the same thread pool
-                        //_server.addConnector(lsnr);
-                        connectors.add(lsnr);
-                        boundAddresses++;
-                        hosts.add(host);
-                    } catch (Exception ioe) {
-                        System.err.println("Unable to bind routerconsole to " + host + " port " + _listenPort + ": " + ioe);
-                        System.err.println("You may ignore this warning if the console is still available at http://localhost:" + _listenPort);
-                    }
-                }
-                if (hosts.isEmpty()) {
-                    _context.portMapper().register(PortMapper.SVC_CONSOLE, lport);
-                } else {
-                    // put IPv4 first
-                    Collections.sort(hosts, new HostComparator());
-                    _context.portMapper().register(PortMapper.SVC_CONSOLE, hosts.get(0), lport);
-                    // note that we could still fail in connector.start() below
-                    listenHosts.addAll(hosts);
-                }
+            List<Connector> httpHosts = setupConsoleHTTP(hasIPV4, hasIPV6, hosts, listenHosts);
+            if (httpHosts != null) {
+                connectors.addAll(httpHosts);
             }
 
-            // add SSL listeners
-            int sslPort = 0;
-            if (_sslListenPort != null) {
-                try {
-                    sslPort = Integer.parseInt(_sslListenPort);
-                } catch (NumberFormatException nfe) {}
-                if (sslPort <= 0)
-                    System.err.println("Bad routerconsole SSL port " + _sslListenPort);
-            }
-            if (sslPort > 0) {
-                File keyStore = new File(_context.getConfigDir(), "keystore/console.ks");
-                // Put the list of hosts together early, so we can put it in the selfsigned cert.
-                StringTokenizer tok = new StringTokenizer(_sslListenHost, " ,");
-                Set<String> altNames = new HashSet<String>(4);
-                while (tok.hasMoreTokens()) {
-                    String s = tok.nextToken().trim();
-                    if (!s.equals("0.0.0.0") && !s.equals("::") &&
-                        !s.equals("0:0:0:0:0:0:0:0"))
-                        altNames.add(s);
-                }
-                String allowed = _context.getProperty(PROP_ALLOWED_HOSTS);
-                if (allowed != null) {
-                    tok = new StringTokenizer(allowed, " ,");
-                    while (tok.hasMoreTokens()) {
-                        altNames.add(tok.nextToken().trim());
-                    }
-                }
-                if (verifyKeyStore(keyStore, altNames)) {
-                    // the keystore path and password
-                    SslContextFactory sslFactory = new SslContextFactory(keyStore.getAbsolutePath());
-                    sslFactory.setKeyStorePassword(_context.getProperty(PROP_KEYSTORE_PASSWORD, KeyStoreUtil.DEFAULT_KEYSTORE_PASSWORD));
-                    // the X.509 cert password (if not present, verifyKeyStore() returned false)
-                    sslFactory.setKeyManagerPassword(_context.getProperty(PROP_KEY_PASSWORD, "thisWontWork"));
-                    sslFactory.addExcludeProtocols(I2PSSLSocketFactory.EXCLUDE_PROTOCOLS.toArray(
-                                                   new String[I2PSSLSocketFactory.EXCLUDE_PROTOCOLS.size()]));
-                    sslFactory.addExcludeCipherSuites(I2PSSLSocketFactory.EXCLUDE_CIPHERS.toArray(
-                                                      new String[I2PSSLSocketFactory.EXCLUDE_CIPHERS.size()]));
-                    List<String> hosts = new ArrayList<String>(2);
-                    tok = new StringTokenizer(_sslListenHost, " ,");
-                    while (tok.hasMoreTokens()) {
-                        String host = tok.nextToken().trim();
-                        // doing it this way means we don't have to escape an IPv6 host with []
-                        try {
-                            // Test before we add the connector, because Jetty 6 won't start if any of the
-                            // connectors are bad
-                            if ((!hasIPV6) && Addresses.isIPv6Address(host))
-                                throw new IOException("IPv6 addresses unsupported");
-                            if ((!hasIPV4) && Addresses.isIPv4Address(host))
-                                throw new IOException("IPv4 addresses unsupported");
-                            ServerSocket testSock = null;
-                            try {
-                                // see comments above
-                                testSock = new ServerSocket();
-                                InetSocketAddress isa = new InetSocketAddress(host, 0);
-                                testSock.bind(isa);
-                            } finally {
-                                if (testSock != null) try { testSock.close(); } catch (IOException ioe) {}
-                            }
-                            HttpConfiguration httpConfig = new HttpConfiguration();
-                            httpConfig.setSecureScheme("https");
-                            httpConfig.setSecurePort(sslPort);
-                            httpConfig.addCustomizer(new SecureRequestCustomizer());
-                            // number of acceptors, (default) number of selectors
-                            ServerConnector ssll = new ServerConnector(_server, 1, 0,
-                                                                       new SslConnectionFactory(sslFactory, "http/1.1"),
-                                                                       new HttpConnectionFactory(httpConfig));
-                            //sssll.setUseDirectBuffers(false);  // default true seems to be leaky
-                            ssll.setHost(host);
-                            ssll.setPort(sslPort);
-                            ssll.setIdleTimeout(90*1000);  // default 10 sec
-                            ssll.setName("ConsoleSocket");   // all with same name will use the same thread pool
-                            //_server.addConnector(ssll);
-                            connectors.add(ssll);
-                            boundAddresses++;
-                            hosts.add(host);
-                        } catch (Exception e) {
-                            System.err.println("Unable to bind routerconsole to " + host + " port " + sslPort + " for SSL: " + e);
-                            if (SystemVersion.isGNU())
-                                System.err.println("Probably because GNU classpath does not support Sun keystores");
-                            System.err.println("You may ignore this warning if the console is still available at https://localhost:" + sslPort);
-                        }
-                    }
-                    if (hosts.isEmpty()) {
-                        _context.portMapper().register(PortMapper.SVC_HTTPS_CONSOLE, sslPort);
-                    } else {
-                        // put IPv4 first
-                        Collections.sort(hosts, new HostComparator());
-                        _context.portMapper().register(PortMapper.SVC_HTTPS_CONSOLE, hosts.get(0), sslPort);
-                        // note that we could still fail in connector.start() below
-                        listenHosts.addAll(hosts);
-                    }
-                } else {
-                    System.err.println("Unable to create or access keystore for SSL: " + keyStore.getAbsolutePath());
-                }
+            List<Connector> httpsHosts = setupConsoleHTTPS(hasIPV4, hasIPV6, hosts, listenHosts);
+            if (httpsHosts != null) {
+                connectors.addAll(httpsHosts);    
             }
 
-            if (boundAddresses <= 0) {
-                System.err.println("Unable to bind routerconsole to any address on port " + _listenPort + (sslPort > 0 ? (" or SSL port " + sslPort) : ""));
+            /*
+             * List<Connector> unixSocketHosts = setupConsoleUnixSocket(connectors, boundAddresses);
+            */
+            
+            
+
+            if (connectors.size() <= 0) {
+                //System.err.println("Unable to bind routerconsole to any address on port " + _listenPort + (sslPort > 0 ? (" or SSL port " + sslPort) : ""));
+                System.err.println("Unable to bind routerconsole to any HTTP address: " + httpHosts + " or HTTPS address:" + httpsHosts + "or UNIX socket address: UNSUPPORTED");
                 return;
             }
             // Each address spawns a Connector and an Acceptor thread
             // If the min is less than this, we have no thread for the handlers or the expiration thread.
-            qtp.setMinThreads(MIN_THREADS + (2 * boundAddresses));
-            qtp.setMaxThreads(MAX_THREADS + (2 * boundAddresses));
+            qtp.setMinThreads(MIN_THREADS + (2 * connectors.size()));
+            qtp.setMaxThreads(MAX_THREADS + (2 * connectors.size()));
 
             File tmpdir = new SecureDirectory(workDir, ROUTERCONSOLE + "-" +
                                                        (_listenPort != null ? _listenPort : _sslListenPort));
@@ -908,7 +767,213 @@ public class RouterConsoleRunner implements RouterApp {
                 _context.addShutdownTask(new ServerShutdown());
             ConfigServiceHandler.registerSignalHandler(_context);
     }
-    
+
+    public List<Connector> setupConsoleHTTP(boolean hasIPV4, boolean hasIPV6, List<String> hosts, Set<String> listenHosts) {
+        // add standard listeners
+        List<Connector> connectors = new ArrayList<Connector>();
+        int lport = 0;
+        if (_listenPort != null) {
+            try {
+                lport = Integer.parseInt(_listenPort);
+            } catch (NumberFormatException nfe) {}
+            if (lport <= 0)
+                System.err.println("Bad routerconsole port " + _listenPort);
+        }
+        System.out.println("Listening on HTTP port " + lport);
+        if (lport > 0) {
+            StringTokenizer tok = new StringTokenizer(_listenHost, " ,");
+            while (tok.hasMoreTokens()) {
+                String host = tok.nextToken().trim();
+                System.out.println("Setting up host: " + host);
+                try {
+                    // Test before we add the connector, because Jetty 6 won't start if any of the
+                    // connectors are bad
+                    if ((!hasIPV6) && Addresses.isIPv6Address(host))
+                        throw new IOException("IPv6 addresses unsupported");
+                    if ((!hasIPV4) && Addresses.isIPv4Address(host))
+                        throw new IOException("IPv4 addresses unsupported");
+                    ServerSocket testSock = null;
+                    try {
+                        // On Windows, this was passing and Jetty was still failing,
+                        // possibly due to %scope_id ???
+                        // https://issues.apache.org/jira/browse/ZOOKEEPER-667
+                        // so do exactly what Jetty does in SelectChannelConnector.open()
+                        testSock = new ServerSocket();
+                        InetSocketAddress isa = new InetSocketAddress(host, 0);
+                        testSock.bind(isa);
+                    } finally {
+                        if (testSock != null) try { testSock.close(); } catch (IOException ioe) {}
+                    }
+                    HttpConfiguration httpConfig = new HttpConfiguration();
+                    // number of acceptors, (default) number of selectors
+                    ServerConnector lsnr = new ServerConnector(_server, 1, 0,
+                                                                new HttpConnectionFactory(httpConfig));
+                    //lsnr.setUseDirectBuffers(false);  // default true seems to be leaky
+                    lsnr.setHost(host);
+                    lsnr.setPort(lport);
+                    lsnr.setIdleTimeout(90*1000);  // default 10 sec
+                    lsnr.setName("ConsoleSocket");   // all with same name will use the same thread pool
+                    //_server.addConnector(lsnr);
+                    connectors.add(lsnr);
+//                    boundAddresses++;
+                    hosts.add(host);
+                } catch (Exception ioe) {
+                    System.err.println("Unable to bind routerconsole to " + host + " port " + _listenPort + ": " + ioe);
+                    System.err.println("You may ignore this warning if the console is still available at http://localhost:" + _listenPort);
+                }
+            }
+            if (hosts.isEmpty()) {
+                _context.portMapper().register(PortMapper.SVC_CONSOLE, lport);
+            } else {
+                // put IPv4 first
+                Collections.sort(hosts, new HostComparator());
+                _context.portMapper().register(PortMapper.SVC_CONSOLE, hosts.get(0), lport);
+                // note that we could still fail in connector.start() below
+                listenHosts.addAll(hosts);
+            }
+            return connectors;
+        }
+        return null;
+    }
+
+    public List<Connector> setupConsoleHTTPS(boolean hasIPV4, boolean hasIPV6, List<String> hosts, Set<String> listenHosts) {
+        List<Connector> connectors = new ArrayList<Connector>();
+        // add SSL listeners
+        int sslPort = 0;
+        if (_sslListenPort != null) {
+            try {
+                sslPort = Integer.parseInt(_sslListenPort);
+            } catch (NumberFormatException nfe) {}
+            if (sslPort <= 0)
+                System.err.println("Bad routerconsole SSL port " + _sslListenPort);
+        }
+        if (sslPort > 0) {
+            File keyStore = new File(_context.getConfigDir(), "keystore/console.ks");
+            // Put the list of hosts together early, so we can put it in the selfsigned cert.
+            StringTokenizer tok = new StringTokenizer(_sslListenHost, " ,");
+            Set<String> altNames = new HashSet<String>(4);
+            while (tok.hasMoreTokens()) {
+                String s = tok.nextToken().trim();
+                if (!s.equals("0.0.0.0") && !s.equals("::") &&
+                    !s.equals("0:0:0:0:0:0:0:0"))
+                    altNames.add(s);
+            }
+            String allowed = _context.getProperty(PROP_ALLOWED_HOSTS);
+            if (allowed != null) {
+                tok = new StringTokenizer(allowed, " ,");
+                while (tok.hasMoreTokens()) {
+                    altNames.add(tok.nextToken().trim());
+                }
+            }
+            if (verifyKeyStore(keyStore, altNames)) {
+                // the keystore path and password
+                SslContextFactory sslFactory = new SslContextFactory(keyStore.getAbsolutePath());
+                sslFactory.setKeyStorePassword(_context.getProperty(PROP_KEYSTORE_PASSWORD, KeyStoreUtil.DEFAULT_KEYSTORE_PASSWORD));
+                // the X.509 cert password (if not present, verifyKeyStore() returned false)
+                sslFactory.setKeyManagerPassword(_context.getProperty(PROP_KEY_PASSWORD, "thisWontWork"));
+                sslFactory.addExcludeProtocols(I2PSSLSocketFactory.EXCLUDE_PROTOCOLS.toArray(
+                                                new String[I2PSSLSocketFactory.EXCLUDE_PROTOCOLS.size()]));
+                sslFactory.addExcludeCipherSuites(I2PSSLSocketFactory.EXCLUDE_CIPHERS.toArray(
+                                                    new String[I2PSSLSocketFactory.EXCLUDE_CIPHERS.size()]));
+                tok = new StringTokenizer(_sslListenHost, " ,");
+                while (tok.hasMoreTokens()) {
+                    String host = tok.nextToken().trim();
+                    // doing it this way means we don't have to escape an IPv6 host with []
+                    try {
+                        // Test before we add the connector, because Jetty 6 won't start if any of the
+                        // connectors are bad
+                        if ((!hasIPV6) && Addresses.isIPv6Address(host))
+                            throw new IOException("IPv6 addresses unsupported");
+                        if ((!hasIPV4) && Addresses.isIPv4Address(host))
+                            throw new IOException("IPv4 addresses unsupported");
+                        ServerSocket testSock = null;
+                        try {
+                            // see comments above
+                            testSock = new ServerSocket();
+                            InetSocketAddress isa = new InetSocketAddress(host, 0);
+                            testSock.bind(isa);
+                        } finally {
+                            if (testSock != null) try { testSock.close(); } catch (IOException ioe) {}
+                        }
+                        HttpConfiguration httpConfig = new HttpConfiguration();
+                        httpConfig.setSecureScheme("https");
+                        httpConfig.setSecurePort(sslPort);
+                        httpConfig.addCustomizer(new SecureRequestCustomizer());
+                        // number of acceptors, (default) number of selectors
+                        ServerConnector ssll = new ServerConnector(_server, 1, 0,
+                                                                    new SslConnectionFactory(sslFactory, "http/1.1"),
+                                                                    new HttpConnectionFactory(httpConfig));
+                        //sssll.setUseDirectBuffers(false);  // default true seems to be leaky
+                        ssll.setHost(host);
+                        ssll.setPort(sslPort);
+                        ssll.setIdleTimeout(90*1000);  // default 10 sec
+                        ssll.setName("ConsoleSocket");   // all with same name will use the same thread pool
+                        //_server.addConnector(ssll);
+                        connectors.add(ssll);
+                        hosts.add(host);
+                    } catch (Exception e) {
+                        System.err.println("Unable to bind routerconsole to " + host + " port " + sslPort + " for SSL: " + e);
+                        if (SystemVersion.isGNU())
+                            System.err.println("Probably because GNU classpath does not support Sun keystores");
+                        System.err.println("You may ignore this warning if the console is still available at https://localhost:" + sslPort);
+                    }
+                }
+                if (hosts.isEmpty()) {
+                    _context.portMapper().register(PortMapper.SVC_HTTPS_CONSOLE, sslPort);
+                } else {
+                    // put IPv4 first
+                    Collections.sort(hosts, new HostComparator());
+                    _context.portMapper().register(PortMapper.SVC_HTTPS_CONSOLE, hosts.get(0), sslPort);
+                    // note that we could still fail in connector.start() below
+                    listenHosts.addAll(hosts);
+                }
+                return connectors;
+            } else {
+                System.err.println("Unable to create or access keystore for SSL: " + keyStore.getAbsolutePath());
+            }
+        }
+        return null;
+    }
+
+    public List<Connector> setupConsoleUnixSocket(List<Connector> connectors, List<String> hosts, Set<String> listenHosts) {
+        StringTokenizer tok = new StringTokenizer(_listenHost, " ,");
+        while (tok.hasMoreTokens()) {
+            String host = tok.nextToken().trim();
+            try {
+                // Test before we add the connector, because Jetty 6 won't start if any of the
+                // connectors are bad
+                ServerSocket testSock = null;
+                try {
+                    // On Windows, this was passing and Jetty was still failing,
+                    // possibly due to %scope_id ???
+                    // https://issues.apache.org/jira/browse/ZOOKEEPER-667
+                    // so do exactly what Jetty does in SelectChannelConnector.open()
+                    testSock = new ServerSocket();
+                    InetSocketAddress isa = new InetSocketAddress(host, 0);
+                    testSock.bind(isa);
+                } finally {
+                    if (testSock != null) try { testSock.close(); } catch (IOException ioe) {}
+                }
+                HttpConfiguration httpConfig = new HttpConfiguration();
+                // number of acceptors, (default) number of selectors
+                //UnixSocketConnector lsnr = new UnixSocketConnector(_server, 1, 0,
+                                                            //new HttpConnectionFactory(httpConfig));
+                //lsnr.setUseDirectBuffers(false);  // default true seems to be leaky
+                //lsnr.setHost(host);
+                //lsnr.setPort(lport);
+                //lsnr.setIdleTimeout(90*1000);  // default 10 sec
+                //lsnr.setName("ConsoleSocket");   // all with same name will use the same thread pool
+                //_server.addConnector(lsnr);
+                //connectors.add(lsnr);
+                hosts.add(host);
+            } catch (Exception ioe) {
+                System.err.println("Unable to bind routerconsole to " + host + " port " + _listenPort + ": " + ioe);
+                System.err.println("You may ignore this warning if the console is still available at http://localhost:" + _listenPort);
+            }
+        }
+        return connectors;
+    }
+
     /**
      * @return success if it exists and we have a password, or it was created successfully.
      * @since 0.8.3
