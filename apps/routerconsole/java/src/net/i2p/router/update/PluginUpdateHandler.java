@@ -1,5 +1,7 @@
 package net.i2p.router.update;
 
+import static net.i2p.update.UpdateMethod.TORRENT;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -42,7 +44,7 @@ class PluginUpdateHandler implements Checker, Updater {
     public UpdateTask check(UpdateType type, UpdateMethod method,
                             String appName, String currentVersion, long maxTime) {
         if ((type != UpdateType.PLUGIN) ||
-            method != UpdateMethod.HTTP || appName.length() <= 0)
+            (method != UpdateMethod.HTTP || method != UpdateMethod.TORRENT) || appName.length() <= 0)
             return null;
 
         Properties props = PluginStarter.pluginProperties(_context, appName);
@@ -58,6 +60,9 @@ class PluginUpdateHandler implements Checker, Updater {
                 _log.info("Checking for updates for " + appName + ": " + xpi2pURL);
             try {
                 updateSources = Collections.singletonList(new URI(xpi2pURL));
+                if (method == UpdateMethod.TORRENT)
+                    updateSources = Collections.singletonList(new URI(xpi2pURL + ".torrent"));
+                
             } catch (URISyntaxException use) {}
         }
 
@@ -65,8 +70,12 @@ class PluginUpdateHandler implements Checker, Updater {
             //updateStatus("<b>" + _t("Cannot check, plugin {0} is not installed", appName) + "</b>");
             return null;
         }
-
-        UpdateRunner update = new PluginUpdateChecker(_context, _mgr, updateSources, appName, oldVersion);
+        UpdateRunner update = null;
+        if (method == UpdateMethod.TORRENT) {
+            update = new PluginUpdateTorrentChecker(_context, _mgr, updateSources, appName, oldVersion);
+        } else {
+            update = new PluginUpdateChecker(_context, _mgr, updateSources, appName, oldVersion);
+        }
         return update;
     }
 
