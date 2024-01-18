@@ -50,12 +50,12 @@ import net.i2p.util.VersionComparator;
  */
 class PluginUpdateRunner extends UpdateRunner {
 
-    private String _appName;
-    private final String _appDisplayName;
+    protected String _appName;
+    protected final String _appDisplayName;
     private final String _oldVersion;
-    private final URI _uri;
-    private final String _xpi2pURL;
-    private boolean _updated;
+    protected final URI _uri;
+    protected final String _xpi2pURL;
+    protected boolean _updated;
     private String _errMsg = "";
 
     private static final String XPI2P = "app.xpi2p";
@@ -199,7 +199,7 @@ class PluginUpdateRunner extends UpdateRunner {
          *  @since 0.9.15
          *  @return if SU3
          */
-        private static boolean isSU3File(File f) throws IOException {
+        protected static boolean isSU3File(File f) throws IOException {
             FileInputStream fis = null;
             try {
                 fis = new FileInputStream(f);
@@ -217,7 +217,7 @@ class PluginUpdateRunner extends UpdateRunner {
          *  @since 0.9.15
          *  @return success
          */
-        private void processSUD(File f, File appDir, String url) {
+        protected void processSUD(File f, File appDir, String url) {
             TrustedUpdate up = new TrustedUpdate(_context);
             File to = new File(_context.getTempDir(), "tmp" + _context.random().nextInt() + ZIP);
             // extract to a zip file whether the sig is good or not, so we can get the properties file
@@ -326,7 +326,7 @@ class PluginUpdateRunner extends UpdateRunner {
         /**
          *  @since 0.9.15
          */
-        private void processSU3(File f, File appDir, String url) {
+        protected void processSU3(File f, File appDir, String url) {
             SU3File su3 = new SU3File(_context, f);
             File to = new File(_context.getTempDir(), "tmp" + _context.random().nextInt() + ZIP);
             String sudVersion;
@@ -373,7 +373,7 @@ class PluginUpdateRunner extends UpdateRunner {
          *  @since 0.9.15
          *  @return null on error
          */
-        private Properties getPluginConfig(File f, File to, String url) {
+        protected Properties getPluginConfig(File f, File to, String url) {
             File tempDir = new File(_context.getTempDir(), "tmp" + _context.random().nextInt() + "-unzip");
             if (!FileUtil.extractZip(to, tempDir, Log.ERROR)) {
                 f.delete();
@@ -406,7 +406,7 @@ class PluginUpdateRunner extends UpdateRunner {
          *  @param pubkey null OK for su3
          *  @since 0.9.15
          */
-        private void processFinal(File to, File appDir, String url, Properties props, String sudVersion, String pubkey, String signer) {
+        protected void processFinal(File to, File appDir, String url, Properties props, String sudVersion, String pubkey, String signer) {
             boolean update = false;
             String appName = props.getProperty("name");
             String version = props.getProperty("version");
