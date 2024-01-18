@@ -35,9 +35,9 @@ public class PluginUpdateTorrentChecker extends UpdateRunner {
 
     @Override
     public void update() {
-        boolean httpSeed = updateCheckHTTP();
+        boolean httpSeed = updateCheck(_currentURI.toString(), false);
         if (httpSeed) {
-            boolean torrentSeed = updateCheckTorrent();
+            boolean torrentSeed = updateCheck(_torrentURI.toString(), true);
             if (!torrentSeed) {
                 _mgr.notifyCheckComplete(this, false, false);
             } else {
@@ -46,14 +46,6 @@ public class PluginUpdateTorrentChecker extends UpdateRunner {
         } else {
             _mgr.notifyCheckComplete(this, false, false);
         }
-    }
-    
-    protected boolean updateCheckHTTP() {
-        return updateCheck(_currentURI.toString(), false);
-    }
-
-    protected boolean updateCheckTorrent() {
-        return updateCheck(_torrentURI.toString(), true);
     }
 
     protected boolean updateCheck(String uriString, boolean torrent) {
@@ -87,10 +79,6 @@ public class PluginUpdateTorrentChecker extends UpdateRunner {
     }
 
     @Override
-    public void bytesTransferred(long alreadyTransferred, int currentWrite, long bytesTransferred, long bytesRemaining, String url) {
-    }
-
-    @Override
     public void transferComplete(long alreadyTransferred, long bytesTransferred, long bytesRemaining,
                                     String url, String outputFile, boolean notModified) {
         super.transferComplete(alreadyTransferred, bytesTransferred, bytesRemaining,
@@ -98,7 +86,7 @@ public class PluginUpdateTorrentChecker extends UpdateRunner {
         // super sets _newVersion if newer
         boolean newer = _newVersion != null;
         if (newer) {
-            _mgr.notifyVersionAvailable(this, _currentURI, UpdateType.PLUGIN, _appName, UpdateMethod.HTTP,
+            _mgr.notifyVersionAvailable(this, _currentURI, UpdateType.PLUGIN, _appName, UpdateMethod.TORRENT,
                                         _urls, _newVersion, _oldVersion);
         }
         _mgr.notifyCheckComplete(this, newer, true);
