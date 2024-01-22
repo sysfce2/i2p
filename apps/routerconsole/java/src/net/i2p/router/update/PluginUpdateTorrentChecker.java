@@ -34,22 +34,25 @@ public class PluginUpdateTorrentChecker extends PluginUpdateChecker {
 
     @Override
     public void update() {
-        boolean httpSeed = updateCheck(_currentURI.toString(), false);
-        // use the HTTP-only check to determine if there's an update available using
-        // PartialEepGet
-        if (httpSeed) {
-            // Here we know there is an update, but we don't know if there's a torrent update
-            boolean torrentSeed = updateCheck(_torrentURI.toString(), true);
-            if (!torrentSeed) {
-                // No torrent update available, just use the HTTP update
-                super.update();
-            } else {
-                // There's a torrent update available
-                _mgr.notifyCheckComplete(this, true, true);
-            }
+        boolean torrentSeed = updateCheck(_torrentURI.toString(), true);
+        if (!torrentSeed) {
+            // No torrent update available, just use the HTTP update
+            super.update();
+            return;
         } else {
-            // HTTP-only update check failed, we know nothing(special)
-            _mgr.notifyCheckComplete(this, false, false);
+            // There's a torrent available
+            //_mgr.notifyCheckComplete(this, true, true);
+            boolean httpSeed = updateCheck(_currentURI.toString(), false);
+            // use the HTTP-only check to determine if there's an update available using
+            // PartialEepGet
+            if (httpSeed) {
+                // Here we know there is an update and a corresponding torrent.
+                // We will check if the versions match before we peform the real update.
+                _mgr.notifyCheckComplete(this, httpSeed, torrentSeed);
+            } else {
+                // HTTP-only update check failed, we know nothing(special)
+                _mgr.notifyCheckComplete(this, false, false);
+            }
         }
     }
 
