@@ -31,6 +31,10 @@ import net.i2p.util.SecureDirectory;
 import net.i2p.util.SecureFile;
 import net.i2p.util.SystemVersion;
 import net.i2p.util.VersionComparator;
+import org.klomp.snark.I2PSnarkUtil;
+import org.klomp.snark.MetaInfo;
+import org.klomp.snark.Snark;
+import org.klomp.snark.SnarkManager;
 
 /**
  * Check for an updated version of a plugin.
@@ -71,54 +75,61 @@ class PluginUpdateTorrentRunner extends PluginUpdateRunner {
 
     @Override
     protected void update() {
-
         _updated = false;
         if (_xpi2pURL.startsWith("file:") || _method == UpdateMethod.FILE) {
-            // strip off file:// or just file:
-            String xpi2pfile = _uri.getPath();
-            if (xpi2pfile == null || xpi2pfile.length() == 0) {
-                statusDone("<b>" + _t("Bad URL {0}", _xpi2pURL) + "</b>");
-            } else {
-                // copy the contents of from to _updateFile
-                long alreadyTransferred = (new File(xpi2pfile)).getAbsoluteFile().length();
-                if (FileUtil.copy((new File(xpi2pfile)).getAbsolutePath(), _updateFile, true, false)) {
-                    updateStatus("<b>" + _t("Attempting to install from file {0}", _xpi2pURL) + "</b>");
-                    transferComplete(alreadyTransferred, alreadyTransferred, 0L, _xpi2pURL, _updateFile, false);
-                } else {
-                    statusDone("<b>" + _t("Failed to install from file {0}, copy failed.", _xpi2pURL) + "</b>");
-                }
-            }
+            super.update();
+            return;
         } else {
-            // use the same settings as for updater
-            // boolean shouldProxy =
-            // _context.getProperty(ConfigUpdateHandler.PROP_SHOULD_PROXY,
-            // ConfigUpdateHandler.DEFAULT_SHOULD_PROXY);
-            // always proxy, or else FIXME
-            boolean shouldProxy = true;
-            String proxyHost = _context.getProperty(ConfigUpdateHandler.PROP_PROXY_HOST,
-                    ConfigUpdateHandler.DEFAULT_PROXY_HOST);
-            int proxyPort = ConfigUpdateHandler.proxyPort(_context);
-            if (shouldProxy && proxyPort == ConfigUpdateHandler.DEFAULT_PROXY_PORT_INT &&
-                    proxyHost.equals(ConfigUpdateHandler.DEFAULT_PROXY_HOST) &&
-                    _context.portMapper().getPort(PortMapper.SVC_HTTP_PROXY) < 0) {
-                String msg = _t("HTTP client proxy tunnel must be running");
-                if (_log.shouldWarn())
-                    _log.warn(msg);
-                statusDone("<b>" + msg + "</b>");
-                _mgr.notifyTaskFailed(this, msg, null);
-                return;
-            }
-            updateStatus("<b>" + _t("Downloading plugin from {0}", _xpi2pURL) + "</b>");
-            try {
-                if (shouldProxy)
-                    // 10 retries!!
-                    _get = new EepGet(_context, proxyHost, proxyPort, 10, _updateFile, _xpi2pURL, false);
-                else
+            if (_xpi2pURL.endsWith(".torrent")) {
+                updateStatus("<b>" + _t("Downloading plugin from {0}", _xpi2pURL) + "</b>");
+                try {
                     _get = new EepGet(_context, 1, _updateFile, _xpi2pURL, false);
-                _get.addStatusListener(PluginUpdateTorrentRunner.this);
-                _get.fetch(CONNECT_TIMEOUT, -1, shouldProxy ? INACTIVITY_TIMEOUT : NOPROXY_INACTIVITY_TIMEOUT);
-            } catch (Throwable t) {
-                _log.error("Error downloading plugin", t);
+                    _get.fetch(CONNECT_TIMEOUT, -1, true ? INACTIVITY_TIMEOUT : NOPROXY_INACTIVITY_TIMEOUT);
+                    File uf = new File(_updateFile);
+                    if (uf.exists()) {
+                        FileInputStream fis = new FileInputStream(uf);
+                        MetaInfo torrent = new MetaInfo(fis);
+                        fis.close();
+                        byte[] ih = torrent.getInfoHash();
+                        // do we already have it?
+                        SnarkManager _smgr = new SnarkManager(_context);
+                        Snark snark = _smgr.getTorrentByInfoHash(ih);
+                        /*if (_snark != null) {
+                            if (_snark.getMetaInfo() != null) {
+                                 _hasMetaInfo = true;
+                                 Storage storage = _snark.getStorage();
+                                 if (storage != null && storage.complete())
+                                     processComplete(_snark);
+                            }
+                            if (!_isComplete) {
+                                if (_snark.isStopped() && !_snark.isStarting())
+                                    _snark.startTorrent();
+                                // we aren't a listener so we must poll
+                                new Watcher();
+                            }
+                            break;
+                        }*/
+                        /*String name = torrent.getName();
+                        String trackerURL = torrent.getTrackerURL();
+                        if (trackerURL == null && !_smgr.util().shouldUseDHT() &&
+                            !_smgr.util().shouldUseOpenTrackers()) {
+                            // but won't we use OT as a failsafe even if disabled?
+                            _umgr.notifyAttemptFailed(this, "No tracker, no DHT, no OT", null);
+                            continue;
+                        }
+                        _snark = _smgr.addMagnet(name, ih, trackerURL, true, true, null, this);
+                        if (_snark != null) {
+                            updateStatus("<b>" + _smgr.util().getString("Updating from {0}", linkify(updateURL)) + "</b>");
+                            new Timeout();
+                            break;
+                        }*/
+                    }
+                } catch (Throwable t) {
+                    _log.error("Error downloading plugin", t);
+                }
+            } else {
+                super.update();
+                return;
             }
         }
         if (_updated) {

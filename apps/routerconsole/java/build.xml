@@ -30,6 +30,7 @@
                 <pathelement location="../../jetty/jettylib/jetty-i2p.jar" />
                 <pathelement location="../../systray/java/build/obj" />
                 <pathelement location="../../desktopgui/build" />
+                <pathelement location="../../i2psnark/java/build/i2psnark.jar" />
                 <pathelement location="../../../installer/lib/wrapper/all/wrapper.jar" />
                 <pathelement location="../../jrobin/java/build/jrobin.jar" />
             </classpath>
@@ -82,6 +83,7 @@
                 <pathelement location="../../jetty/jettylib/jetty-i2p.jar" />
                 <pathelement location="../../systray/java/build/systray.jar" />
                 <pathelement location="../../desktopgui/dist/desktopgui.jar" />
+                <pathelement location="../../i2psnark/java/build/i2psnark.jar" />
                 <pathelement location="../../../installer/lib/wrapper/all/wrapper.jar" />
                 <pathelement location="../../jrobin/java/build/jrobin.jar" />
 

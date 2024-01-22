@@ -379,7 +379,7 @@
         <copy file="apps/desktopgui/dist/desktopgui.jar" todir="build/" />
     </target>
 
-    <target name="buildRouterConsole" depends="buildrouter, buildSystray, buildDesktopGui, buildJetty, buildJrobin" >
+    <target name="buildRouterConsole" depends="buildrouter, buildSystray, buildDesktopGui, buildJetty, buildJrobin, i2psnark" >
         <ant dir="apps/routerconsole/java/" target="jar" />
     </target>
 
