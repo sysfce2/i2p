@@ -85,7 +85,6 @@ class PluginUpdateTorrentRunner extends PluginUpdateRunner implements CompleteLi
             _xpi2pURLTorrent = uris.get(1).toString();
         else
             _xpi2pURLTorrent = "";
-        // if (_xpi2pURLTorrent.endsWith(".torrent")
     }
 
     @Override
@@ -177,6 +176,7 @@ class PluginUpdateTorrentRunner extends PluginUpdateRunner implements CompleteLi
         SnarkManager _smgr = getSnarkManager();
         if (_smgr == null) {
             _log.error("No SnarkManager, can't find plugin update");
+            super.transferComplete(alreadyTransferred, bytesTransferred, bytesRemaining, url, outputFile, notModified);
             return;
         }
         String file = _snark.getBaseName();
@@ -327,19 +327,22 @@ class PluginUpdateTorrentRunner extends PluginUpdateRunner implements CompleteLi
     }
 
     private void processComplete(Snark snark) {
+        String url = _snark.getMetaInfo().toMagnetURI();
         SnarkManager _smgr = getSnarkManager();
         if (_smgr == null) {
             _log.warn("No SnarkManager");
             return;
         }
         String dataFile = snark.getBaseName();
-        File f = new File(getSnarkManager().getDataDir(), dataFile);
+        File f = new File(_smgr.getDataDir(), dataFile);
         String sudVersion = TrustedUpdate.getVersionString(f);
         if (_newVersion.equals(sudVersion))
             _mgr.notifyComplete(this, _newVersion, f);
         else
             fatal("version mismatch");
         _isComplete = true;
+        long alreadyTransferred = f.getAbsoluteFile().length();
+        transferComplete(alreadyTransferred, alreadyTransferred, 0, _xpi2pURL, null, false);
     }
 
     /**
@@ -444,9 +447,10 @@ class PluginUpdateTorrentRunner extends PluginUpdateRunner implements CompleteLi
         if (_hasMetaInfo && _snark != null) {
             long total = _snark.getTotalLength();
             long remaining = _snark.getRemainingLength();
+            long transferred = total - remaining;
             String status = "<b>" + _smgr.util().getString("Updating") + "</b>";
             _mgr.notifyProgress(this, status, total - remaining, total);
-            this.bytesTransferred(remaining, MAX_PRIORITY, total, remaining, status);
+            bytesTransferred(total, 0, transferred, remaining, _xpi2pURLTorrent);
         }
     }
 }
