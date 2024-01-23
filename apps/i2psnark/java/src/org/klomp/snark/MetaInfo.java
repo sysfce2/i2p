@@ -789,6 +789,22 @@ public class MetaInfo
     return Collections.unmodifiableMap(infoMap);
   }
 
+  public String toMagnetURI() {
+    String magnetURIString = "magnet:?xt=urn:btih:" + I2PSnarkUtil.toHex(calculateInfoHash());
+    if (_log.shouldLog(Log.DEBUG))
+      _log.debug("Created magnet URI: " + magnetURIString);
+    long exactLength = getTotalLength();
+    if (exactLength != 0)
+      magnetURIString += "&xl=" + exactLength;
+    String announce = getAnnounce();
+    if (announce != null)
+      magnetURIString += "&tr=" + announce;
+    List<String> webSeeds = getWebSeedURLs();
+    if (webSeeds != null)
+      magnetURIString += "&ws=" + webSeeds.get(0);
+    return magnetURIString;
+  }
+
   private byte[] calculateInfoHash()
   {
     Map<String, BEValue> info = createInfoMap();

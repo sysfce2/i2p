@@ -33,6 +33,7 @@
                 <pathelement location="../../i2psnark/java/build/i2psnark.jar" />
                 <pathelement location="../../../installer/lib/wrapper/all/wrapper.jar" />
                 <pathelement location="../../jrobin/java/build/jrobin.jar" />
+                <pathelement location="../../../build/mstreaming.jar" />
             </classpath>
         </depend>
     </target>
@@ -67,6 +68,7 @@
             <compilerarg line="${javac.compilerargs}" />
             <classpath>
                 <pathelement location="../../../core/java/build/i2p.jar" />
+                <pathelement location="../../../build/mstreaming.jar" />
                 <!-- gnu-getopt.jar only present for debian builds -->
                 <pathelement location="../../../core/java/build/gnu-getopt.jar" />
                 <pathelement location="../../../router/java/build/router.jar" />
