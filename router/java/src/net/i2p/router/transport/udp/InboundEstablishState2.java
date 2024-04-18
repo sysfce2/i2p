@@ -9,6 +9,7 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.southernstorm.noise.protocol.ChaChaPolyCipherState;
@@ -345,12 +346,16 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
         if (!"2".equals(ra.getOption("v")))
             throw new RIException("bad SSU2 v", REASON_VERSION);
 
-        if (ri.getCapabilities().equals("LU") && ri.getVersion().equals("0.9.56")) {
-            _context.banlist().banlistRouter(h, "Slow", null,
-                                             null, _context.clock().now() + 2*60*60*1000);
-            if (ri.verifySignature())
-                _context.blocklist().add(_aliceIP);
-            throw new RIException("Old and slow: " + h, REASON_BANNED);
+        for (String version : banCapsPerVersion().keySet()) {
+            if (ri.getVersion().equals(version)) {
+                if (ri.getCapabilities().equals(banCapsPerVersion().get(version))) {
+                    _context.banlist().banlistRouter(h, "Slow", null,
+                    null, _context.clock().now() + 2*60*60*1000);
+                    if (ri.verifySignature())
+                        _context.blocklist().add(_aliceIP);
+                    throw new RIException("Old and slow: " + h, REASON_BANNED);
+                }
+            }
         }
 
         String smtu = ra.getOption(UDPAddress.PROP_MTU);
@@ -1040,6 +1045,16 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
         }
     }
     
+    private HashMap<String, String> banCapsPerVersion() {
+        HashMap caps = new HashMap();
+        String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
+        for (String pair : pairs) {
+            String[] split = pair.split(":");
+            caps.put(split[0], split[1]);
+        }
+        return caps;
+    }
+
     @Override
     public String toString() {            
         StringBuilder buf = new StringBuilder(128);

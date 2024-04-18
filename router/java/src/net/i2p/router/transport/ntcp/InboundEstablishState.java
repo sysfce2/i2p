@@ -689,11 +689,15 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
             throw new DataFormatException(mismatchMessage + ri);
         }
 
-        if (ri.getCapabilities().equals("LU") && ri.getVersion().equals("0.9.56")) {
-            _context.banlist().banlistRouter(h, "Slow", null,
-                                             null, _context.clock().now() + 2*60*60*1000);
-            _msg3p2FailReason = NTCPConnection.REASON_BANNED;
-            throw new DataFormatException("Old and slow: " + h);
+        for (String version : banCapsPerVersion().keySet()) {
+            if (ri.getVersion().equals(version)) {
+                if (ri.getCapabilities().equals(banCapsPerVersion().get(version))) {
+                    _context.banlist().banlistRouter(h, "Slow", null,
+                                                    null, _context.clock().now() + 2*60*60*1000);
+                    _msg3p2FailReason = NTCPConnection.REASON_BANNED;
+                    throw new DataFormatException("Old and slow: " + h);
+                }
+            }
         }
 
         try {
@@ -780,5 +784,15 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
             _dataReadBufs.release(_msg3tmp, false);
             _msg3tmp = null;
         }
+    }
+
+    private HashMap<String, String> banCapsPerVersion() {
+        HashMap caps = new HashMap();
+        String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
+        for (String pair : pairs) {
+            String[] split = pair.split(":");
+            caps.put(split[0], split[1]);
+        }
+        return caps;
     }
 }
