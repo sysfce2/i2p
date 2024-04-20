@@ -795,7 +795,7 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
     private HashMap<String, String> banCapsPerVersion() {
         HashMap caps = new HashMap<String, String>();
         if (_log.shouldDebug())
-                _log.debug("Got token request from: " + _aliceSocketAddress);
+            _log.debug("Performance check: reading router.config file for ban version/caps pairs");
         String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
         for (String pair : pairs) {
             String[] split = pair.split(":");
