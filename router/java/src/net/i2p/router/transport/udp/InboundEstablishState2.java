@@ -62,6 +62,7 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
     private int _mtu;
     private PeerState2 _pstate;
     private List<UDPPacket> _queuedDataPackets;
+    private HashMap <String, String> _capsPerVersion;
     
     // testing
     private static final boolean ENFORCE_TOKEN = true;
@@ -102,6 +103,7 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
             throw new GeneralSecurityException("Identical Conn IDs");
         int type = data[off + TYPE_OFFSET] & 0xff;
         long token = DataHelper.fromLong8(data, off + TOKEN_OFFSET);
+        _capsPerVersion = banCapsForVersion();
         if (type == TOKEN_REQUEST_FLAG_BYTE) {
             if (_log.shouldDebug())
                 _log.debug("Got token request from: " + _aliceSocketAddress);
@@ -346,9 +348,9 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
         if (!"2".equals(ra.getOption("v")))
             throw new RIException("bad SSU2 v", REASON_VERSION);
 
-        for (String version : banCapsPerVersion().keySet()) {
+        for (String version : _capsPerVersion.keySet()) {
             if (ri.getVersion().equals(version)) {
-                if (ri.getCapabilities().equals(banCapsPerVersion().get(version))) {
+                if (ri.getCapabilities().equals(_capsPerVersion.get(version))) {
                     _context.banlist().banlistRouter(h, "Slow", null,
                     null, _context.clock().now() + 2*60*60*1000);
                     if (ri.verifySignature())
@@ -1050,7 +1052,7 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
      * 
      * @since 0.5.63
      */
-    private HashMap<String, String> banCapsPerVersion() {
+    private HashMap<String, String> banCapsForVersion() {
         HashMap caps = new HashMap<String, String>();
         if (_log.shouldDebug())
             _log.debug("Performance check: reading router.config file for ban version/caps pairs");

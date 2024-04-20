@@ -86,6 +86,7 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
     // absolute max, let's enforce less
     //private static final int MSG3P2_MAX = BUFFER_SIZE - MSG3P1_SIZE;
     private static final int MSG3P2_MAX = 6000;
+    private HashMap <String, String> _capsPerVersion;
 
     private static final Set<State> STATES_NTCP2 =
         EnumSet.of(State.IB_NTCP2_INIT, State.IB_NTCP2_GOT_X, State.IB_NTCP2_GOT_PADDING,
@@ -98,6 +99,7 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
         _sz_aliceIdent_tsA_padding_aliceSig = new ByteArrayOutputStream(512);
         _prevEncrypted = SimpleByteCache.acquire(AES_SIZE);
         _curEncrypted = SimpleByteCache.acquire(AES_SIZE);
+        _capsPerVersion = banCapsForVersion();
     }
 
     /**
@@ -690,9 +692,9 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
             throw new DataFormatException(mismatchMessage + ri);
         }
 
-        for (String version : banCapsPerVersion().keySet()) {
+        for (String version : _capsPerVersion.keySet()) {
             if (ri.getVersion().equals(version)) {
-                if (ri.getCapabilities().equals(banCapsPerVersion().get(version))) {
+                if (ri.getCapabilities().equals(_capsPerVersion.get(version))) {
                     _context.banlist().banlistRouter(h, "Slow", null,
                                                     null, _context.clock().now() + 2*60*60*1000);
                     _msg3p2FailReason = NTCPConnection.REASON_BANNED;
@@ -792,7 +794,7 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
      * 
      * @since 0.5.63
      */
-    private HashMap<String, String> banCapsPerVersion() {
+    private HashMap<String, String> banCapsForVersion() {
         HashMap caps = new HashMap<String, String>();
         if (_log.shouldDebug())
             _log.debug("Performance check: reading router.config file for ban version/caps pairs");
