@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -786,12 +787,17 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
         }
     }
 
+    /**
+     * get a list of caps and versions which should be soft-banned from the router.config file
+     * 
+     * @since 0.5.63
+     */
     private HashMap<String, String> banCapsPerVersion() {
-        HashMap caps = new HashMap();
+        HashMap caps = new HashMap<String, String>();
         String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
         for (String pair : pairs) {
             String[] split = pair.split(":");
-            caps.put(split[0], split[1]);
+            if (split.length == 2) caps.put(split[0], split[1]);
         }
         return caps;
     }
