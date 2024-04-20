@@ -65,8 +65,8 @@ class Mail {
 	
 	private static final String DATEFORMAT = "date.format";
 	private static final String unknown = "unknown";
-	private static final String P1 = "^[^@< \t]+@[^> \t]+$";
-	private static final String P2 = "^<[^@< \t]+@[^> \t]+>$";
+	private static final String P1 = "^[^@< \t]+@[A-Za-z0-9-]+\\.[A-Za-z0-9\\.-]+$";
+	private static final String P2 = "^<[^@< \t]+@[A-Za-z0-9-]+\\.[A-Za-z0-9\\.-]+>$";
 	private static final Pattern PATTERN1 = Pattern.compile(P1);
 	private static final Pattern PATTERN2 = Pattern.compile(P2);
 	/**
@@ -77,7 +77,7 @@ class Mail {
 
 	private long size;
 	public String sender,   // as received, trimmed only, not HTML escaped
-		reply,
+		reply,          // address only, enclosed by <>
 		subject,	// as received, trimmed only, not HTML escaped, non-null, default ""
 		dateString,
 		//formattedSender,    // address only, enclosed with <>, not HTML escaped
@@ -243,7 +243,9 @@ class Mail {
 		// if part != null query parts instead?
 		return contentType != null &&
 			!contentType.contains("text/plain") &&
+			!contentType.contains("text/html") &&
 			!contentType.contains("multipart/alternative") &&
+			!contentType.contains("multipart/related") &&
 			!contentType.contains("multipart/signed");
 	}
 
@@ -268,11 +270,11 @@ class Mail {
 		int addresses = 0;
 		
 		for( int i = 0; i < tokens.length; i++ ) {
-			if( tokens[i].matches( "^[^@< \t]+@[^> \t]+$" ) ||
-					tokens[i].matches( "^<[^@< \t]+@[^> \t]+>$" ) )
+			if (PATTERN1.matcher(tokens[i]).matches() ||
+			    PATTERN2.matcher(tokens[i]).matches())
 				addresses++;
 		}
-		return addresses == 1;
+		return addresses > 0;
 	}
 
 	/**

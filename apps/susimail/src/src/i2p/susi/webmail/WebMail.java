@@ -67,11 +67,13 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -412,6 +414,8 @@ public class WebMail extends HttpServlet
 			buf.append(" beforePopup\"");
 		else
 			buf.append('"');
+		if (name.equals(NEW_UPLOAD))
+			buf.append(" id=\"" + NEW_UPLOAD + '"');
 		// These are icons only now, via the CSS, so add a tooltip
 		if (name.equals(FIRSTPAGE) || name.equals(PREVPAGE) || name.equals(NEXTPAGE) || name.equals(LASTPAGE) ||
 		    name.equals(PREV) || name.equals(LIST) || name.equals(NEXT))
@@ -573,9 +577,21 @@ public class WebMail extends HttpServlet
 									            _t("View email as plain text") + "</a></p>");
 									out.println( "</td></tr>" );
 								}
+							} else if (subPart.cid != null && subPart.type != null &&
+							           subPart.type.startsWith("image/") &&
+							           ("text/html".equals(chosen.type) || "text/html".equals(chosen.multipart_type)) &&
+							           mailPart.type.equals("multipart/related")) {
+								// assume image with CID was loaded in the iframe
+								// don't show it as an attachment also
+								out.println("<!-- ");
+								out.println("Debug: Not showing related Mail Part with CID at level " + (level + 1) + " with ID " + subPart.getID());
+								out.println("Debug: Mail Part headers follow");
+								for (int i = 0; i < subPart.headerLines.length; i++) {
+									out.println(subPart.headerLines[i].replace("--", "&#45;&#45;"));
+								}
+								out.println( "-->");
 							} else {
 								// show as attachment
-								// if image is loaded as a CID in the iframe, we will still show it as an attachment also
 								showPart(out, subPart, level + 1, html, allowHtml);
 							}
 						}
@@ -1253,7 +1269,7 @@ public class WebMail extends HttpServlet
 					MailPart part = mail != null ? mail.getPart() : null;
 					if (part != null) {
 						StringBuilderWriter text = new StringBuilderWriter();
-						String from = null, to = null, cc = null, bcc = null, subject = null;
+						String to = null, cc = null, bcc = null, subject = null;
 						List<Attachment> attachments = null;
 						if( reply || replyAll ) {
 							if( mail.reply != null && Mail.validateAddress( mail.reply ) )
@@ -1282,27 +1298,35 @@ public class WebMail extends HttpServlet
 						}
 						if( replyAll ) {
 							/*
-							 * extract additional recipients
+							 * extract additional recipients and dedup
 							 */
+							String us = '<' + sessionObject.user + '@' + Config.getProperty(CONFIG_SENDER_DOMAIN, "mail.i2p") + '>';
 							StringBuilder buf = new StringBuilder();
-							String pad = "";
-							// TODO original recipients should be in the To: line, not the CC: line
 							if( mail.to != null ) {
-								for( int i = 0; i < mail.to.length; i++ ) {
+								String pad = to.length() > 0 ? ", " : "";
+								for (String s : mail.to) {
+									if (s.equals(us) || s.equals(to))
+										continue;
 									buf.append( pad );
-									buf.append(mail.to[i]);
+									buf.append(s);
 									pad = ", ";
 								}
+								if (buf.length() > 0)
+									to += buf.toString();
 							}
 							if( mail.cc != null ) {
-								for( int i = 0; i < mail.cc.length; i++ ) {
+								buf.setLength(0);
+								String pad = "";
+								for (String s : mail.cc) {
+									if (s.equals(us))
+										continue;
 									buf.append( pad );
-									buf.append(mail.cc[i]);
+									buf.append(s);
 									pad = ", ";
 								}
+								if (buf.length() > 0)
+									cc = buf.toString();
 							}
-							if( buf.length() > 0 )
-								cc = buf.toString();
 						}
 						I2PAppContext ctx = I2PAppContext.getGlobalContext();
 						if( forward ) {
@@ -1396,7 +1420,7 @@ public class WebMail extends HttpServlet
 						}
 						// Store as draft here, put draft UIDL in sessionObject,
 						// then P-R-G in processRequest()
-						StringBuilder draft = composeDraft(sessionObject, from, to, cc, bcc,
+						StringBuilder draft = composeDraft(sessionObject, null, to, cc, bcc,
 						                                   subject, text.toString(), attachments);
 						String draftuidl = ctx.random().nextLong() + "drft";
 						boolean ok = saveDraft(sessionObject, draftuidl, draft);
@@ -2594,7 +2618,7 @@ public class WebMail extends HttpServlet
 				                                                   Long.toString(ctx.random().nextLong());
 				sessionObject.addNonce(nonce);
 				out.println(
-					"<div class=\"page\">" +
+					"<div class=\"page\" id=\"page\">" +
 					"<form method=\"POST\" enctype=\"multipart/form-data\" action=\"" + myself + "\" accept-charset=\"UTF-8\">\n" +
 					"<input type=\"hidden\" name=\"" + SUSI_NONCE + "\" value=\"" + nonce + "\">\n" +
 					// we use this to know if the user thought he was logged in at the time
@@ -2918,8 +2942,7 @@ public class WebMail extends HttpServlet
 
 		boolean fixed = Boolean.parseBoolean(Config.getProperty( CONFIG_SENDER_FIXED, "true" ));
 		if (fixed) {
-			String domain = Config.getProperty( CONFIG_SENDER_DOMAIN, "mail.i2p" );
-			from = "<" + sessionObject.user + "@" + domain + ">";
+			from = getDefaultSender(sessionObject);
 		}
 		ArrayList<String> toList = new ArrayList<String>();
 		ArrayList<String> ccList = new ArrayList<String>();
@@ -3314,25 +3337,7 @@ public class WebMail extends HttpServlet
 		boolean fixed = Boolean.parseBoolean(Config.getProperty( CONFIG_SENDER_FIXED, "true" ));
 
 		if (from.length() <= 0 || !fixed) {
-			String user = sessionObject.user;
-			String name = Config.getProperty(CONFIG_SENDER_NAME);
-			if (name != null) {
-				name = name.trim();
-				if (name.contains(" "))
-					from = '"' + name + "\" ";
-				else
-					from = name + ' ';
-			} else {
-				from = "";
-			}
-			if (user.contains("@")) {
-				from += '<' + user + '>';
-			} else {
-				String domain = Config.getProperty( CONFIG_SENDER_DOMAIN, "mail.i2p" );
-				if (from.length() == 0)
-					from = user + ' ';
-				from += '<' + user + '@' + domain + '>';
-			}
+			from = getDefaultSender(sessionObject);
 		}
 
 		out.println( "<div id=\"composemail\"><table id=\"newmail\" cellspacing=\"0\" cellpadding=\"5\">\n" +
@@ -3369,6 +3374,37 @@ public class WebMail extends HttpServlet
 				    "</td></tr>");
 		}
 		out.println( "</table></div>" );
+	}
+
+	/**
+	 *  The sender string
+	 *
+	 *  @return non-null
+	 *  @since 0.9.63 pulled out of showCompose()
+	 *
+	 */
+	private static String getDefaultSender(SessionObject sessionObject) {
+		String from;
+		String user = sessionObject.user;
+		String name = Config.getProperty(CONFIG_SENDER_NAME);
+		if (name != null && name.length() > 0) {
+			name = name.trim();
+			if (name.contains(" "))
+				from = '"' + name + "\" ";
+			else
+				from = name + ' ';
+		} else {
+			from = "";
+		}
+		if (user.contains("@")) {
+			from += '<' + user + '>';
+		} else {
+			String domain = Config.getProperty(CONFIG_SENDER_DOMAIN, "mail.i2p");
+			if (from.length() == 0)
+				from = user + ' ';
+			from += '<' + user + '@' + domain + '>';
+		}
+		return from;
 	}
 
 	/**
@@ -3728,9 +3764,19 @@ public class WebMail extends HttpServlet
 		out.println( button( NEW, _t("New") ) + spacer);
 		boolean hasHeader = mail != null && mail.hasHeader();
 		if (hasHeader) {
-			out.println(button( REPLY, _t("Reply") ) +
-				button( REPLYALL, _t("Reply All") ) +
-				button( FORWARD, _t("Forward") ) +
+			out.println(button(REPLY, _t("Reply")));
+			// dedup sender/to/cc/us to get a true count of recipients
+			Set<String> rep = new HashSet<String>();
+			if (mail.to != null)
+				rep.addAll(Arrays.asList(mail.to));
+			if (mail.cc != null)
+				rep.addAll(Arrays.asList(mail.cc));
+			if (mail.reply == null)
+				rep.remove(mail.sender);
+			rep.remove('<' + sessionObject.user + '@' + Config.getProperty(CONFIG_SENDER_DOMAIN, "mail.i2p") + '>');
+			if (!rep.isEmpty())
+				out.println(button(REPLYALL, _t("Reply All")));
+			out.println(button( FORWARD, _t("Forward") ) +
 				button( SAVE_AS, _t("Save As")));
 			if (sessionObject.reallyDelete)
 				out.println(button2(DELETE, _t("Delete")));
