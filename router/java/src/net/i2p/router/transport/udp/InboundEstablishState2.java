@@ -1050,7 +1050,9 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
     /**
      * get a list of caps and versions which should be soft-banned from the router.config file
      * 
-     * @since 0.5.63
+     * 
+     * @since 0.9.63
+     * @return a map of caps and versions
      */
     private HashMap<String, String> banCapsForVersion() {
         HashMap caps = new HashMap<String, String>();
@@ -1059,7 +1061,13 @@ class InboundEstablishState2 extends InboundEstablishState implements SSU2Payloa
         String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
         for (String pair : pairs) {
             String[] split = pair.split(":");
-            if (split.length == 2) caps.put(split[0], split[1]);
+            if (split.length == 2) {
+                String validatedVersion = split[0];
+                if (!VersionComparator.isValid(validatedVersion))
+                    continue;
+                String validatedCaps = split[1];
+                caps.put(validatedVersion, validatedCaps);
+            }
         }
         return caps;
     }

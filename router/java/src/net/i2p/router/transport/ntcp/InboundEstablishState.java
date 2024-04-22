@@ -39,6 +39,7 @@ import net.i2p.util.ByteArrayStream;
 import net.i2p.util.ByteCache;
 import net.i2p.util.Log;
 import net.i2p.util.SimpleByteCache;
+import net.i2p.util.VersionComparator;
 
 /**
  *
@@ -793,6 +794,7 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
      * get a list of caps and versions which should be soft-banned from the router.config file
      * 
      * @since 0.5.63
+     * @return a map of caps and versions
      */
     private HashMap<String, String> banCapsForVersion() {
         HashMap caps = new HashMap<String, String>();
@@ -801,7 +803,13 @@ class InboundEstablishState extends EstablishBase implements NTCP2Payload.Payloa
         String[] pairs = _context.getProperty("router.banVersionCaps", "0.9.56:LU").split(",");
         for (String pair : pairs) {
             String[] split = pair.split(":");
-            if (split.length == 2) caps.put(split[0], split[1]);
+            if (split.length == 2) {
+                String validatedVersion = split[0];
+                if (!VersionComparator.isValid(validatedVersion))
+                    continue;
+                String validatedCaps = split[1];
+                caps.put(validatedVersion, validatedCaps);
+            }
         }
         return caps;
     }

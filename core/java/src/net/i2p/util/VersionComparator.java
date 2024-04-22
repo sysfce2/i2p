@@ -115,4 +115,16 @@ public class VersionComparator implements Comparator<String>, Serializable {
             return -1;
         return rv;
     }
+
+    /**
+     * Validate an API version string.
+     * 
+     * @param version
+     * @return true if valid
+     */
+    public static boolean isValid(String version) {
+        if (version.split(".").length != 3)
+            return false;
+        return true;
+    }
 }
