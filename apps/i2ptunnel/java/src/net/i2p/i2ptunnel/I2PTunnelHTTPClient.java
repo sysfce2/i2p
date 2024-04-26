@@ -192,7 +192,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "The request uses a bad protocol. " +
             "The I2P HTTP Proxy supports HTTP and HTTPS requests only. Other protocols such as FTP are not allowed.<BR>";
 
-    private final static String ERR_BAD_URI =
+    protected final static String ERR_BAD_URI =
             "HTTP/1.1 403 Bad URI\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -468,55 +468,12 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
                     if(params.length != 3) {
                         break;
                     }
-                    String request = params[1];
-
-                    // various obscure fixups
-                    if(request.startsWith("/") && getTunnel().getClientOptions().getProperty("i2ptunnel.noproxy") != null) {
-                        // what is this for ???
-                        request = "http://i2p" + request;
-                    } else if(request.startsWith("/eepproxy/")) {
-                        // Deprecated
-                        // /eepproxy/foo.i2p/bar/baz.html
-                        String subRequest = request.substring("/eepproxy/".length());
-                        if(subRequest.indexOf('/') == -1) {
-                            subRequest += '/';
-                        }
-                        request = "http://" + subRequest;
-                    /****
-                    } else if (request.toLowerCase(Locale.US).startsWith("http://i2p/")) {
-                    // http://i2p/b64key/bar/baz.html
-                    // we can't do this now by setting the URI host to the b64key, as
-                    // it probably contains '=' and '~' which are illegal,
-                    // and a host may not include escaped octets
-                    // This will get undone below.
-                    String subRequest = request.substring("http://i2p/".length());
-                    if (subRequest.indexOf("/") == -1)
-                    subRequest += "/";
-                    "http://" + "b64key/bar/baz.html"
-                    request = "http://" + subRequest;
-                    } else if (request.toLowerCase(Locale.US).startsWith("http://")) {
-                    // Unsupported
-                    // http://$b64key/...
-                    // This probably used to work, rewrite it so that
-                    // we can create a URI without illegal characters
-                    // This will get undone below.
-                    String  oldPath = request.substring(7);
-                    int slash = oldPath.indexOf("/");
-                    if (slash < 0)
-                    slash = oldPath.length();
-                    if (slash >= 516 && !oldPath.substring(0, slash).contains("."))
-                    request = "http://i2p/" + oldPath;
-                     ****/
-                    }
+                    String request = fixupRequest(params[0],params[1]);
 
                     method = params[0].toUpperCase(Locale.US);
                     if (method.equals("HEAD")) {
                         isHead = true;
                     } else if (method.equals("CONNECT")) {
-                        // this makes things easier later, by spoofing a
-                        // protocol so the URI parser find the host and port
-                        // For in-net outproxy, will be fixed up below
-                        request = "https://" + request + '/';
                         isConnect = true;
                         keepalive = false;
                     } else if (!method.equals("GET")) {
@@ -1687,7 +1644,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
      *  Warning - DataHelper limits line length, BufferedReader does not
      *  Todo: Limit line length for buffered reads, or go back to unbuffered for all
      */
-    private static class InputReader {
+    protected static class InputReader {
         InputStream _s;
 
         public InputReader(InputStream s) {
@@ -1797,7 +1754,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
      *
      *  @since 0.9
      */
-    private static URI changeURI(URI uri, String host, int port, String path) throws URISyntaxException {
+    protected static URI changeURI(URI uri, String host, int port, String path) throws URISyntaxException {
         return new URI(uri.getScheme(),
                 null,
                 host != null ? host : uri.getHost(),
@@ -1877,6 +1834,57 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             }
         }
         return null;
+    }
+
+    protected String fixupRequest(String requestMethod, String requestParam) {
+        String request = requestParam;
+        // various obscure fixups
+        if(request.startsWith("/") && getTunnel().getClientOptions().getProperty("i2ptunnel.noproxy") != null) {
+            // what is this for ???
+            request = "http://i2p" + request;
+        } else if(request.startsWith("/eepproxy/")) {
+            // Deprecated
+            // /eepproxy/foo.i2p/bar/baz.html
+            String subRequest = request.substring("/eepproxy/".length());
+            if(subRequest.indexOf('/') == -1) {
+                subRequest += '/';
+            }
+            request = "http://" + subRequest;
+        /****
+        } else if (request.toLowerCase(Locale.US).startsWith("http://i2p/")) {
+        // http://i2p/b64key/bar/baz.html
+        // we can't do this now by setting the URI host to the b64key, as
+        // it probably contains '=' and '~' which are illegal,
+        // and a host may not include escaped octets
+        // This will get undone below.
+        String subRequest = request.substring("http://i2p/".length());
+        if (subRequest.indexOf("/") == -1)
+        subRequest += "/";
+        "http://" + "b64key/bar/baz.html"
+        request = "http://" + subRequest;
+        } else if (request.toLowerCase(Locale.US).startsWith("http://")) {
+        // Unsupported
+        // http://$b64key/...
+        // This probably used to work, rewrite it so that
+        // we can create a URI without illegal characters
+        // This will get undone below.
+        String  oldPath = request.substring(7);
+        int slash = oldPath.indexOf("/");
+        if (slash < 0)
+        slash = oldPath.length();
+        if (slash >= 516 && !oldPath.substring(0, slash).contains("."))
+        request = "http://i2p/" + oldPath;
+            ****/
+        }
+
+        String method = request.toUpperCase(Locale.US);
+        if (method.equals("CONNECT")) {
+            // this makes things easier later, by spoofing a
+            // protocol so the URI parser find the host and port
+            // For in-net outproxy, will be fixed up below
+            request = "https://" + request + '/';
+        }
+        return request;
     }
 
 /****
