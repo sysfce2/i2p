@@ -371,7 +371,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClient {
                         String hostName = requestURI.getHost();
                         if(hostName != null) {
                             host = hostName;
-                            hostLowerCase = host.toLowerCase(Locale.US);>
+                            hostLowerCase = host.toLowerCase(Locale.US);
                         }
                         /**
                          * This is where the host-specific logic happens
