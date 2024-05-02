@@ -798,7 +798,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS24 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS24, POINTS24_MAX);
             int i = ii.intValue();
             int i0 = i >> 16;
             int i1 = (i >> 8) & 0xff;
@@ -850,7 +850,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS16 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS16, POINTS16_MAX);
             int i = ii.intValue();
             int i0 = i >> 8;
             int i1 = i & 0xff;
@@ -893,7 +893,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Long, List<RouterInfo>> e : rv.entrySet()) {
             Long ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS64 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS64, POINTS64_MAX);
             long i = ii.longValue();
             int i0 = (int) ((i >> 56) & 0xff);
             int i1 = (int) ((i >> 48) & 0xff);
@@ -958,7 +958,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Long, List<RouterInfo>> e : rv.entrySet()) {
             Long ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS48 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS48, POINTS48_MAX);
             long i = ii.longValue();
             int i0 = (int) ((i >> 40) & 0xff);
             int i1 = (int) ((i >> 32) & 0xff);
