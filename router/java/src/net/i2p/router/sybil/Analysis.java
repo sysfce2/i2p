@@ -80,10 +80,13 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     public static final int MAX = 10;
     // multiplied by size - 1, will also get POINTS24 added
     private static final double POINTS32 = 5.0;
+    private static final double POINTS32_MAX = 100;
     // multiplied by size - 1, will also get POINTS16 added
     private static final double POINTS24 = 4.0;
+    private static final double POINTS24_MAX = 100;
     // multiplied by size - 1
     private static final double POINTS16 = 0.25;
+    private static final double POINTS16_MAX = 100;
     private static final double POINTS_US32 = 25.0;
     private static final double POINTS_US24 = 20.0;
     private static final double POINTS_US16 = 10.0;
@@ -92,7 +95,9 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     private static final double POINTS_V6_US64 = 12.5;
     private static final double POINTS_V6_US48 = 5.0;
     private static final double POINTS64 = 2.0;
+    private static final double POINTS64_MAX = 100;
     private static final double POINTS48 = 0.5;
+    private static final double POINTS48_MAX = 100;
 
     private static final double POINTS_FAMILY = -10.0;
     private static final double POINTS_FAMILY_VERIFIED = POINTS_FAMILY * 4;
@@ -328,6 +333,25 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         }
     }
 
+    private double calculateLimitedPoints(double count, double penalty, double max) {
+        /*
+        The old way of calculating it, but with an optional maximum applied
+        double result = (count - 1) * penalty;
+        if (result > max)
+            return max;
+        return result;
+        */
+
+        /*
+         The penalty calculated on a curve instead
+         */
+        double result = 0;
+        for (int i = 0; i < count; i++) {
+            result = (1 / i) * penalty;
+        }
+        return result;
+    }
+
     /**
      *  All the floodfills, not including us
      *  @since 0.9.38 split out from renderRouterInfoHTML
@@ -401,11 +425,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         // unused here, just for the console, so use the same for all of them
         List<RouterInfo> dummy = new DummyList();
         calculateIPGroupsUs(ris, points, dummy, dummy, dummy, dummy, dummy);
-        //calculateIPGroups32(ris, points);
-        //calculateIPGroups24(ris, points);
-        //calculateIPGroups16(ris, points);
-        //calculateIPGroups64(ris, points);
-        //calculateIPGroups48(ris, points);
+        calculateIPGroups32(ris, points);
+        calculateIPGroups24(ris, points);
+        calculateIPGroups16(ris, points);
+        calculateIPGroups64(ris, points);
+        calculateIPGroups48(ris, points);
 
         // Pairwise distance analysis
         // O(n**2)
@@ -723,7 +747,8 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS32 * (count - 1);
+            //double point = POINTS32 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS32, POINTS32_MAX);
             int i = ii.intValue();
             int i0 = (i >> 24) & 0xff;
             int i1 = (i >> 16) & 0xff;
