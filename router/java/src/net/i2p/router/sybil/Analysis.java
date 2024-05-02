@@ -79,11 +79,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     public static final int PAIRMAX = 20;
     public static final int MAX = 10;
     // multiplied by size - 1, will also get POINTS24 added
-    private static final double POINTS32 = 5.0;
+    private static final double POINTS32 = 0; //5.0;
     // multiplied by size - 1, will also get POINTS16 added
-    private static final double POINTS24 = 4.0;
+    private static final double POINTS24 = 0; //4.0;
     // multiplied by size - 1
-    private static final double POINTS16 = 0.25;
+    private static final double POINTS16 = 0; //0.25;
     private static final double POINTS_US32 = 25.0;
     private static final double POINTS_US24 = 20.0;
     private static final double POINTS_US16 = 10.0;
@@ -91,8 +91,8 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     // IPv6 since 0.9.57, likely to be on top of IPv4, so make lower
     private static final double POINTS_V6_US64 = 12.5;
     private static final double POINTS_V6_US48 = 5.0;
-    private static final double POINTS64 = 2.0;
-    private static final double POINTS48 = 0.5;
+    private static final double POINTS64 = 0; //2.0;
+    private static final double POINTS48 = 0; //0.5;
 
     private static final double POINTS_FAMILY = -10.0;
     private static final double POINTS_FAMILY_VERIFIED = POINTS_FAMILY * 4;
