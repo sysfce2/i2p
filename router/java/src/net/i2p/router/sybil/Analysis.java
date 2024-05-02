@@ -337,9 +337,6 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         /*
         The old way of calculating it, but with an optional maximum applied
         double result = (count - 1) * penalty;
-        if (result > max)
-            return max;
-        return result;
         */
 
         /*
@@ -347,8 +344,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
          */
         double result = 0;
         for (int i = 0; i < count; i++) {
-            result = (1 / i) * penalty;
+            result += (1 / i) * penalty;
         }
+        
+        if (result > max)
+            return max;
         return result;
     }
 
