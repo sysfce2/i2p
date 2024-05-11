@@ -185,6 +185,11 @@
                     <%=intl._t("Set your browser to use this tunnel as an http proxy, or set your \"http_proxy\" environment variable for command-line applications in GNU/Linux.")%>
                     <%=intl._t("Websites outside I2P can also be reached if an HTTP proxy within I2P is known.")%>
                 </td></tr>
+                <tr><td><%=intl._t("Tabbed")%> HTTP/HTTPS</td><td>
+                    <%=intl._t("Like the HTTP/HTTPS tunnel, but designed to isolate each new origin under a new destination.")%>
+                    <%=intl._t("Especially useful when combined with a browser which displays multiple tabs.")%>
+                    <%=intl._t("Set your browser to use this tunnel as an http proxy, or set your \"http_proxy\" environment variable for command-line applications in GNU/Linux.")%>
+                </td></tr>
                 <tr><td>IRC</td><td>
                     <%=intl._t("Customized client tunnel specific for IRC connections.")%>
                     <%=intl._t("With this tunnel type, your IRC client will be able to connect to an IRC network inside I2P.")%>

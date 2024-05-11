@@ -1061,44 +1061,40 @@ public class I2PTunnel extends EventDispatcherImpl implements Logging {
             } catch (NumberFormatException nfe) {
                 l.log("invalid port");
                 _log.error(getPrefix() + "Port specified is not valid: " + args[0], nfe);
-                notifyEvent("httpclientTaskId", Integer.valueOf(-1));
+                notifyEvent("httpbrowserclientTaskId", Integer.valueOf(-1));
             }
             if (clientPort <= 0)
                 throw new IllegalArgumentException(getPrefix() + "Bad port " + args[0]);
 
             String proxy = "";
-            boolean isShared = true;
             if (args.length > 1) {
                 if (Boolean.parseBoolean(args[1].trim())) {
-                    isShared = true;
                     if (args.length == 3)
                         proxy = args[2];
                 } else if ("false".equalsIgnoreCase(args[1].trim())) {
-                    isShared = false;
                     if (args.length == 3)
                         proxy = args[2];
                 } else if (args.length == 3) {
-                    isShared = false; // not "true"
                     proxy = args[2];
                 } else {
-                    // isShared not specified, default to true
-                    isShared = true;
                     proxy = args[1];
                 }
             }
 
+            // isShared not specified, default to false
+            boolean isShared = false;
             ownDest = !isShared;
             try {
-                I2PTunnelClientBase task = new I2PTunnelHTTPClient(clientPort, l, ownDest, proxy, this, this);
+                I2PTunnelClientBase task = new I2PTunnelHTTPBrowserClient(clientPort, l, ownDest, proxy, this, this);
                 task.startRunning();
                 addtask(task);
-                notifyEvent("httpclientTaskId", Integer.valueOf(task.getId()));
+                notifyEvent("httpbrowserclientTaskId", Integer.valueOf(task.getId()));
             } catch (IllegalArgumentException iae) {
-                String msg = "Invalid I2PTunnel configuration to create an HTTP Proxy connecting to the router at " + host + ':'+ port +
+                String msg = "Invalid I2PTunnel configuration to create an Browser Proxy connecting to the router at " + host + ':'+ port +
                              " and listening on " + listenHost + ':' + clientPort;
                 _log.error(getPrefix() + msg, iae);
                 l.log(msg);
-                notifyEvent("httpclientTaskId", Integer.valueOf(-1));
+                notifyEvent("httpbrowserclientTaskId", Integer.valueOf(-1));
                 // Since nothing listens to TaskID events, use this to propagate the error to TunnelController
                 // Otherwise, the tunnel stays up even though the port is down
                 // This doesn't work for CLI though... and the tunnel doesn't close itself after error,
@@ -1106,12 +1102,12 @@ public class I2PTunnel extends EventDispatcherImpl implements Logging {
                 throw iae;
             }
         } else {
-            l.log("httpclient <port> [<sharedClient>] [<proxy>]\n" +
+            l.log("browserclient <port> [<sharedClient>] [<proxy>]\n" +
                   "  Creates a HTTP client proxy on the specified port.\n" +
-                  "  <sharedClient> (optional) Indicates if this client shares tunnels with other clients (true or false)\n" +
+                  "  <sharedClient> (always false) Indicates if this client shares tunnels with other clients (true or false)\n" +
                   "  <proxy> (optional) Indicates a proxy server to be used\n" +
                   "  when trying to access an address out of the .i2p domain");
-            notifyEvent("httpclientTaskId", Integer.valueOf(-1));
+            notifyEvent("httpbrowserclientTaskId", Integer.valueOf(-1));
         }
     }
 

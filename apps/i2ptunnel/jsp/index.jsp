@@ -375,6 +375,7 @@
                     <select name="type">
                         <option value="client"><%=intl._t("Standard")%></option>
                         <option value="httpclient">HTTP/CONNECT</option>
+                        <option value="browserclient">Tabbed HTTP/CONNECT</option>
                         <option value="ircclient">IRC</option>
                         <option value="sockstunnel">SOCKS 4/4a/5</option>
                         <option value="socksirctunnel">SOCKS IRC</option>
