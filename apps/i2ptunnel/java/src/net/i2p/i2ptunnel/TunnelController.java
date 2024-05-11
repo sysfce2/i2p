@@ -1073,6 +1073,7 @@ public class TunnelController implements Logging {
     public static boolean isClient(String type) {
         return TYPE_STD_CLIENT.equals(type) ||
                TYPE_HTTP_CLIENT.equals(type) ||
+               TYPE_BROWSER_HTTP_CLIENT.equals(type) ||
                TYPE_SOCKS.equals(type) ||
                TYPE_SOCKS_IRC.equals(type) ||
                TYPE_CONNECT.equals(type) ||
