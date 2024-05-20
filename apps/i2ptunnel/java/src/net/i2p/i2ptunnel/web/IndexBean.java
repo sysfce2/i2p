@@ -493,6 +493,7 @@ public class IndexBean {
     public String getTypeName(String internalType) {
         if (TunnelController.TYPE_STD_CLIENT.equals(internalType)) return _t("Standard client");
         else if (TunnelController.TYPE_HTTP_CLIENT.equals(internalType)) return _t("HTTP/HTTPS client");
+        else if (TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(internalType)) return _t("HTTP/HTTPS client");
         else if (TunnelController.TYPE_IRC_CLIENT.equals(internalType)) return _t("IRC client");
         else if (TunnelController.TYPE_STD_SERVER.equals(internalType)) return _t("Standard server");
         else if (TunnelController.TYPE_HTTP_SERVER.equals(internalType)) return _t("HTTP server");
