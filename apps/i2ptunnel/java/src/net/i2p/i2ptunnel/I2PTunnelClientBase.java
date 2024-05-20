@@ -965,4 +965,8 @@ public abstract class I2PTunnelClientBase extends I2PTunnelTask implements Runna
      * so it may block or run indefinitely.
      */
     protected abstract void clientConnectionRun(Socket s);
+
+    public long getClientId() {
+        return _clientId;
+    }
 }

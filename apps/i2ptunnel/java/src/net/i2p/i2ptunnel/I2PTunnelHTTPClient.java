@@ -37,6 +37,7 @@ import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.data.Hash;
 import net.i2p.i2ptunnel.localServer.LocalHTTPServer;
+import net.i2p.i2ptunnel.util.InputReader;
 import net.i2p.util.ConvertToHash;
 import net.i2p.util.DNSOverHTTPS;
 import net.i2p.util.EventDispatcher;
@@ -81,7 +82,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
      *  Map of hostname to base64 destination for destinations collected
      *  via address helper links
      */
-    private final ConcurrentHashMap<String, String> addressHelpers = new ConcurrentHashMap<String, String>(8);
+    public final ConcurrentHashMap<String, String> addressHelpers = new ConcurrentHashMap<String, String>(8);
 
     /**
      *  Used to protect actions via http://proxy.i2p/
@@ -89,16 +90,16 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     private final String _proxyNonce;
 
     public static final String AUTH_REALM = "I2P HTTP Proxy";
-    private static final String UA_I2P = "User-Agent: " +
+    public static final String UA_I2P = "User-Agent: " +
                                          "MYOB/6.66 (AN/ON)" +
                                          "\r\n";
     // ESR version of Firefox, same as Tor Browser
-    private static final String UA_CLEARNET = "User-Agent: " +
+    public static final String UA_CLEARNET = "User-Agent: " +
                                               DNSOverHTTPS.UA_CLEARNET +
                                               "\r\n";
     // overrides
-    private static final String PROP_UA_I2P = "httpclient.userAgent.i2p";
-    private static final String PROP_UA_CLEARNET = "httpclient.userAgent.outproxy";
+    public static final String PROP_UA_I2P = "httpclient.userAgent.i2p";
+    public static final String PROP_UA_CLEARNET = "httpclient.userAgent.outproxy";
     public static final String OPT_KEEPALIVE_BROWSER = "keepalive.browser";
     public static final String OPT_KEEPALIVE_I2P = "keepalive.i2p";
 
@@ -111,7 +112,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     /**
      *  These are backups if the xxx.ht error page is missing.
      */
-    private final static String ERR_REQUEST_DENIED =
+    public final static String ERR_REQUEST_DENIED =
             "HTTP/1.1 403 Access Denied\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -133,7 +134,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     "the following Destination:<BR><BR>")
     .getBytes();
      *****/
-    private final static String ERR_NO_OUTPROXY =
+    public final static String ERR_NO_OUTPROXY =
             "HTTP/1.1 503 Service Unavailable\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -143,7 +144,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "Your request was for a site outside of I2P, but you have no " +
             "HTTP outproxy configured.  Please configure an outproxy in I2PTunnel";
 
-    private final static String ERR_AHELPER_CONFLICT =
+    public final static String ERR_AHELPER_CONFLICT =
             "HTTP/1.1 409 Conflict\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -159,7 +160,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "discarding the host entry from your host database, " +
             "or naming one of them differently.<p>";
 
-    private final static String ERR_AHELPER_NOTFOUND =
+    public final static String ERR_AHELPER_NOTFOUND =
             "HTTP/1.1 404 Not Found\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -192,7 +193,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "The request uses a bad protocol. " +
             "The I2P HTTP Proxy supports HTTP and HTTPS requests only. Other protocols such as FTP are not allowed.<BR>";
 
-    private final static String ERR_BAD_URI =
+    public final static String ERR_BAD_URI =
             "HTTP/1.1 403 Bad URI\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -202,7 +203,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "The request URI is invalid, and probably contains illegal characters. " +
             "If you clicked e.g. a forum link, check the end of the URI for any characters the browser has mistakenly added on.<BR>";
 
-    private final static String ERR_LOCALHOST =
+    public final static String ERR_LOCALHOST =
             "HTTP/1.1 403 Access Denied\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -365,9 +366,9 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
         return AUTH_REALM;
     }
 
-    private static final String HELPER_PARAM = "i2paddresshelper";
+    public static final String HELPER_PARAM = "i2paddresshelper";
     public static final String LOCAL_SERVER = "proxy.i2p";
-    private static final boolean DEFAULT_GZIP = true;
+    public static final boolean DEFAULT_GZIP = true;
     /** all default to false */
     public static final String PROP_REFERER = "i2ptunnel.httpclient.sendReferer";
     public static final String PROP_USER_AGENT = "i2ptunnel.httpclient.sendUserAgent";
@@ -1675,49 +1676,6 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
                   label + "</button></div>\n" +
                   "</form>\n</div>\n");
         writeFooter(out);
-    }
-
-    /**
-     *  Read the first line unbuffered.
-     *  After that, switch to a BufferedReader, unless the method is "POST".
-     *  We can't use BufferedReader for POST because we can't have readahead,
-     *  since we are passing the stream on to I2PTunnelRunner for the POST data.
-     *
-     *  Warning - BufferedReader removes \r, DataHelper does not
-     *  Warning - DataHelper limits line length, BufferedReader does not
-     *  Todo: Limit line length for buffered reads, or go back to unbuffered for all
-     */
-    private static class InputReader {
-        InputStream _s;
-
-        public InputReader(InputStream s) {
-            _s = s;
-        }
-
-        String readLine(String method) throws IOException {
-            //  Use unbuffered until we can find a BufferedReader that limits line length
-            //if (method == null || "POST".equals(method))
-            return DataHelper.readLine(_s);
-        //if (_br == null)
-        //    _br = new BufferedReader(new InputStreamReader(_s, "ISO-8859-1"));
-        //return _br.readLine();
-        }
-
-        /**
-         *  Read the rest of the headers, which keeps firefox
-         *  from complaining about connection reset after
-         *  an error on the first line.
-         *  @since 0.9.14
-         */
-        public void drain() {
-            try {
-                String line;
-                do {
-                    line = DataHelper.readLine(_s);
-                    // \r not stripped so length == 1 is empty
-                } while (line != null && line.length() > 1);
-            } catch (IOException ioe) {}
-        }
     }
 
     /**
