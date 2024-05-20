@@ -6,6 +6,7 @@ import java.util.Set;
 import net.i2p.data.Hash;
 import net.i2p.data.router.RouterInfo;
 import net.i2p.data.TunnelId;
+import net.i2p.data.i2np.DatabaseLookupMessage;
 import net.i2p.data.i2np.I2NPMessage;
 import net.i2p.data.i2np.TunnelGatewayMessage;
 import net.i2p.router.JobImpl;
@@ -28,7 +29,7 @@ class OutboundMessageDistributor {
     
     private static final long MAX_DISTRIBUTE_TIME = 15*1000;
     // This is probably too high, to be reduced later
-    private static final int MAX_ROUTERS_PER_PERIOD = 60;
+    private static final int MAX_ROUTERS_PER_PERIOD = 48;
     private static final long NEW_ROUTER_PERIOD = 30*1000;
     
     /**
@@ -55,12 +56,21 @@ class OutboundMessageDistributor {
     public void distribute(I2NPMessage msg, Hash target, TunnelId tunnel) {
         if (shouldDrop(target)) {
             _context.statManager().addRateData("tunnel.dropAtOBEP", 1);
-            if (_log.shouldLog(Log.WARN))
-                 _log.warn("Drop msg at OBEP (new conn throttle) to " + target + ' ' + msg);
+            if (_log.shouldWarn())
+                 _log.warn("Drop msg at OBEP (new conn throttle) to " + target.toBase64() + " type " + msg.getType());
             return;
         }
         RouterInfo info = _context.netDb().lookupRouterInfoLocally(target);
         if (info == null) {
+            if (_toRouters != null) {
+                // only if not zero-hop
+                // credit our lookup message as part. traffic
+                if (_context.tunnelDispatcher().shouldDropParticipatingMessage(TunnelDispatcher.Location.OBEP, DatabaseLookupMessage.MESSAGE_TYPE, 1024)) {
+                    if (_log.shouldWarn())
+                        _log.warn("Drop msg at OBEP (lookup bandwidth) to " + target.toBase64() + " type " + msg.getType());
+                    return;
+                }
+            }
             if (_log.shouldLog(Log.INFO))
                 _log.info("outbound distributor to " + target
                            + "." + (tunnel != null ? tunnel.getTunnelId() + "" : "")
@@ -150,7 +160,7 @@ class OutboundMessageDistributor {
                 stat = 1;
             } else {
                 if (_log.shouldLog(Log.WARN))
-                    _log.warn("outbound distributor to " + _target
+                    _log.warn("outbound distributor msg type " + _message.getType() + " to " + _target
                            + "." + (_tunnel != null ? _tunnel.getTunnelId() + "" : "")
                            + ": NOT found on search");
                 stat = 0;

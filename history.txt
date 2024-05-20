@@ -1,3 +1,66 @@
+2024-05-18 zzz
+ * Console: js global scope fixes (Gitlab MR !195)
+ * Transport: Remove SSU1 code from PacketBuilder/PeerState/OMF (Gitlab MR !193)
+
+2024-05-17 zzz
+ * Build: Add script to make Tor blocklist
+
+2024-05-16 zzz
+ * I2CP: Hopefully fix rare NPE
+ * Util: Remove ST2 timers from queue on cancel
+
+2024-05-15 2.5.2 (API 0.9.62) released
+
+2024-05-14 zzz
+ * i2ptunnel: Fix keepalive bug causing truncation of chunked content
+ * Pull translations from Transifex
+ * Router: Update Tor blocklist
+
+2024-05-12 zzz
+ * Console: Update rrd4j to 3.9.1 preview
+
+2024-05-08 zzz
+ * i2ptunnel: Fix custom options form width (light theme)
+ * Router: Publish G cap if symmetric natted
+ * Tunnels: Validate peer RI expiration in TunnelPeerSelector
+
+2024-05-06 2.5.1 (API 0.9.62) released
+
+2024-05-05 zzz
+ * NetDB: Various fixes and adjustments
+ * Pull translations from Transifex
+
+2024-05-03 zzz
+ * NetDB: Don't lookup RI if temp. banlisted
+ * Router: Add Tor blocklist
+ * Tunnels: OBEP distributor: Check and charge RI lookup bandwidth
+
+2024-05-02 zzz
+ * Profiles: Fixes for firstHeardAbout and/or lastHeardAbout being zero
+
+2024-05-01 zzz
+ * NetDB:
+   - Limit number of DSRM entries to follow
+   - Deny old ANY lookup type to non-ff
+
+2024-04-27 zzz
+ * Sybil: Disable IP checks for now
+
+2024-04-26 zzz
+ * Susimail: Search fixes
+
+2024-04-25 zzz
+ * Susimail: Add search box (Gitlab MR !190)
+ * Transport: Remove SSU1 code from IMF/IMS (Gitlab MR !189)
+
+2024-04-22 zzz
+ * Addressbook: Use standard time formatting for log
+ * Profiles: Don't update last heard time on tunnel failure
+ * Transport: Remove SSU1 code from PeerTest and IntroductionManager (Gitlab MRs !185, !186)
+
+2024-04-17 zzz
+ * Build: Update to Tomcat 9.0.88
+
 2024-04-15 zzz
  * Susimail: Don't show multipart/related CID images as attachments also
 
