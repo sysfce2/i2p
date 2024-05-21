@@ -471,6 +471,8 @@ public class TunnelController implements Logging {
         setSessionOptions();
         if (TYPE_HTTP_CLIENT.equals(type)) {
             startHttpClient();
+        } else if(TYPE_BROWSER_HTTP_CLIENT.equals(type)) {
+            startBrowserClient();
         } else if(TYPE_IRC_CLIENT.equals(type)) {
             startIrcClient();
         } else if(TYPE_SOCKS.equals(type)) {
@@ -518,6 +520,17 @@ public class TunnelController implements Logging {
             _tunnel.runHttpClient(new String[] { listenPort, sharedClient }, this);
         else
             _tunnel.runHttpClient(new String[] { listenPort, sharedClient, proxyList }, this);
+    }
+
+    private void startBrowserClient() {
+        setListenOn();
+        String listenPort = getListenPort();
+        String proxyList = getProxyList();
+        String sharedClient = getSharedClient();
+        if (proxyList == null)
+            _tunnel.runBrowserClient(new String[] { listenPort, sharedClient }, this);
+        else
+            _tunnel.runBrowserClient(new String[] { listenPort, sharedClient, proxyList }, this);
     }
 
     private void startConnectClient() {
@@ -1073,6 +1086,7 @@ public class TunnelController implements Logging {
     public static boolean isClient(String type) {
         return TYPE_STD_CLIENT.equals(type) ||
                TYPE_HTTP_CLIENT.equals(type) ||
+               TYPE_BROWSER_HTTP_CLIENT.equals(type) ||
                TYPE_SOCKS.equals(type) ||
                TYPE_SOCKS_IRC.equals(type) ||
                TYPE_CONNECT.equals(type) ||

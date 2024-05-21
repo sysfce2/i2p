@@ -145,7 +145,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClient {
      */
     @Override
     public void startRunning() {
-        super.startRunning();
+        initialize();
         if (open) {
             this.isr = new InternalSocketRunner(this);
             this.isr.start();
@@ -253,19 +253,11 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClient {
             s.setSoTimeout(INITIAL_SO_TIMEOUT);
             out = s.getOutputStream();
             InputReader reader = new InputReader(s.getInputStream());
-            HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, usingWWWProxy, __requestId, BROWSER_READ_TIMEOUT, getTunnel(), null);
-            _log.debug(hrr.toString());
-            // HTTP Persistent Connections (RFC 2616)
-            // for the local browser-to-client-proxy socket.
-            // Keep it very simple.
-            // Will be set to false for non-GET/HEAD, non-HTTP/1.1,
-            // Connection: close, InternalSocket,
-            // or after analysis of the response headers in
-            // HTTPResponseOutputStream, or on errors in I2PTunnelRunner.
+            HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, usingWWWProxy, __requestId, BROWSER_READ_TIMEOUT, getTunnel(), this);
+            _log.debug("clientConnectionRun on Tab-Aware Proxy to" + hrr.toString(), new Exception("I did it :)."));
+
             boolean keepalive = getBooleanOption(OPT_KEEPALIVE_BROWSER, DEFAULT_KEEPALIVE_BROWSER) &&
                     !(s instanceof InternalSocket);
-
-            // indent
             do {
 
             } while (keepalive);

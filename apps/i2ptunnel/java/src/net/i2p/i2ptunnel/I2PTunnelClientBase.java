@@ -549,6 +549,10 @@ public abstract class I2PTunnelClientBase extends I2PTunnelTask implements Runna
      *
      */
     public void startRunning() {
+        initialize();
+    }
+    
+    public void initialize() {
         boolean openNow = !Boolean.parseBoolean(getTunnel().getClientOptions().getProperty("i2cp.delayOpen"));
         if (openNow) {
             while (sockMgr == null) {
@@ -569,7 +573,7 @@ public abstract class I2PTunnelClientBase extends I2PTunnelTask implements Runna
         } // else delay creating session until createI2PSocket() is called
         startup();
     }
-        
+    
     private void startup() {
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("startup " + _clientId, new Exception("I did it"));

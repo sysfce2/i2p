@@ -1,9 +1,9 @@
 package net.i2p.i2ptunnel.web;
 /*
  * free (adj.): unencumbered; not under the control of others
- * Written by jrandom in 2005 and released into the public domain 
- * with no warranty of any kind, either expressed or implied.  
- * It probably won't make your computer catch on fire, or eat 
+ * Written by jrandom in 2005 and released into the public domain
+ * with no warranty of any kind, either expressed or implied.
+ * It probably won't make your computer catch on fire, or eat
  * your children, but it might.  Use at your own risk.
  *
  */
@@ -71,12 +71,12 @@ public class IndexBean {
     private int _hashCashValue;
     private int _certType;
     private String _certSigner;
-    
+
     public static final int RUNNING = GeneralHelper.RUNNING;
     public static final int STARTING = GeneralHelper.STARTING;
     public static final int NOT_RUNNING = GeneralHelper.NOT_RUNNING;
     public static final int STANDBY = GeneralHelper.STANDBY;
-    
+
     //static final String PROP_NONCE = IndexBean.class.getName() + ".nonce";
     //static final String PROP_NONCE_OLD = PROP_NONCE + '2';
     /** 3 wasn't enough for some browsers. They are reloading the page for some reason - maybe HEAD? @since 0.8.1 */
@@ -92,7 +92,7 @@ public class IndexBean {
     private static final String PROP_DISABLE_OLD = "routerconsole.disableOldThemes";
     private static final boolean DEFAULT_DISABLE_OLD = true;
     private static final String PROP_PW_ENABLE = "routerconsole.auth.enable";
-    
+
     public IndexBean() {
         _context = I2PAppContext.getGlobalContext();
         _log = _context.logManager().getLog(IndexBean.class);
@@ -114,7 +114,7 @@ public class IndexBean {
         addNonce();
         _config = new TunnelConfig();
     }
-    
+
     /**
      *  @since 0.9.4
      */
@@ -177,7 +177,7 @@ public class IndexBean {
             _msgID = -1;
         }
     }
-    
+
     /** @return non-null */
     private String processAction() {
         if ( (_action == null) || (_action.trim().length() <= 0) || ("Cancel".equals(_action)))
@@ -251,7 +251,7 @@ public class IndexBean {
 
     private String start() {
         if (_tunnel < 0) return "Invalid tunnel";
-        
+
         List<TunnelController> controllers = _group.getControllers();
         if (_tunnel >= controllers.size()) return "Invalid tunnel";
         TunnelController controller = controllers.get(_tunnel);
@@ -262,10 +262,10 @@ public class IndexBean {
         // FIXME name will be HTML escaped twice
         return _t("Starting tunnel") + ' ' + getTunnelName(_tunnel) + "...";
     }
-    
+
     private String stop() {
         if (_tunnel < 0) return "Invalid tunnel";
-        
+
         List<TunnelController> controllers = _group.getControllers();
         if (_tunnel >= controllers.size()) return "Invalid tunnel";
         TunnelController controller = controllers.get(_tunnel);
@@ -276,7 +276,7 @@ public class IndexBean {
         // FIXME name will be HTML escaped twice
         return _t("Stopping tunnel") + ' ' + getTunnelName(_tunnel) + "...";
     }
-    
+
     /**
      * Only call this ONCE! Or you will get duplicate tunnels on save.
      *
@@ -297,9 +297,9 @@ public class IndexBean {
 
         return getMessages(_helper.deleteTunnel(_tunnel, _config.getPrivKeyFile()));
     }
-    
+
     /**
-     * Executes any action requested (start/stop/etc) and dump out the 
+     * Executes any action requested (start/stop/etc) and dump out the
      * messages.
      *
      * Only call this ONCE! Or you will get duplicate tunnels on save.
@@ -309,7 +309,7 @@ public class IndexBean {
     public String getMessages() {
         if (_group == null)
             return _fatalError;
-        
+
         StringBuilder buf = new StringBuilder(512);
         if (_action != null) {
             try {
@@ -330,7 +330,7 @@ public class IndexBean {
         getMessages(_group.clearAllMessages(), buf);
         return DataHelper.escapeHTML(buf.toString());
     }
-    
+
     /**
      * The last stored message ID
      *
@@ -339,11 +339,11 @@ public class IndexBean {
     public int getLastMessageID() {
         return _messages.getLastMessageID();
     }
-    
+
     ////
     // The remaining methods are simple bean props for the jsp to query
     ////
-    
+
     public String getTheme() {
         String theme = _context.getProperty(PROP_THEME_NAME, DEFAULT_THEME);
         // remap deprecated themes
@@ -396,7 +396,7 @@ public class IndexBean {
              return l.compareTo(r);
         }
     }
-    
+
     /**
      *  Is it a client or server in the UI and I2P side?
      *  Note that a streamr client is a UI and I2P client but a server on the localhost side.
@@ -423,7 +423,7 @@ public class IndexBean {
     public boolean isSharedClient(int tunnel) {
         return _helper.isSharedClient(tunnel);
     }
-    
+
     public String getTunnelName(int tunnel) {
         String name = _helper.getTunnelName(tunnel);
         if (name != null && name.length() > 0)
@@ -431,7 +431,7 @@ public class IndexBean {
         else
             return _t("New Tunnel");
     }
-    
+
     /**
      *  No validation
      */
@@ -439,7 +439,7 @@ public class IndexBean {
         int port = _helper.getClientPort(tunnel);
         return port > 0 ? Integer.toString(port) : "";
     }
-    
+
     /**
      *  Returns error message if blank or invalid
      *  @since 0.9.3
@@ -481,7 +481,7 @@ public class IndexBean {
         }
         return "<font color=\"red\">" + _t("Port not set") + "</font>";
     }
-    
+
     public String getTunnelType(int tunnel) {
         TunnelController tun = getController(tunnel);
         if (tun != null)
@@ -489,11 +489,11 @@ public class IndexBean {
         else
             return "";
     }
-    
+
     public String getTypeName(String internalType) {
         if (TunnelController.TYPE_STD_CLIENT.equals(internalType)) return _t("Standard client");
         else if (TunnelController.TYPE_HTTP_CLIENT.equals(internalType)) return _t("HTTP/HTTPS client");
-        else if (TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(internalType)) return _t("HTTP/HTTPS client");
+        else if (TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(internalType)) return _t("Tabbed HTTP/HTTPS client");
         else if (TunnelController.TYPE_IRC_CLIENT.equals(internalType)) return _t("IRC client");
         else if (TunnelController.TYPE_STD_SERVER.equals(internalType)) return _t("Standard server");
         else if (TunnelController.TYPE_HTTP_SERVER.equals(internalType)) return _t("HTTP server");
@@ -506,23 +506,23 @@ public class IndexBean {
         else if (TunnelController.TYPE_HTTP_BIDIR_SERVER.equals(internalType)) return _t("HTTP bidir");
         else return internalType;
     }
-    
+
     public String getInternalType(int tunnel) {
         return _helper.getTunnelType(tunnel);
     }
-    
+
     public String getClientInterface(int tunnel) {
         return _helper.getClientInterface(tunnel);
     }
-    
+
     public int getTunnelStatus(int tunnel) {
         return _helper.getTunnelStatus(tunnel);
     }
-    
+
     public String getTunnelDescription(int tunnel) {
         return DataHelper.escapeHTML(_helper.getTunnelDescription(tunnel));
     }
-    
+
     public String getSharedClient(int tunnel) {
     	TunnelController tun = getController(tunnel);
     	if (tun != null)
@@ -530,11 +530,11 @@ public class IndexBean {
     	else
     		return "";
     }
-    
+
     public String getClientDestination(int tunnel) {
         return _helper.getClientDestination(tunnel);
     }
-    
+
     /**
      * Call this to see if it is ok to linkify getServerTarget()
      * @since 0.8.3
@@ -573,7 +573,7 @@ public class IndexBean {
        }  else
             return "";
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return Destination or null
@@ -582,7 +582,7 @@ public class IndexBean {
     protected Destination getDestination(int tunnel) {
         return _helper.getDestination(tunnel);
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return Base64 or ""
@@ -593,7 +593,7 @@ public class IndexBean {
             return d.toBase64();
         return "";
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return "{52 chars}.b32.i2p" or ""
@@ -604,7 +604,7 @@ public class IndexBean {
             return d.toBase32();
         return "";
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return "{56 chars}.b32.i2p" or "" if not blinded
@@ -635,7 +635,7 @@ public class IndexBean {
     protected Destination getAltDestination(int tunnel) {
         return _helper.getAltDestination(tunnel);
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return Base64 or ""
@@ -647,7 +647,7 @@ public class IndexBean {
             return d.toBase64();
         return "";
     }
-    
+
     /**
      *  Works even if tunnel is not running.
      *  @return "{52 chars}.b32.i2p" or ""
@@ -668,7 +668,7 @@ public class IndexBean {
     public boolean getIsOfflineKeys(int tunnel) {
         return _helper.isOfflineKeys(tunnel);
     }
-    
+
     /**
      *  For index.jsp
      *  @return true if the plugin is enabled, installed, and running
@@ -707,23 +707,23 @@ public class IndexBean {
     ///
     /// bean props for form submission
     ///
-    
+
     /**
-     * What type of tunnel (httpclient, ircclient, client, or server).  This is 
+     * What type of tunnel (httpclient, ircclient, client, or server).  This is
      * required when adding a new tunnel.
      *
      */
-    public void setType(String type) { 
+    public void setType(String type) {
         _config.setType(type);
     }
     String getType() { return _config.getType(); }
-    
+
     /** Short name of the tunnel */
     public void setNofilter_name(String name) {
         _config.setName(name);
     }
     /** one line description */
-    public void setNofilter_description(String description) { 
+    public void setNofilter_description(String description) {
         _config.setDescription(description);
     }
     /** I2CP host the router is on, ignored when in router context */
@@ -824,33 +824,33 @@ public class IndexBean {
     }
 
     /** what I2P session overrides should be used */
-    public void setNofilter_customOptions(String customOptions) { 
+    public void setNofilter_customOptions(String customOptions) {
         _config.setCustomOptions(customOptions);
     }
     /** what HTTP outproxies should be used (httpclient specific) */
-    public void setProxyList(String proxyList) { 
+    public void setProxyList(String proxyList) {
         _config.setProxyList(proxyList);
     }
     /** what port should this client/httpclient/ircclient listen on */
-    public void setPort(String port) { 
+    public void setPort(String port) {
         if (port != null) {
             try {
                 _config.setPort(Integer.parseInt(port.trim()));
             } catch (NumberFormatException nfe) {}
         }
     }
-    /** 
+    /**
      * what interface should this client/httpclient/ircclient listen on
      */
-    public void setReachableBy(String reachableBy) { 
+    public void setReachableBy(String reachableBy) {
         _config.setReachableBy(reachableBy);
     }
     /** What peer does this client tunnel point at */
-    public void setTargetDestination(String dest) { 
+    public void setTargetDestination(String dest) {
         _config.setTargetDestination(dest);
     }
     /** What host does this server tunnel point at */
-    public void setTargetHost(String host) { 
+    public void setTargetHost(String host) {
         _config.setTargetHost(host);
     }
     /** What port does this server tunnel point at */
@@ -862,12 +862,12 @@ public class IndexBean {
         }
     }
     /** What host does this http server tunnel spoof */
-    public void setSpoofedHost(String host) { 
+    public void setSpoofedHost(String host) {
         _config.setSpoofedHost(host);
     }
 
     /** What filename is this server tunnel's private keys stored in */
-    public void setPrivKeyFile(String file) { 
+    public void setPrivKeyFile(String file) {
         _config.setPrivKeyFile(file);
     }
 
@@ -875,7 +875,7 @@ public class IndexBean {
      *  What filename is this server tunnel's alternate private keys stored in
      *  @since 0.9.30
      */
-    public void setAltPrivKeyFile(String file) { 
+    public void setAltPrivKeyFile(String file) {
         _config.setAltPrivKeyFile(file);
     }
 
@@ -902,7 +902,7 @@ public class IndexBean {
     public void setConnectDelay(String moo) {
         _config.setConnectDelay(true);
     }
-    public void setProfile(String profile) { 
+    public void setProfile(String profile) {
         _config.setProfile(profile);
     }
 
@@ -924,7 +924,7 @@ public class IndexBean {
             } catch (NumberFormatException nfe) {}
         }
     }
-    
+
     /** @since 0.9.40 */
     public void setNofilter_blindedPassword(String s) {
         _config.setBlindedPassword(s);
@@ -1135,23 +1135,23 @@ public class IndexBean {
                           TunnelController.TYPE_SOCKS_IRC.equals(type);
         _config.setProxyAuth(isSOCKS ? "true" : I2PTunnelHTTPClientBase.DIGEST_AUTH);
     }
-    
+
     public void setProxyUsername(String s) {
         _config.setProxyUsername(s);
     }
-    
+
     public void setNofilter_proxyPassword(String s) {
         _config.setProxyPassword(s);
     }
-    
+
     public void setOutproxyAuth(String s) {
         _config.setOutproxyAuth(true);
     }
-    
+
     public void setOutproxyUsername(String s) {
         _config.setOutproxyUsername(s);
     }
-    
+
     public void setNofilter_outproxyPassword(String s) {
         _config.setOutproxyPassword(s);
     }
@@ -1500,7 +1500,7 @@ public class IndexBean {
      }
 
     /**
-     * Based on all provided data, create a set of configuration parameters 
+     * Based on all provided data, create a set of configuration parameters
      * suitable for use in a TunnelController.  This will replace (not add to)
      * any existing parameters, so this should return a comprehensive mapping.
      *
@@ -1515,11 +1515,11 @@ public class IndexBean {
     ///
     ///
     ///
-    
+
     protected TunnelController getController(int tunnel) {
         return _helper.getController(tunnel);
     }
-    
+
     private static String getMessages(List<String> msgs) {
         StringBuilder buf = new StringBuilder(128);
         getMessages(msgs, buf);
