@@ -775,7 +775,8 @@ public class GeneralHelper {
                 TunnelController.TYPE_STREAMR_CLIENT.equals(ttype) ||
                 TunnelController.TYPE_STD_CLIENT.equals(ttype) ||
                 TunnelController.TYPE_CONNECT.equals(ttype) ||
-                TunnelController.TYPE_HTTP_CLIENT.equals(ttype))
+                TunnelController.TYPE_HTTP_CLIENT.equals(ttype) ||
+                TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(ttype))
                 type = TunnelController.PREFERRED_SIGTYPE;
             else
                 type = SigType.DSA_SHA1;
@@ -798,6 +799,7 @@ public class GeneralHelper {
         String dflt;
         if (tun.isClient() &&
             (TunnelController.TYPE_HTTP_CLIENT.equals(type) ||
+             TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(type) ||
              TunnelController.TYPE_IRC_CLIENT.equals(type) ||
              TunnelController.TYPE_SOCKS_IRC.equals(type) ||
              TunnelController.TYPE_STREAMR_CLIENT.equals(type) ||
@@ -1080,6 +1082,7 @@ public class GeneralHelper {
             Properties opts = tun.getClientOptionProps();
             if (opts == null) return "";
             boolean isMD5Proxy = TunnelController.TYPE_HTTP_CLIENT.equals(tun.getType()) ||
+                                 TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(tun.getType()) ||
                                  TunnelController.TYPE_CONNECT.equals(tun.getType());
             Map<String, String> sorted = new TreeMap<String, String>();
             for (Map.Entry<Object, Object> e : opts.entrySet()) {

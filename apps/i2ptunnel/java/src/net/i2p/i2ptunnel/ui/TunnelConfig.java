@@ -739,7 +739,7 @@ public class TunnelConfig {
                 config.setProperty(TunnelController.PROP_LISTEN_PORT, Integer.toString(_port));
             config.setProperty(TunnelController.PROP_SHARED, _sharedClient + "");
             // see I2PTunnelHTTPClient
-            if (TunnelController.TYPE_HTTP_CLIENT.equals(_type))
+            if (TunnelController.TYPE_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(_type))
                 _booleanOptions.add(I2PTunnelHTTPClient.PROP_SSL_SET);
             for (String p : _booleanClientOpts)
                 config.setProperty(OPT + p, Boolean.toString(_booleanOptions.contains(p)));
@@ -776,7 +776,7 @@ public class TunnelConfig {
         }
 
         // generic proxy stuff
-        if (TunnelController.TYPE_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_CONNECT.equals(_type) || 
+        if (TunnelController.TYPE_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_CONNECT.equals(_type) || 
             TunnelController.TYPE_SOCKS.equals(_type) ||TunnelController.TYPE_SOCKS_IRC.equals(_type)) {
             for (String p : _booleanProxyOpts)
                 config.setProperty(OPT + p, Boolean.toString(_booleanOptions.contains(p)));
@@ -785,7 +785,7 @@ public class TunnelConfig {
         }
 
         // Proxy auth including migration to MD5 and SHA256
-        if (TunnelController.TYPE_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_CONNECT.equals(_type)) {
+        if (TunnelController.TYPE_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(_type) || TunnelController.TYPE_CONNECT.equals(_type)) {
             // Migrate even if auth is disabled
             // go get the old from custom options that updateConfigGeneric() put in there
             String puser = OPT + I2PTunnelHTTPClientBase.PROP_USER;
@@ -811,7 +811,7 @@ public class TunnelConfig {
                                  user + I2PTunnelHTTPClientBase.PROP_PROXY_DIGEST_SHA256_SUFFIX;
                 if (config.getProperty(psha256) == null) {
                     // not in there, add it
-                    String realm = _type.equals(TunnelController.TYPE_HTTP_CLIENT) ? I2PTunnelHTTPClient.AUTH_REALM
+                    String realm = (_type.equals(TunnelController.TYPE_HTTP_CLIENT) || _type.equals(TunnelController.TYPE_BROWSER_HTTP_CLIENT)) ? I2PTunnelHTTPClient.AUTH_REALM
                                                               : I2PTunnelConnectClient.AUTH_REALM;
                     String hex = PasswordManager.sha256Hex(realm, user, pw);
                     if (hex != null)
@@ -825,7 +825,7 @@ public class TunnelConfig {
                     _newProxyUser.length() > 0 && _newProxyPW.length() > 0) {
                     String pmd5 = OPT + I2PTunnelHTTPClientBase.PROP_PROXY_DIGEST_PREFIX +
                                   _newProxyUser + I2PTunnelHTTPClientBase.PROP_PROXY_DIGEST_SUFFIX;
-                    String realm = _type.equals(TunnelController.TYPE_HTTP_CLIENT) ? I2PTunnelHTTPClient.AUTH_REALM
+                    String realm = (_type.equals(TunnelController.TYPE_HTTP_CLIENT) || _type.equals(TunnelController.TYPE_BROWSER_HTTP_CLIENT)) ? I2PTunnelHTTPClient.AUTH_REALM
                                                               : I2PTunnelConnectClient.AUTH_REALM;
                     String hex = PasswordManager.md5Hex(realm, _newProxyUser, _newProxyPW);
                     if (hex != null)
@@ -1253,6 +1253,7 @@ public class TunnelConfig {
                 // leave in for HTTP and Connect so it can get migrated to MD5
                 // hide for SOCKS until migrated to MD5
                 if ((!TunnelController.TYPE_HTTP_CLIENT.equals(_type)) &&
+                    (!TunnelController.TYPE_BROWSER_HTTP_CLIENT.equals(_type)) &&
                     (!TunnelController.TYPE_CONNECT.equals(_type)) &&
                     _nonProxyNoShowSet.contains(key))
                     continue;

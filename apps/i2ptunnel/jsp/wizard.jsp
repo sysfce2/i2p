@@ -86,7 +86,7 @@
                       <input type="hidden" name="nofilter_description" value="<%=net.i2p.data.DataHelper.stripHTML(request.getParameter("nofilter_description"))%>" /><%
                 }
                 if (curPage != 4 && tunnelIsClient &&
-                    ("httpclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType))) {
+                    ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType) ||"connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType))) {
                     %><input type="hidden" name="targetDestination" value="<%=net.i2p.data.DataHelper.stripHTML(request.getParameter("targetDestination"))%>" />
                       <input type="hidden" name="proxyList" value="<%=net.i2p.data.DataHelper.stripHTML(request.getParameter("proxyList"))%>" /><%
                 }
@@ -286,7 +286,7 @@
             <% /* Page 4 - Target destination or proxy list */
 
             if (tunnelIsClient) {
-              if ("httpclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) {
+              if ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) {
                 if (curPage == 4) {
           %>
     <tr>
@@ -477,7 +477,7 @@
                 <tr><td><%=intl._t("Tunnel type")%></td><td><%
                 if ("client".equals(tunnelType) || "server".equals(tunnelType)) { %>
                     <%=intl._t("Standard")%><%
-                } else if ("httpclient".equals(tunnelType) || "httpserver".equals(tunnelType)) { %>
+                } else if ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType) || "httpserver".equals(tunnelType)) { %>
                     HTTP<%
                 } else if ("ircclient".equals(tunnelType) || "ircserver".equals(tunnelType)) { %>
                     IRC<%
@@ -494,7 +494,7 @@
                 <%
                 if (tunnelIsClient) { %>
                 <tr><td><%=intl._t("Tunnel destination")%></td><td><%
-                  if ("httpclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) { %>
+                  if ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) { %>
                     <%=net.i2p.data.DataHelper.stripHTML(request.getParameter("proxyList"))%><%
                   } else if ("client".equals(tunnelType) || "ircclient".equals(tunnelType)) { %>
                     <%=net.i2p.data.DataHelper.stripHTML(request.getParameter("targetDestination"))%><%

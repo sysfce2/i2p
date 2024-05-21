@@ -911,7 +911,7 @@ public class TunnelController implements Logging {
                 type.equals(TYPE_IRC_CLIENT) || type.equals(TYPE_STD_CLIENT) ||
                 type.equals(TYPE_SOCKS) || type.equals(TYPE_CONNECT) ||
                 type.equals(TYPE_SOCKS_IRC) || type.equals(TYPE_STREAMR_CLIENT) ||
-                type.equals(TYPE_HTTP_CLIENT)) {
+                type.equals(TYPE_HTTP_CLIENT) || type.equals(TYPE_BROWSER_HTTP_CLIENT)) {
                 if (!_config.containsKey(OPT_SIG_TYPE))
                     _config.setProperty(OPT_SIG_TYPE, PREFERRED_SIGTYPE.name());
             }
@@ -952,7 +952,7 @@ public class TunnelController implements Logging {
                 }
             }
             if (isClient(type) &&
-                (type.equals(TYPE_HTTP_CLIENT) || Boolean.parseBoolean(_config.getProperty(PROP_SHARED)))) {
+                (type.equals(TYPE_HTTP_CLIENT) || type.equals(TYPE_BROWSER_HTTP_CLIENT) || Boolean.parseBoolean(_config.getProperty(PROP_SHARED)))) {
                 // migration: HTTP proxy and shared clients default to both
                 if (!_config.containsKey(OPT_ENCTYPE))
                     _config.setProperty(OPT_ENCTYPE, "4,0");

@@ -316,7 +316,7 @@
     </tr><tr>
         <td class="tunnelDestination" colspan="6">
             <span class="tunnelDestinationLabel">
-<%             if ("httpclient".equals(indexBean.getInternalType(curClient)) || "connectclient".equals(indexBean.getInternalType(curClient)) ||
+<%             if ("httpclient".equals(indexBean.getInternalType(curClient)) || "browserclient".equals(indexBean.getInternalType(curClient)) || "connectclient".equals(indexBean.getInternalType(curClient)) ||
                    "sockstunnel".equals(indexBean.getInternalType(curClient)) || "socksirctunnel".equals(indexBean.getInternalType(curClient))) { %>
                 <b><%=intl._t("Outproxy")%>:</b>
 <%             } else { %>
