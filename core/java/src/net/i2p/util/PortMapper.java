@@ -29,6 +29,8 @@ public class PortMapper {
     public static final String SVC_HTTPS_CONSOLE = "https_console";
     public static final String SVC_HTTP_PROXY = "HTTP";
     public static final String SVC_HTTPS_PROXY = "HTTPS";
+    public static final String SVC_HTTP_PROXY_TABBED = "HTTP_TABBED";
+    public static final String SVC_HTTPS_PROXY_TABBED = "HTTPS_TABBED";
     public static final String SVC_EEPSITE = "eepsite";
     /** @since 0.9.34 */
     public static final String SVC_HTTPS_EEPSITE = "https_eepsite";

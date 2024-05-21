@@ -1037,4 +1037,8 @@ public class HTTPRequestReader {
     protected String getErrorPage(String base, String backup) {
         return I2PTunnelHTTPClient.getErrorPage(_context, base, backup);
     }
+
+    public String toString() {
+        return targetRequest;
+    }
 }

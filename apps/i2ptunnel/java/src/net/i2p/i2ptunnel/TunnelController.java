@@ -156,6 +156,7 @@ public class TunnelController implements Logging {
     public static final String TYPE_HTTP_BIDIR_SERVER = "httpbidirserver";
     public static final String TYPE_HTTP_CLIENT = "httpclient";
     public static final String TYPE_HTTP_SERVER = "httpserver";
+    public static final String TYPE_BROWSER_HTTP_CLIENT = "browserclient";
     public static final String TYPE_IRC_CLIENT = "ircclient";
     public static final String TYPE_IRC_SERVER = "ircserver";
     public static final String TYPE_SOCKS = "sockstunnel";
