@@ -2,9 +2,11 @@ package net.i2p.i2ptunnel.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -48,27 +50,28 @@ public class HTTPRequestReader {
     I2PSocket i2ps = null;
     protected final Log _log;
     protected final I2PAppContext _context;
+    StringBuilder newRequest = new StringBuilder();
+    String method = null, protocol = null, host = null, destination = null;
+    String hostLowerCase = null;
+    String authorization = null;
+    boolean allowGzip = false;
+    String userAgent = null;
+    int remotePort = 0;
+    boolean ahelperPresent = false;
+    boolean ahelperNew = false;
+    String ahelperKey = null;
+    String referer = null;
 
     public HTTPRequestReader(Socket s, I2PAppContext ctx, InputReader reader, boolean keepalive, AtomicLong __requestId,
             int requestCount, I2PTunnel tun, I2PTunnelHTTPClient client) throws IOException {
+        String line = null;
         _tunnel = tun;
         _client = client;
         _context = ctx;
         _log = ctx.logManager().getLog(getClass());
         long requestId = __requestId.incrementAndGet();
-        String line, method = null, protocol = null, host = null, destination = null;
-        String hostLowerCase = null;
-        StringBuilder newRequest = new StringBuilder();
-        boolean ahelperPresent = false;
-        boolean ahelperNew = false;
-        String ahelperKey = null;
-        String userAgent = null;
-        String authorization = null;
-        int remotePort = 0;
-        String referer = null;
         URI origRequestURI = null;
         boolean preserveConnectionHeader = false;
-        boolean allowGzip = false;
         OutputStream out = s.getOutputStream();
         while ((line = reader.readLine(method)) != null) {
             line = line.trim();
@@ -855,7 +858,7 @@ public class HTTPRequestReader {
     }
 
     protected String getPrefix(long requestId) {
-        return "HTTPClient[" + _clientId()+ '/' + requestId + "]: ";
+        return "HTTPClient[" + _clientId() + '/' + requestId + "]: ";
     }
 
     /** @param host ignored */
@@ -1040,5 +1043,153 @@ public class HTTPRequestReader {
 
     public String toString() {
         return targetRequest;
+    }
+
+    public String getTargetRequest() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Target Request:" + targetRequest);
+        return targetRequest;
+    }
+
+    public URI originSeparator() {
+        URI url = null;
+        try {
+            url = new URI(this.toString());
+        } catch (URISyntaxException use) {
+            return null;
+        }
+        return url;
+    }
+
+    public StringBuilder getNewRequest() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("New Request: " + newRequest);
+        return newRequest;
+    }
+
+    public String getHost() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Hostname" + host);
+        return host;
+    }
+
+    public String getHostLowerCase() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("LowerCase Hostname" + hostLowerCase);
+        return hostLowerCase;
+    }
+
+    public int getRemotePort() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("RemotePort: " + remotePort);
+        return remotePort;
+    }
+
+    public String getProtocol() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Protocol: " + protocol);
+        return protocol;
+    }
+
+    public String getMethod() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Method: " + method);
+        return method;
+    }
+
+    public String getDestination() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Destination: " + destination);
+        return destination;
+    }
+
+    public boolean getUsingInternalOutproxy() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Using Internal Outproxy: " + usingInternalOutproxy);
+        return usingInternalOutproxy;
+    }
+
+    public boolean getUsingInternalServer() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Using Internal Server: " + usingInternalServer);
+        return usingInternalServer;
+    }
+
+    public String getInternalPath() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("InternalPath: " + internalPath);
+        return internalPath;
+    }
+
+    public String getInternalRawQuery() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("InternalRawQuery: " + internalRawQuery);
+        return internalRawQuery;
+    }
+
+    public String getAuthorization() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Authorization: " + authorization);
+        return authorization;
+    }
+
+    public boolean getAllowGzip() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Gzip: " + allowGzip);
+        return allowGzip;
+    }
+
+    public boolean getIsConnect() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("CONNECT request: " + isConnect);
+        return isConnect;
+    }
+
+    public String getCurrentProxy() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Current Proxy: " + currentProxy);
+        return currentProxy;
+    }
+
+    public Outproxy getOutproxy() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Outproxy: " + outproxy);
+        return outproxy;
+    }
+
+    public String getUserAgent() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("User Agent: " + userAgent);
+        return userAgent;
+    }
+
+    public boolean getAhelperNew() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Address Helper New: " + ahelperNew);
+        return ahelperNew;
+    }
+
+    public String getAhelperKey() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Address Helper Key: " + ahelperKey);
+        return ahelperKey;
+    }
+
+    public String getReferer() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Referer: " + referer);
+        return referer;
+    }
+
+    public boolean getIsHead() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("HEAD request: " + isHead);
+        return isHead;
+    }
+
+    public boolean getAhelperPresent() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Address helper present: " + ahelperPresent);
+        return ahelperPresent;
     }
 }

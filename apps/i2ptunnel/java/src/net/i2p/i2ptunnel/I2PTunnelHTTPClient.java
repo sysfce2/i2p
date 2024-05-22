@@ -87,7 +87,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     /**
      *  Used to protect actions via http://proxy.i2p/
      */
-    private final String _proxyNonce;
+    protected final String _proxyNonce;
 
     public static final String AUTH_REALM = "I2P HTTP Proxy";
     public static final String UA_I2P = "User-Agent: " +
@@ -107,7 +107,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     // Firefox timeout appears to be about 114 seconds, so it will close before we do.
     static final int BROWSER_KEEPALIVE_TIMEOUT = 2*60*1000;
     private static final boolean DEFAULT_KEEPALIVE_BROWSER = true;
-    private static final boolean DEFAULT_KEEPALIVE_I2P = true;
+    protected static final boolean DEFAULT_KEEPALIVE_I2P = true;
 
     /**
      *  These are backups if the xxx.ht error page is missing.
@@ -183,7 +183,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "If you save it to your address book, you will not see this message again. " +
             "If you do not wish to visit this host, click the \"back\" button on your browser.";
 
-    private final static String ERR_BAD_PROTOCOL =
+    protected final static String ERR_BAD_PROTOCOL =
             "HTTP/1.1 403 Bad Protocol\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -212,7 +212,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
             "<html><body><H1>I2P ERROR: REQUEST DENIED</H1>" +
             "Your browser is misconfigured. Do not use the proxy to access the router console or other localhost destinations.<BR>";
 
-    private final static String ERR_INTERNAL_SSL =
+    protected final static String ERR_INTERNAL_SSL =
             "HTTP/1.1 403 SSL Rejected\r\n" +
             "Content-Type: text/html; charset=iso-8859-1\r\n" +
             "Cache-Control: no-cache\r\n" +
@@ -1551,7 +1551,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
      * @param destination the hostname
      * @since 0.8.7
      */
-    private void writeHelperSaveForm(OutputStream outs, String destination, String ahelperKey,
+    protected void writeHelperSaveForm(OutputStream outs, String destination, String ahelperKey,
                                      String targetRequest, String referer) throws IOException {
         if(outs == null)
             return;
@@ -1617,7 +1617,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
     }
 
     /** @since 0.9.43 */
-    private void writeB32SaveForm(OutputStream outs, String destination, int code,
+    protected void writeB32SaveForm(OutputStream outs, String destination, int code,
                                      String targetRequest) throws IOException {
         if(outs == null)
             return;
@@ -1734,7 +1734,7 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
         return lc.equals("http") || lc.equals("https");
     }
 
-    private final static String ERR_HELPER_DISABLED =
+    public final static String ERR_HELPER_DISABLED =
             "HTTP/1.1 403 Disabled\r\n" +
             "Content-Type: text/plain\r\n" +
             "Connection: close\r\n"+
