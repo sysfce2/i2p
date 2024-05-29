@@ -47,6 +47,7 @@ import net.i2p.util.PortMapper;
  * of 05/29/2024
  *
  * @author idk
+ * @since 0.9.62
  */
 public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
@@ -69,6 +70,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * clients HashMap.
      *
      * @return I2PTunnelHTTPClient used for outproxy requests.
+     * @since 0.9.62
      */
     private I2PTunnelHTTPClient nullClient() {
         return clients.get(Hash.FAKE_HASH);
@@ -81,6 +83,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * Do not use overrides for per-socket options.
      *
      * This will throw IAE on tunnel build failure
+     *
+     * @since 0.9.62
      */
     @Override
     protected I2PSocketOptions getDefaultOptions(Properties overrides) {
@@ -108,6 +112,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * Overridden to start an internal socket too.
      * Also instantiates the "OutProxy" I2PTunnelHTTPClient
      *
+     * @since 0.9.62
      */
     @Override
     public void startRunning() {
@@ -136,6 +141,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * Overridden to close internal socket too.
      * Also overridden to close the multiplexed proxies before closing the
      * I2PTunnelHTTPBrowserClient and remove them from the map.
+     *
+     * @since 0.9.62
      */
     @Override
     public boolean close(boolean forced) {
@@ -167,6 +174,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      *
      * @param hostname
      * @param port
+     * @since 0.9.62
      */
     private void mapPort(Hash hash, int port) {
         _context.portMapper().register(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
@@ -180,6 +188,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     /**
      * Unregisters a multiplexed I2PTunnelHTTPClient's port from the PortMapper
      * using the hash.toBase32() to identify it.
+     *
+     * @since 0.9.62
      */
     private void unmapPort(Hash hash) {
         _context.portMapper().unregister(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
@@ -195,6 +205,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * closing the socket which dies at the end of the function.
      *
      * @return int a random number in Java's default random port range.
+     * @since 0.9.62
      */
     private int findRandomOpenPort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0);) {
@@ -208,6 +219,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      *
      * @param uri a URI to discover an I2PTunnelHTTPClient for
      * @return the correct I2PTunnelHTTPClient
+     * @since 0.9.62
      */
     public I2PTunnelHTTPClient getI2PTunnelHTTPClient(URI uri) {
         String hostname = uri.getHost();
@@ -223,6 +235,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      *
      * @param hostname a hostname to convert to a destination hash
      * @return I2PTunnelHTTPClient for the host, or null if it's not created yet.
+     * @since 0.9.62
      */
     public I2PTunnelHTTPClient getI2PTunnelHTTPClient(String hostname) {
         if (hostname == null)
@@ -242,6 +255,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      *
      * @param uri
      * @return true only if a new I2PTunnelHTTPClient was created
+     * @since 0.9.62
      */
     protected boolean mapNewClient(URI uri) {
         String hostname = uri.getHost();
@@ -273,7 +287,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * port mapper
      *
      * @param hash
-     * @return
+     * @return true if the client existed and was unmapped
+     * @since 0.9.62
      */
     protected boolean unmapClient(Hash hash) {
         if (clients.get(hash) != null) {
@@ -285,6 +300,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         return false;
     }
 
+    /**
+     * Variant clientConnectionRun based on the one in I2PTunnelHTTPClient, modified
+     * to read the entire request and annotate it advance, then look up an
+     * additional proxy from the clients multiplex to forward it to.
+     *
+     * @since 0.9.62
+     */
     @Override
     protected void clientConnectionRun(Socket s) {
         OutputStream out = null;
@@ -754,6 +776,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
 
     /**
      * @return "I2P Browser Proxy"
+     * @since 0.9.62
      */
     protected String getRealm() {
         return AUTH_REALM;
