@@ -22,6 +22,7 @@ import net.i2p.client.streaming.I2PSocketOptions;
 import net.i2p.crypto.Blinding;
 import net.i2p.data.Base32;
 import net.i2p.data.BlindData;
+import net.i2p.data.DataFormatException;
 import net.i2p.data.Destination;
 import net.i2p.data.Hash;
 import net.i2p.i2ptunnel.localServer.LocalHTTPServer;
@@ -52,7 +53,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         super(localPort, ownDest, l, notifyThis, handlerName, tunnel);
         premadeI2PTunnel = new I2PTunnelHTTPClient(localPort, l, ownDest, handlerName, notifyThis, tunnel);
         setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
-        notifyEvent("openHTTPClientResult", "ok");
+        notifyEvent("openBrowserHTTPClientResult", "ok");
     }
 
     public I2PTunnelHTTPBrowserClient(int localPort, Logging l,
@@ -61,7 +62,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         super(localPort, l, sockMgr, tunnel, notifyThis, clientId);
         premadeI2PTunnel = new I2PTunnelHTTPClient(localPort, l, _ownDest, ERR_NO_OUTPROXY, notifyThis, tunnel);
         setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
-        notifyEvent("openHTTPClientResult", "ok");
+        notifyEvent("openBrowserHTTPClientResult", "ok");
     }
 
     public I2PTunnelHTTPBrowserClient(int clientPort, Logging l, boolean ownDest, String proxy, I2PTunnel i2pTunnel,
@@ -69,7 +70,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         super(clientPort, ownDest, l, i2pTunnel, proxy, tunnel);
         premadeI2PTunnel = new I2PTunnelHTTPClient(clientPort, l, ownDest, proxy, i2pTunnel, tunnel);
         // setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
-        notifyEvent("openHTTPClientResult", "ok");
+        notifyEvent("openBrowserHTTPClientResult", "ok");
     }
 
     /**
@@ -199,8 +200,15 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         if (hostname == null)
             return null;
         Destination destination = _context.namingService().lookup(hostname);
-        if (destination == null)
-            return null;
+        if (destination == null) {
+            try {
+                destination = new Destination(Hash.FAKE_HASH.toBase64());
+            } catch (DataFormatException e) {
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("Unable to get fake dest for outproxy");
+                return null;
+            }
+        }
         return clients.get(destination);
     }
 
@@ -209,8 +217,15 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         if (hostname == null)
             return false;
         Destination destination = _context.namingService().lookup(hostname);
-        if (destination == null)
-            return false;
+        if (destination == null) {
+            try {
+                destination = new Destination(Hash.FAKE_HASH.toBase64());
+            } catch (DataFormatException e) {
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("Unable to get fake dest for outproxy");
+                return false;
+            }
+        }
         if (getI2PTunnelHTTPClient(uri) != null)
             return false;
         try {
@@ -626,7 +641,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     }
                     if (hrr.getRemotePort() > 0)
                         sktOpts.setPort(hrr.getRemotePort());
-                    i2ps = createI2PSocket(clientDest, sktOpts);
+                    i2ps = httpClient.createI2PSocket(clientDest, sktOpts);
                 }
 
                 I2PTunnelRunner t;

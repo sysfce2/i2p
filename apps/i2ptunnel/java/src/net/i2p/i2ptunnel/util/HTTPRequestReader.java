@@ -2,11 +2,9 @@ package net.i2p.i2ptunnel.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,34 +31,37 @@ public class HTTPRequestReader {
     /**
      * The URL after fixup, always starting with http:// or https://
      */
-    String targetRequest = null;
+    private String targetRequest = null;
 
     // in-net outproxy
-    boolean usingWWWProxy = false;
+    private boolean usingWWWProxy = false;
     // local outproxy plugin
-    boolean usingInternalOutproxy = false;
-    Outproxy outproxy = null;
-    boolean usingInternalServer = false;
-    String internalPath = null;
-    String internalRawQuery = null;
-    String currentProxy = null;
-    boolean shout = false;
-    boolean isConnect = false;
-    boolean isHead = false;
-    I2PSocket i2ps = null;
-    protected final Log _log;
-    protected final I2PAppContext _context;
-    StringBuilder newRequest = new StringBuilder();
-    String method = null, protocol = null, host = null, destination = null;
-    String hostLowerCase = null;
-    String authorization = null;
-    boolean allowGzip = false;
-    String userAgent = null;
-    int remotePort = 0;
-    boolean ahelperPresent = false;
-    boolean ahelperNew = false;
-    String ahelperKey = null;
-    String referer = null;
+    private boolean usingInternalOutproxy = false;
+    private Outproxy outproxy = null;
+    private boolean usingInternalServer = false;
+    private String internalPath = null;
+    private String internalRawQuery = null;
+    private String currentProxy = null;
+    private boolean shout = false;
+    private boolean isConnect = false;
+    private boolean isHead = false;
+    private I2PSocket i2ps = null;
+    private final Log _log;
+    private final I2PAppContext _context;
+    private StringBuilder newRequest = new StringBuilder();
+    private String method = null;
+    private String protocol = null;
+    private String host = null;
+    private String destination = null;
+    private String hostLowerCase = null;
+    private String authorization = null;
+    private boolean allowGzip = false;
+    private String userAgent = null;
+    private int remotePort = 0;
+    private boolean ahelperPresent = false;
+    private boolean ahelperNew = false;
+    private String ahelperKey = null;
+    private String referer = null;
 
     public HTTPRequestReader(Socket s, I2PAppContext ctx, InputReader reader, boolean keepalive, AtomicLong __requestId,
             int requestCount, I2PTunnel tun, I2PTunnelHTTPClient client) throws IOException {
