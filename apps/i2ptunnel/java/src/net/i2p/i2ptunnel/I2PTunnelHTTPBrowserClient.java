@@ -722,7 +722,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     boolean keepaliveI2P = keepalive
                             && getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_I2P,
                                     I2PTunnelHTTPClient.DEFAULT_KEEPALIVE_I2P);
-                    hrunner = new I2PTunnelHTTPClientRunner(s, i2ps, sockLock, data, mySockets, onTimeout,
+                    hrunner = new I2PTunnelHTTPClientRunner(s, i2ps, httpClient.sockLock, data, mySockets, onTimeout,
                             keepaliveI2P, keepalive, hrr.getIsHead());
                     t = hrunner;
                 }
