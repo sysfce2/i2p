@@ -31,8 +31,9 @@ import net.i2p.util.Translate;
  * method accessor.
  * It is only possible to populate the instance variables using the constructor,
  * which may only take a socket to read it from.
- * The read loop is identical to the I2PTunnelHTTPClient read loop that performs
- * the same function and is almost a drop-in replacement for it.
+ * The read loop in the constructor is identical to the I2PTunnelHTTPClient read
+ * loop that performs the same function and is almost a drop-in replacement for
+ * it.
  *
  * adapted from I2PTunnelHTTPClient, original author mihi
  *
@@ -40,7 +41,7 @@ import net.i2p.util.Translate;
  */
 public class HTTPRequestReader {
     private final I2PTunnel _tunnel;
-    //private final I2PTunnelHTTPClient _client;
+    // private final I2PTunnelHTTPClient _client;
     /**
      * The URL after fixup, always starting with http:// or https://
      */
@@ -865,9 +866,11 @@ public class HTTPRequestReader {
                 null);
     }
 
-    /*private long _clientId() {
-        return _client.getClientId();
-    }*/
+    /*
+     * private long _clientId() {
+     * return _client.getClientId();
+     * }
+     */
 
     protected String getPrefix(long requestId) {
         return "HTTPRequestReader[" + "Browser Proxy" + '/' + requestId + "]: ";
