@@ -61,7 +61,7 @@ public class HTTPRequestReader {
     private boolean isHead = false;
     private final Log _log;
     private final I2PAppContext _context;
-    private StringBuilder newRequest = new StringBuilder();
+    private final StringBuilder newRequest = new StringBuilder();
     private String method = null;
     private String protocol = null;
     private String host = null;
@@ -76,30 +76,31 @@ public class HTTPRequestReader {
     private String ahelperKey = null;
     private String referer = null;
 
-    public HTTPRequestReader(Socket s, I2PAppContext ctx, InputReader reader, boolean keepalive, AtomicLong __requestId,
-            int requestCount, I2PTunnel tun, I2PTunnelHTTPClient _client) throws IOException {
+    public HTTPRequestReader(final Socket s, final I2PAppContext ctx, final InputReader reader, boolean keepalive,
+            final AtomicLong __requestId,
+            final int requestCount, final I2PTunnel tun, final I2PTunnelHTTPClient _client) throws IOException {
         String line = null;
         _tunnel = tun;
         _context = ctx;
         _log = ctx.logManager().getLog(getClass());
-        long requestId = __requestId.incrementAndGet();
+        final long requestId = __requestId.incrementAndGet();
         URI origRequestURI = null;
         boolean preserveConnectionHeader = false;
-        OutputStream out = s.getOutputStream();
+        final OutputStream out = s.getOutputStream();
         while ((line = reader.readLine(method)) != null) {
             line = line.trim();
             if (_log.shouldLog(Log.DEBUG)) {
                 _log.debug(getPrefix(requestId) + "Line=[" + line + "]");
             }
 
-            String lowercaseLine = line.toLowerCase(Locale.US);
+            final String lowercaseLine = line.toLowerCase(Locale.US);
 
             if (method == null) {
                 // first line GET/POST/etc.
                 if (_log.shouldInfo())
                     _log.info(getPrefix(requestId) + "req #" + requestCount + " first line [" + line + "]");
 
-                String[] params = DataHelper.split(line, " ", 3);
+                final String[] params = DataHelper.split(line, " ", 3);
                 if (params.length != 3) {
                     break;
                 }
@@ -167,7 +168,7 @@ public class HTTPRequestReader {
                 try {
                     try {
                         requestURI = new URI(request);
-                    } catch (URISyntaxException use) {
+                    } catch (final URISyntaxException use) {
                         // fixup []| in path/query not escaped by browsers, see ticket #2130
                         boolean error = true;
                         // find 3rd /
@@ -179,7 +180,7 @@ public class HTTPRequestReader {
                             idx++;
                         }
                         if (idx > 0) {
-                            String schemeHostPort = request.substring(0, idx);
+                            final String schemeHostPort = request.substring(0, idx);
                             String rest = request.substring(idx);
                             // not escaped by all browsers, may be specific to query, see ticket #2130
                             rest = rest.replace("[", "%5B");
@@ -187,13 +188,13 @@ public class HTTPRequestReader {
                             rest = rest.replace("|", "%7C");
                             rest = rest.replace("{", "%7B");
                             rest = rest.replace("}", "%7D");
-                            String testRequest = schemeHostPort + rest;
+                            final String testRequest = schemeHostPort + rest;
                             if (!testRequest.equals(request)) {
                                 try {
                                     requestURI = new URI(testRequest);
                                     request = testRequest;
                                     error = false;
-                                } catch (URISyntaxException use2) {
+                                } catch (final URISyntaxException use2) {
                                     // didn't work, give up
                                 }
                             }
@@ -217,13 +218,13 @@ public class HTTPRequestReader {
                         }
                         requestURI = changeURI(requestURI, null, 0, "/");
                     }
-                } catch (URISyntaxException use) {
+                } catch (final URISyntaxException use) {
                     if (_log.shouldLog(Log.WARN)) {
                         _log.warn(getPrefix(requestId) + "Bad request [" + request + "]", use);
                     }
                     try {
                         out.write(getErrorPage("baduri", I2PTunnelHTTPClient.ERR_BAD_URI).getBytes("UTF-8"));
-                        String msg = use.getLocalizedMessage();
+                        final String msg = use.getLocalizedMessage();
                         if (msg != null) {
                             out.write(DataHelper.getASCII("<p>\n"));
                             out.write(DataHelper.getUTF8(DataHelper.escapeHTML(msg)));
@@ -232,13 +233,13 @@ public class HTTPRequestReader {
                         out.write(DataHelper.getASCII("</div>\n"));
                         writeFooter(out);
                         reader.drain();
-                    } catch (IOException ioe) {
+                    } catch (final IOException ioe) {
                         // ignore
                     }
                     return;
                 }
 
-                String protocolVersion = params[2];
+                final String protocolVersion = params[2];
                 if (!protocolVersion.equals("HTTP/1.1"))
                     keepalive = false;
 
@@ -250,7 +251,7 @@ public class HTTPRequestReader {
                     break;
                 }
 
-                int port = requestURI.getPort();
+                final int port = requestURI.getPort();
 
                 // Go through the various types of hostnames, set
                 // the host and destination variables accordingly,
@@ -275,7 +276,7 @@ public class HTTPRequestReader {
                         slash = oldPath.length();
                         oldPath += '/';
                     }
-                    String _dest = oldPath.substring(0, slash);
+                    final String _dest = oldPath.substring(0, slash);
                     if (slash >= 516 && !_dest.contains(".")) {
                         // possible alternative:
                         // redirect to b32
@@ -283,13 +284,13 @@ public class HTTPRequestReader {
                         host = getHostName(destination);
                         targetRequest = requestURI.toASCIIString();
                         String newURI = oldPath.substring(slash);
-                        String query = requestURI.getRawQuery();
+                        final String query = requestURI.getRawQuery();
                         if (query != null) {
                             newURI += '?' + query;
                         }
                         try {
                             requestURI = new URI(newURI);
-                        } catch (URISyntaxException use) {
+                        } catch (final URISyntaxException use) {
                             // shouldnt happen
                             _log.warn(request, use);
                             method = null;
@@ -307,7 +308,7 @@ public class HTTPRequestReader {
                     // failure
                     host = getHostName(destination);
 
-                    int rPort = requestURI.getPort();
+                    final int rPort = requestURI.getPort();
                     if (rPort > 0) {
                         // Save it to put in the I2PSocketOptions,
                         remotePort = rPort;
@@ -335,7 +336,7 @@ public class HTTPRequestReader {
                         boolean ahelperConflict = false;
 
                         // Try to find an address helper in the query
-                        String[] helperStrings = removeHelper(query);
+                        final String[] helperStrings = removeHelper(query);
                         if (helperStrings != null &&
                                 !Boolean.parseBoolean(
                                         getTunnel().getClientOptions()
@@ -346,7 +347,7 @@ public class HTTPRequestReader {
                             }
                             try {
                                 requestURI = replaceQuery(requestURI, query);
-                            } catch (URISyntaxException use) {
+                            } catch (final URISyntaxException use) {
                                 // shouldn't happen
                                 _log.warn(request, use);
                                 method = null;
@@ -363,13 +364,13 @@ public class HTTPRequestReader {
                                      * <a href="?i2paddresshelper=name.i2p">This is the name I want to be
                                      * called.</a>
                                      */
-                                    Destination _dest = _context.namingService().lookup(ahelperKey);
+                                    final Destination _dest = _context.namingService().lookup(ahelperKey);
                                     if (_dest == null) {
                                         if (_log.shouldLog(Log.WARN)) {
                                             _log.warn(getPrefix(requestId) + "Could not find destination for "
                                                     + ahelperKey);
                                         }
-                                        String header = getErrorPage("ahelper-notfound",
+                                        final String header = getErrorPage("ahelper-notfound",
                                                 I2PTunnelHTTPClient.ERR_AHELPER_NOTFOUND);
                                         try {
                                             out.write(header.getBytes("UTF-8"));
@@ -380,7 +381,7 @@ public class HTTPRequestReader {
                                                     "</p>").getBytes("UTF-8"));
                                             writeFooter(out);
                                             reader.drain();
-                                        } catch (IOException ioe) {
+                                        } catch (final IOException ioe) {
                                             // ignore
                                         }
                                         return;
@@ -393,7 +394,8 @@ public class HTTPRequestReader {
                                 if (host == null || "i2p".equals(host)) {
                                     // Host lookup failed - resolvable only with addresshelper
                                     // Store in local HashMap unless there is conflict
-                                    String old = _client.addressHelpers.putIfAbsent(destination.toLowerCase(Locale.US),
+                                    final String old = _client.addressHelpers.putIfAbsent(
+                                            destination.toLowerCase(Locale.US),
                                             ahelperKey);
                                     ahelperNew = old == null;
                                     // inr address helper links without trailing '=', so omit from comparison
@@ -410,9 +412,9 @@ public class HTTPRequestReader {
                                 } else {
                                     // If the host is resolvable from database, verify addresshelper key
                                     // Silently bypass correct keys, otherwise alert
-                                    Destination hostDest = _context.namingService().lookup(destination);
+                                    final Destination hostDest = _context.namingService().lookup(destination);
                                     if (hostDest != null) {
-                                        String destB64 = hostDest.toBase64();
+                                        final String destB64 = hostDest.toBase64();
                                         if (destB64 != null && !destB64.equals(ahelperKey)) {
                                             // Conflict: handle when URL reconstruction done
                                             ahelperConflict = true;
@@ -433,24 +435,25 @@ public class HTTPRequestReader {
                         if (ahelperConflict) {
                             try {
                                 // convert ahelperKey to b32
-                                String alias = getHostName(ahelperKey);
+                                final String alias = getHostName(ahelperKey);
                                 if (alias.equals("i2p")) {
                                     // bad ahelperKey
-                                    String header = getErrorPage("dnfb", I2PTunnelHTTPClient.ERR_DESTINATION_UNKNOWN);
+                                    final String header = getErrorPage("dnfb",
+                                            I2PTunnelHTTPClient.ERR_DESTINATION_UNKNOWN);
                                     _client.writeErrorMessage(header, out, targetRequest, false, destination);
                                 } else {
-                                    String trustedURL = requestURI.toASCIIString();
+                                    final String trustedURL = requestURI.toASCIIString();
                                     URI conflictURI;
                                     try {
                                         conflictURI = changeURI(requestURI, alias, 0, null);
-                                    } catch (URISyntaxException use) {
+                                    } catch (final URISyntaxException use) {
                                         // shouldn't happen
                                         _log.warn(request, use);
                                         method = null;
                                         break;
                                     }
-                                    String conflictURL = conflictURI.toASCIIString();
-                                    String header = getErrorPage("ahelper-conflict",
+                                    final String conflictURL = conflictURI.toASCIIString();
+                                    final String header = getErrorPage("ahelper-conflict",
                                             I2PTunnelHTTPClient.ERR_AHELPER_CONFLICT);
                                     out.write(header.getBytes("UTF-8"));
                                     out.write("<p>".getBytes("UTF-8"));
@@ -458,10 +461,10 @@ public class HTTPRequestReader {
                                             "To visit the destination in your address book, click <a href=\"{0}\">here</a>. To visit the conflicting addresshelper destination, click <a href=\"{1}\">here</a>.",
                                             trustedURL, conflictURL).getBytes("UTF-8"));
                                     out.write("</p>".getBytes("UTF-8"));
-                                    Hash h1 = ConvertToHash.getHash(requestURI.getHost());
-                                    Hash h2 = ConvertToHash.getHash(ahelperKey);
+                                    final Hash h1 = ConvertToHash.getHash(requestURI.getHost());
+                                    final Hash h2 = ConvertToHash.getHash(ahelperKey);
                                     if (h1 != null && h2 != null) {
-                                        String conURL = _context.portMapper().getConsoleURL();
+                                        final String conURL = _context.portMapper().getConsoleURL();
                                         out.write(("\n<table class=\"conflict\"><tr><th align=\"center\">" +
                                                 "<a href=\"" + trustedURL + "\">").getBytes("UTF-8"));
                                         out.write(_t("Destination for {0} in address book", requestURI.getHost())
@@ -491,14 +494,14 @@ public class HTTPRequestReader {
                                     writeFooter(out);
                                 }
                                 reader.drain();
-                            } catch (IOException ioe) {
+                            } catch (final IOException ioe) {
                                 // ignore
                             }
                             return;
                         }
                     } // end query processing
 
-                    String addressHelper = _client.addressHelpers.get(destination);
+                    final String addressHelper = _client.addressHelpers.get(destination);
                     if (addressHelper != null) {
                         host = getHostName(addressHelper);
                     }
@@ -512,7 +515,7 @@ public class HTTPRequestReader {
                         }
                         try {
                             requestURI = new URI(newURI);
-                        } catch (URISyntaxException use) {
+                        } catch (final URISyntaxException use) {
                             // shouldnt happen
                             _log.warn(request, use);
                             method = null;
@@ -529,7 +532,7 @@ public class HTTPRequestReader {
                         out.write(getErrorPage("localhost", I2PTunnelHTTPClient.ERR_LOCALHOST).getBytes("UTF-8"));
                         writeFooter(out);
                         reader.drain();
-                    } catch (IOException ioe) {
+                    } catch (final IOException ioe) {
                         // ignore
                     }
                     return;
@@ -537,12 +540,12 @@ public class HTTPRequestReader {
                     if (Boolean.parseBoolean(
                             getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USE_OUTPROXY_PLUGIN,
                                     "true"))) {
-                        ClientAppManager mgr = _context.clientAppManager();
+                        final ClientAppManager mgr = _context.clientAppManager();
                         if (mgr != null) {
-                            ClientApp op = mgr.getRegisteredApp(Outproxy.NAME);
+                            final ClientApp op = mgr.getRegisteredApp(Outproxy.NAME);
                             if (op != null) {
                                 outproxy = (Outproxy) op;
-                                int rPort = requestURI.getPort();
+                                final int rPort = requestURI.getPort();
                                 if (rPort > 0)
                                     remotePort = rPort;
                                 else if ("https".equals(protocol) || isConnect)
@@ -580,7 +583,7 @@ public class HTTPRequestReader {
                                         getErrorPage("noproxy", I2PTunnelHTTPClient.ERR_NO_OUTPROXY).getBytes("UTF-8"));
                                 writeFooter(out);
                                 reader.drain();
-                            } catch (IOException ioe) {
+                            } catch (final IOException ioe) {
                                 // ignore
                             }
                             return;
@@ -604,13 +607,13 @@ public class HTTPRequestReader {
                         out.write(getErrorPage("denied", I2PTunnelHTTPClient.ERR_REQUEST_DENIED).getBytes("UTF-8"));
                         writeFooter(out);
                         reader.drain();
-                    } catch (IOException ioe) {
+                    } catch (final IOException ioe) {
                         // ignore
                     }
                     return;
                 } // end hostname processing
 
-                boolean isValid = usingInternalOutproxy || usingWWWProxy ||
+                final boolean isValid = usingInternalOutproxy || usingWWWProxy ||
                         usingInternalServer || isSupportedAddress(host, protocol);
                 if (!isValid) {
                     if (_log.shouldLog(Log.INFO)) {
@@ -683,9 +686,9 @@ public class HTTPRequestReader {
                     if (!Boolean.parseBoolean(
                             getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_ACCEPT))) {
                         // Replace with a standard one if possible
-                        boolean html = lowercaseLine.indexOf("text/html") > 0;
-                        boolean css = lowercaseLine.indexOf("text/css") > 0;
-                        boolean img = lowercaseLine.indexOf("image") > 0;
+                        final boolean html = lowercaseLine.indexOf("text/html") > 0;
+                        final boolean css = lowercaseLine.indexOf("text/css") > 0;
+                        final boolean img = lowercaseLine.indexOf("image") > 0;
                         if (html && !img && !css) {
                             // firefox, tor browser
                             line = "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
@@ -715,10 +718,10 @@ public class HTTPRequestReader {
                             getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_REFERER))) {
                         try {
                             // Either strip or rewrite the referer line
-                            URI refererURI = new URI(referer);
-                            String refererHost = refererURI.getHost();
+                            final URI refererURI = new URI(referer);
+                            final String refererHost = refererURI.getHost();
                             if (refererHost != null) {
-                                String origHost = origRequestURI.getHost();
+                                final String origHost = origRequestURI.getHost();
                                 if (!refererHost.equals(origHost) ||
                                         refererURI.getPort() != origRequestURI.getPort() ||
                                         !DataHelper.eq(refererURI.getScheme(), origRequestURI.getScheme())) {
@@ -726,16 +729,16 @@ public class HTTPRequestReader {
                                     continue; // completely strip the line if everything doesn't match
                                 }
                                 // Strip to a relative URI, to hide the original hostname
-                                StringBuilder buf = new StringBuilder();
+                                final StringBuilder buf = new StringBuilder();
                                 buf.append("Referer: ");
-                                String refererPath = refererURI.getRawPath();
+                                final String refererPath = refererURI.getRawPath();
                                 buf.append(refererPath != null ? refererPath : "/");
-                                String refererQuery = refererURI.getRawQuery();
+                                final String refererQuery = refererURI.getRawQuery();
                                 if (refererQuery != null)
                                     buf.append('?').append(refererQuery);
                                 line = buf.toString();
                             } // else relative URI, leave in
-                        } catch (URISyntaxException use) {
+                        } catch (final URISyntaxException use) {
                             line = null;
                             continue; // completely strip the line
                         }
@@ -771,7 +774,7 @@ public class HTTPRequestReader {
 
             if (line.length() == 0) {
                 // No more headers, add our own and break out of the loop
-                String ok = getTunnel().getClientOptions().getProperty("i2ptunnel.gzip");
+                final String ok = getTunnel().getClientOptions().getProperty("i2ptunnel.gzip");
                 boolean gzip = I2PTunnelHTTPClient.DEFAULT_GZIP;
                 if (ok != null) {
                     gzip = Boolean.parseBoolean(ok);
@@ -855,7 +858,8 @@ public class HTTPRequestReader {
      *
      * @since 0.9
      */
-    private static URI changeURI(URI uri, String host, int port, String path) throws URISyntaxException {
+    private static URI changeURI(final URI uri, final String host, final int port, final String path)
+            throws URISyntaxException {
         return new URI(uri.getScheme(),
                 null,
                 host != null ? host : uri.getHost(),
@@ -872,12 +876,12 @@ public class HTTPRequestReader {
      * }
      */
 
-    protected String getPrefix(long requestId) {
+    protected String getPrefix(final long requestId) {
         return "HTTPRequestReader[" + "Browser Proxy" + '/' + requestId + "]: ";
     }
 
     /** @param host ignored */
-    private static boolean isSupportedAddress(String host, String protocol) {
+    private static boolean isSupportedAddress(final String host, final String protocol) {
         if ((host == null) || (protocol == null)) {
             return false;
         }
@@ -903,7 +907,7 @@ public class HTTPRequestReader {
          * }
          * }
          ****/
-        String lc = protocol.toLowerCase(Locale.US);
+        final String lc = protocol.toLowerCase(Locale.US);
         return lc.equals("http") || lc.equals("https");
     }
 
@@ -914,7 +918,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    public static void writeFooter(OutputStream out) throws IOException {
+    public static void writeFooter(final OutputStream out) throws IOException {
         out.write(I2PTunnelHTTPClient.getFooter().getBytes("UTF-8"));
         out.flush();
     }
@@ -923,14 +927,14 @@ public class HTTPRequestReader {
      * @return b32hash.b32.i2p, or "i2p" on lookup failure.
      *         Prior to 0.7.12, returned b64 key
      */
-    private final String getHostName(String host) {
+    private final String getHostName(final String host) {
         if (host == null) {
             return null;
         }
         if (host.toLowerCase(Locale.US).endsWith(".b32.i2p")) {
             return host;
         }
-        Destination dest = _context.namingService().lookup(host);
+        final Destination dest = _context.namingService().lookup(host);
         if (dest == null)
             return "i2p";
         return dest.toBase32();
@@ -950,18 +954,18 @@ public class HTTPRequestReader {
      *         rv null if no helper present
      * @since 0.9
      */
-    private static String[] removeHelper(String query) {
+    private static String[] removeHelper(final String query) {
         int keystart = 0;
         int valstart = -1;
         String key = null;
         for (int i = 0; i <= query.length(); i++) {
-            char c = i < query.length() ? query.charAt(i) : '&';
+            final char c = i < query.length() ? query.charAt(i) : '&';
             if (c == ';' || c == '&') {
                 // end of key or value
                 if (valstart < 0) {
                     key = query.substring(keystart, i);
                 }
-                String decodedKey = LocalHTTPServer.decode(key);
+                final String decodedKey = LocalHTTPServer.decode(key);
                 if (decodedKey.equals(I2PTunnelHTTPClient.HELPER_PARAM)) {
                     String newQuery = keystart > 0 ? query.substring(0, keystart - 1) : "";
                     if (i < query.length() - 1) {
@@ -971,8 +975,8 @@ public class HTTPRequestReader {
                             newQuery += query.substring(i + 1);
                         }
                     }
-                    String value = valstart >= 0 ? query.substring(valstart, i) : "";
-                    String helperValue = LocalHTTPServer.decode(value);
+                    final String value = valstart >= 0 ? query.substring(valstart, i) : "";
+                    final String helperValue = LocalHTTPServer.decode(value);
                     return new String[] { newQuery, helperValue };
                 }
                 keystart = i + 1;
@@ -994,7 +998,7 @@ public class HTTPRequestReader {
      * @param query an ENCODED query, removed if null
      * @since 0.9
      */
-    private static URI replaceQuery(URI uri, String query) throws URISyntaxException {
+    private static URI replaceQuery(final URI uri, final String query) throws URISyntaxException {
         URI rv = uri;
         if (rv.getRawQuery() != null) {
             rv = new URI(rv.getScheme(),
@@ -1006,7 +1010,7 @@ public class HTTPRequestReader {
                     null);
         }
         if (query != null) {
-            String newURI = rv.toASCIIString() + '?' + query;
+            final String newURI = rv.toASCIIString() + '?' + query;
             rv = new URI(newURI);
         }
         return rv;
@@ -1017,7 +1021,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(String key) {
+    protected String _t(final String key) {
         return Translate.getString(key, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1027,7 +1031,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(String key, Object o) {
+    protected String _t(final String key, final Object o) {
         return Translate.getString(key, o, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1037,7 +1041,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(String key, Object o, Object o2) {
+    protected String _t(final String key, final Object o, final Object o2) {
         return Translate.getString(key, o, o2, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1052,7 +1056,7 @@ public class HTTPRequestReader {
      * @return non-null
      * @since 0.9.4 moved from I2PTunnelHTTPClient
      */
-    protected String getErrorPage(String base, String backup) {
+    protected String getErrorPage(final String base, final String backup) {
         return I2PTunnelHTTPClient.getErrorPage(_context, base, backup);
     }
 
@@ -1070,7 +1074,7 @@ public class HTTPRequestReader {
         URI url = null;
         try {
             url = new URI(this.toString());
-        } catch (URISyntaxException use) {
+        } catch (final URISyntaxException use) {
             return null;
         }
         return url;
