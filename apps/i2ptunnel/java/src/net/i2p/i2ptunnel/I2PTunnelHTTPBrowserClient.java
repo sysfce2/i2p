@@ -418,7 +418,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                                         .getProperty(I2PTunnelHTTPClient.PROP_DISABLE_HELPER))) {
                             out.write(I2PTunnelHTTPClient.ERR_HELPER_DISABLED.getBytes("UTF-8"));
                         } else {
-                            LocalHTTPServer.serveLocalFile(_context, sockMgr, out, hrr.getMethod(),
+                            LocalHTTPServer.serveLocalFile(httpClient.getContext(), httpClient.sockMgr, out,
+                                    hrr.getMethod(),
                                     hrr.getInternalPath(),
                                     hrr.getInternalRawQuery(), httpClient._proxyNonce, hrr.getAllowGzip());
                         }
@@ -442,7 +443,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         data = hrr.getNewRequest().toString().getBytes("ISO-8859-1");
                         response = null;
                     }
-                    Thread t = new I2PTunnelOutproxyRunner(s, outSocket, sockLock, data, response, onTimeout);
+                    Thread t = new I2PTunnelOutproxyRunner(s, outSocket, httpClient.sockLock, data, response,
+                            onTimeout);
                     // we are called from an unlimited thread pool, so run inline
                     // t.start();
                     t.run();
@@ -456,7 +458,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 Destination clientDest = null;
                 String addressHelper = httpClient.addressHelpers.get(hrr.getDestination().toLowerCase(Locale.US));
                 if (addressHelper != null) {
-                    clientDest = _context.namingService().lookup(addressHelper);
+                    clientDest = httpClient.getContext().namingService().lookup(addressHelper);
                     if (clientDest == null) {
                         // remove bad entries
                         httpClient.addressHelpers.remove(hrr.getDestination().toLowerCase(Locale.US));
@@ -492,7 +494,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     if (len >= 64) {
                         // catch b33 errors before session lookup
                         try {
-                            BlindData bd = Blinding.decode(_context, hrr.getDestination());
+                            BlindData bd = Blinding.decode(httpClient.getContext(), hrr.getDestination());
                             if (_log.shouldWarn())
                                 _log.warn("Resolved b33 " + bd);
                             // TESTING
@@ -513,8 +515,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         }
                     }
                     // use existing session to look up for efficiency
-                    verifySocketManager();
-                    I2PSession sess = sockMgr.getSession();
+                    httpClient.verifySocketManager();
+                    I2PSession sess = httpClient.sockMgr.getSession();
                     if (!sess.isClosed()) {
                         if (len == 60) {
                             byte[] hData = Base32.decode(hrr.getDestination().substring(0, 52));
@@ -548,12 +550,12 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         if (_log.shouldInfo())
                             _log.info("lookup b32 out of session " + hrr.getDestination());
                         // TODO can't get result code from here
-                        clientDest = _context.namingService().lookup(hrr.getDestination());
+                        clientDest = httpClient.getContext().namingService().lookup(hrr.getDestination());
                     }
                 } else {
                     if (_log.shouldInfo())
                         _log.info("lookup hostname " + hrr.getDestination());
-                    clientDest = _context.namingService().lookup(hrr.getDestination());
+                    clientDest = httpClient.getContext().namingService().lookup(hrr.getDestination());
                 }
 
                 if (clientDest == null) {
@@ -580,7 +582,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         if (jumpServers == null) {
                             jumpServers = I2PTunnelHTTPClient.DEFAULT_JUMP_SERVERS;
                         }
-                        int jumpDelay = 400 + _context.random().nextInt(256);
+                        int jumpDelay = 400 + httpClient.getContext().random().nextInt(256);
                         try {
                             Thread.sleep(jumpDelay);
                         } catch (InterruptedException ie) {
@@ -769,7 +771,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     currentProxy, requestId);
         } finally {
             // only because we are running it inline
-            closeSocket(s);
+            I2PTunnelHTTPClientBase.closeSocket(s);
             if (i2ps != null)
                 try {
                     i2ps.close();

@@ -1837,6 +1837,14 @@ public class I2PTunnelHTTPClient extends I2PTunnelHTTPClientBase implements Runn
         return null;
     }
 
+    /**
+     * get the I2PAppContext for this Client
+     * @return _context
+     */
+    public I2PAppContext getContext() {
+        return _context;
+    }
+
 /****
     private static String[] tests = {
         "", "foo", "foo=bar", "&", "&=&", "===", "&&",
