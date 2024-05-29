@@ -41,17 +41,16 @@ import net.i2p.util.PortMapper;
  *
  */
 public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
-    HashMap<Destination, I2PTunnelHTTPClient> clients = new HashMap<Destination, I2PTunnelHTTPClient>();
+    HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
     private InternalSocketRunner isr;
     private static final boolean DEFAULT_KEEPALIVE_BROWSER = true;
     public static final String AUTH_REALM = "I2P Browser Proxy";
-    private volatile I2PTunnelHTTPClient premadeI2PTunnel;
+    //private volatile I2PTunnelHTTPClient premadeI2PTunnel;
     protected static final AtomicLong __requestId = new AtomicLong();
 
     public I2PTunnelHTTPBrowserClient(int localPort, boolean ownDest, Logging l, EventDispatcher notifyThis,
             String handlerName, I2PTunnel tunnel) throws IllegalArgumentException {
         super(localPort, ownDest, l, notifyThis, handlerName, tunnel);
-        premadeI2PTunnel = new I2PTunnelHTTPClient(localPort, l, ownDest, handlerName, notifyThis, tunnel);
         setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
     }
@@ -60,7 +59,6 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             I2PSocketManager sockMgr, I2PTunnel tunnel,
             EventDispatcher notifyThis, long clientId) {
         super(localPort, l, sockMgr, tunnel, notifyThis, clientId);
-        premadeI2PTunnel = new I2PTunnelHTTPClient(localPort, l, _ownDest, ERR_NO_OUTPROXY, notifyThis, tunnel);
         setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
     }
@@ -68,9 +66,12 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     public I2PTunnelHTTPBrowserClient(int clientPort, Logging l, boolean ownDest, String proxy, I2PTunnel i2pTunnel,
             I2PTunnel tunnel) {
         super(clientPort, ownDest, l, i2pTunnel, proxy, tunnel);
-        premadeI2PTunnel = new I2PTunnelHTTPClient(clientPort, l, ownDest, proxy, i2pTunnel, tunnel);
         // setName("Browser Proxy on " + tunnel.listenHost + ':' + localPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
+    }
+
+    private I2PTunnelHTTPClient nullClient() {
+        return clients.get(Hash.FAKE_HASH);
     }
 
     /**
@@ -146,6 +147,15 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             _context.portMapper().register(PortMapper.SVC_HTTPS_PROXY_TABBED,
                     getTunnel().listenHost, port);
         }
+        try {
+            int port = findRandomOpenPort();
+            I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
+                    port, l, _ownDest, Hash.FAKE_HASH.toBase32(), getEventDispatcher(), getTunnel());
+            clients.put(Hash.FAKE_HASH, client);
+        } catch (IOException ioe) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Unable to find a random port");
+        }
     }
 
     /**
@@ -201,15 +211,9 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             return null;
         Destination destination = _context.namingService().lookup(hostname);
         if (destination == null) {
-            try {
-                destination = new Destination(Hash.FAKE_HASH.toBase64());
-            } catch (DataFormatException e) {
-                if (_log.shouldLog(Log.DEBUG))
-                    _log.debug("Unable to get fake dest for outproxy");
-                return null;
-            }
+            return nullClient();
         }
-        return clients.get(destination);
+        return clients.get(destination.getHash());
     }
 
     protected boolean mapNewClient(URI uri) {
@@ -234,7 +238,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             int port = findRandomOpenPort();
             I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                     port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
-            clients.put(destination, client);
+            clients.put(destination.getHash(), client);
             getI2PTunnelHTTPClient(hostname).startRunning();
             mapPort(hostname, port);
         } catch (IOException e) {
@@ -275,7 +279,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             out = s.getOutputStream();
             InputReader reader = new InputReader(s.getInputStream());
             final HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, usingWWWProxy, __requestId,
-                    I2PTunnelHTTPClientBase.BROWSER_READ_TIMEOUT, getTunnel(), premadeI2PTunnel);
+                    I2PTunnelHTTPClientBase.BROWSER_READ_TIMEOUT, getTunnel(), nullClient());
             _log.debug("clientConnectionRun on Tab-Aware Proxy to" + hrr.toString(), new Exception("I did it :)."));
             if (hrr.originSeparator() == null) {
                 if (_log.shouldLog(Log.WARN))

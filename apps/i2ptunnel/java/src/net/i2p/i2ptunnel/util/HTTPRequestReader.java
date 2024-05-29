@@ -12,7 +12,6 @@ import net.i2p.I2PAppContext;
 import net.i2p.app.ClientApp;
 import net.i2p.app.ClientAppManager;
 import net.i2p.app.Outproxy;
-import net.i2p.client.streaming.I2PSocket;
 import net.i2p.data.Base64;
 import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
@@ -25,9 +24,23 @@ import net.i2p.util.Log;
 import net.i2p.util.PortMapper;
 import net.i2p.util.Translate;
 
+/**
+ * Reads an HTTP request in off of a socket and fixes them up for forwarding
+ * into I2P.
+ * Every member is intentionally private and can only be accessed through a
+ * method accessor.
+ * It is only possible to populate the instance variables using the constructor,
+ * which may only take a socket to read it from.
+ * The read loop is identical to the I2PTunnelHTTPClient read loop that performs
+ * the same function and is almost a drop-in replacement for it.
+ *
+ * adapted from I2PTunnelHTTPClient, original author mihi
+ *
+ * @author idk
+ */
 public class HTTPRequestReader {
     private final I2PTunnel _tunnel;
-    private final I2PTunnelHTTPClient _client;
+    //private final I2PTunnelHTTPClient _client;
     /**
      * The URL after fixup, always starting with http:// or https://
      */
@@ -45,7 +58,6 @@ public class HTTPRequestReader {
     private boolean shout = false;
     private boolean isConnect = false;
     private boolean isHead = false;
-    private I2PSocket i2ps = null;
     private final Log _log;
     private final I2PAppContext _context;
     private StringBuilder newRequest = new StringBuilder();
@@ -64,10 +76,9 @@ public class HTTPRequestReader {
     private String referer = null;
 
     public HTTPRequestReader(Socket s, I2PAppContext ctx, InputReader reader, boolean keepalive, AtomicLong __requestId,
-            int requestCount, I2PTunnel tun, I2PTunnelHTTPClient client) throws IOException {
+            int requestCount, I2PTunnel tun, I2PTunnelHTTPClient _client) throws IOException {
         String line = null;
         _tunnel = tun;
-        _client = client;
         _context = ctx;
         _log = ctx.logManager().getLog(getClass());
         long requestId = __requestId.incrementAndGet();
@@ -854,12 +865,12 @@ public class HTTPRequestReader {
                 null);
     }
 
-    private long _clientId() {
+    /*private long _clientId() {
         return _client.getClientId();
-    }
+    }*/
 
     protected String getPrefix(long requestId) {
-        return "HTTPClient[" + _clientId() + '/' + requestId + "]: ";
+        return "HTTPRequestReader[" + "Browser Proxy" + '/' + requestId + "]: ";
     }
 
     /** @param host ignored */
