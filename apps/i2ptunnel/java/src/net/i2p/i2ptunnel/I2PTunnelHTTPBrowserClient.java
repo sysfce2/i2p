@@ -340,7 +340,11 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     _log.debug("A tab-aware proxy for: " + hrr.originSeparator() + "already existed. Re-using it.");
             }
             targetRequest = hrr.getTargetRequest();
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Target Request is: " + targetRequest);
             currentProxy = hrr.getCurrentProxy();
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Current Proxy is: " + currentProxy);
             httpClient = getI2PTunnelHTTPClient(hrr.originSeparator());
             if (httpClient == null) {
                 if (_log.shouldLog(Log.ERROR))
