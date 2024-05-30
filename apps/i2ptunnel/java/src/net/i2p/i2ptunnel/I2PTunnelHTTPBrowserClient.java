@@ -392,17 +392,17 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
 
                 // Authorization
                 // Yes, this is sent and checked for every request on a persistent connection
-                final AuthResult result = httpClient.authorize(s, requestId, hrr.getMethod(), hrr.getAuthorization());
+                final AuthResult result = authorize(s, requestId, hrr.getMethod(), hrr.getAuthorization());
                 if (result != AuthResult.AUTH_GOOD) {
                     if (_log.shouldLog(Log.WARN)) {
                         if (hrr.getAuthorization() != null) {
-                            _log.warn(httpClient.getPrefix(requestId) + "Auth failed, sending 407 again");
+                            _log.warn(getPrefix(requestId) + "Auth failed, sending 407 again");
                         } else {
-                            _log.warn(httpClient.getPrefix(requestId) + "Auth required, sending 407");
+                            _log.warn(getPrefix(requestId) + "Auth required, sending 407");
                         }
                     }
                     try {
-                        out.write(httpClient.getAuthError(result == AuthResult.AUTH_STALE).getBytes("UTF-8"));
+                        out.write(getAuthError(result == AuthResult.AUTH_STALE).getBytes("UTF-8"));
                         I2PTunnelHTTPClientBase.writeFooter(out);
                     } catch (final IOException ioe) {
                         // ignore
