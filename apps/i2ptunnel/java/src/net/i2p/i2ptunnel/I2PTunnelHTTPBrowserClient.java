@@ -74,6 +74,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * @since 0.9.62
      */
     private I2PTunnelHTTPClient nullClient() {
+        if (clients.get(Hash.FAKE_HASH) == null) {
+            if (_log.shouldLog(Log.ERROR))
+                _log.error("null client for outproxy request not found");
+        } else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Getting null client for outproxy request");
+        }
         return clients.get(Hash.FAKE_HASH);
     }
 
@@ -223,6 +230,9 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * @since 0.9.62
      */
     public I2PTunnelHTTPClient getI2PTunnelHTTPClient(final URI uri) {
+        if (uri == null)
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("uri is null");
         final String hostname = uri.getHost();
         return getI2PTunnelHTTPClient(hostname);
     }
@@ -239,12 +249,19 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * @since 0.9.62
      */
     public I2PTunnelHTTPClient getI2PTunnelHTTPClient(final String hostname) {
-        if (hostname == null)
-            return null;
-        final Destination destination = _context.namingService().lookup(hostname);
-        if (destination == null) {
+        if (hostname == null) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("origin separator is null, returning outproxy client");
             return nullClient();
         }
+        final Destination destination = _context.namingService().lookup(hostname);
+        if (destination == null) {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("destination is null, getting outproxy client");
+            return nullClient();
+        }
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("destination is: " + destination.getHash());
         return clients.get(destination.getHash());
     }
 
@@ -327,7 +344,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             final InputReader reader = new InputReader(s.getInputStream());
             final HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, usingWWWProxy, __requestId,
                     I2PTunnelHTTPClientBase.BROWSER_READ_TIMEOUT, getTunnel(), nullClient());
-            _log.debug("clientConnectionRun on Tab-Aware Proxy to" + hrr.toString(), new Exception("I did it :)."));
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("clientConnectionRun on Tab-Aware Proxy to" + hrr.toString());
             if (hrr.originSeparator() == null) {
                 if (_log.shouldLog(Log.WARN))
                     _log.warn("Invalid URL used as origin in tab-aware proxy");
@@ -350,6 +368,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             if (httpClient == null) {
                 if (_log.shouldLog(Log.ERROR))
                     _log.error("Proxy is not available for destination");
+                return;
             }
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("Locally-isolated destination for:" + hrr.originSeparator().getHost() + " is on: "

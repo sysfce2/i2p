@@ -83,6 +83,7 @@ public class HTTPRequestReader {
         _tunnel = tun;
         _context = ctx;
         _log = ctx.logManager().getLog(getClass());
+
         final long requestId = __requestId.incrementAndGet();
         URI origRequestURI = null;
         boolean preserveConnectionHeader = false;
@@ -931,12 +932,15 @@ public class HTTPRequestReader {
         if (host == null) {
             return null;
         }
-        if (host.toLowerCase(Locale.US).endsWith(".b32.i2p")) {
+        if (host.toLowerCase(Locale.US).endsWith(".b32.i2p") && !host.toLowerCase().equals(Hash.FAKE_HASH.toBase32())) {
             return host;
         }
         final Destination dest = _context.namingService().lookup(host);
         if (dest == null)
             return "i2p";
+        if (_log.shouldLog(Log.DEBUG)) {
+            _log.debug("Hostname resolved: " + dest.toBase32());
+        }
         return dest.toBase32();
     }
 
@@ -1061,7 +1065,7 @@ public class HTTPRequestReader {
     }
 
     public String toString() {
-        return targetRequest;
+        return host;
     }
 
     public String getTargetRequest() {
@@ -1088,13 +1092,13 @@ public class HTTPRequestReader {
 
     public String getHost() {
         if (_log.shouldLog(Log.DEBUG))
-            _log.debug("Hostname" + host);
+            _log.debug("Hostname: " + host);
         return host;
     }
 
     public String getHostLowerCase() {
         if (_log.shouldLog(Log.DEBUG))
-            _log.debug("LowerCase Hostname" + hostLowerCase);
+            _log.debug("LowerCase Hostname: " + hostLowerCase);
         return hostLowerCase;
     }
 

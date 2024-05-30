@@ -144,7 +144,7 @@
 <%
             } /* tunnel types */
 
-            if ("httpclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) {
+            if ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType) || "connectclient".equals(tunnelType) || "sockstunnel".equals(tunnelType) || "socksirctunnel".equals(tunnelType)) {
 %>
         <tr>
             <th colspan="2">
@@ -177,7 +177,7 @@
             </td>
         </tr>
 <%
-                 if ("httpclient".equals(tunnelType)) {
+                 if ("httpclient".equals(tunnelType) || "browserclient".equals(tunnelType)) {
 %>
         <tr>
             <th colspan="2">
