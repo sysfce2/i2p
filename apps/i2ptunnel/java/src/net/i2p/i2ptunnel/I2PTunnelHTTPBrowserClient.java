@@ -52,7 +52,7 @@ import net.i2p.util.PortMapper;
 public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
     private InternalSocketRunner isr;
-    private static final boolean DEFAULT_KEEPALIVE_BROWSER = true;
+    public static final boolean DEFAULT_KEEPALIVE_BROWSER = true;
     public static final String AUTH_REALM = "I2P Browser Proxy";
     protected static final AtomicLong __requestId = new AtomicLong();
 
@@ -136,8 +136,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         }
         try {
             final int port = findRandomOpenPort();
+            Object proxyList = getHostMultiplexerProperties().get("proxyList");
+            String proxyListString = null;
+            if (proxyList != null)
+                proxyListString = proxyList.toString();
             final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
-                    port, l, _ownDest, Hash.FAKE_HASH.toBase32(), getEventDispatcher(), getTunnel());
+                    port, l, _ownDest, proxyListString, getEventDispatcher(), getTunnel());
+            client.getTunnel().setClientOptions(getHostMultiplexerProperties());
             clients.put(Hash.FAKE_HASH, client);
         } catch (final IOException ioe) {
             if (_log.shouldLog(Log.DEBUG))
@@ -292,6 +297,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                     port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
             clients.put(destination.getHash(), client);
+            getI2PTunnelHTTPClient(hostname).getTunnel().setClientOptions(getHostMultiplexerProperties());
             getI2PTunnelHTTPClient(hostname).startRunning();
             mapPort(destination.getHash(), port);
         } catch (final IOException e) {
@@ -319,6 +325,23 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     }
 
     /**
+     *
+     */
+    protected Properties getHostMultiplexerProperties() {
+        Properties opts = getTunnel().getClientOptions();
+        if (opts == null)
+            opts = new Properties();
+        opts.remove("i2cp.leaseSetPrivateKey");
+        opts.remove("inbound.randomKey");
+        opts.remove("outbound.randomKey");
+        opts.remove("inbound.nickname");
+        opts.remove("outbound.nickname");
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Options: " + opts.toString());
+        return opts;
+    }
+
+    /**
      * Variant clientConnectionRun based on the one in I2PTunnelHTTPClient, modified
      * to read the entire request and annotate it advance, then look up an
      * additional proxy from the clients multiplex to forward it to.
@@ -330,7 +353,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         OutputStream out = null;
 
         // in-net outproxy
-        final boolean usingWWWProxy = false;
+        boolean usingWWWProxy = false;
 
         final long requestId = __requestId.incrementAndGet();
         I2PSocket i2ps = null;
@@ -342,7 +365,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             s.setSoTimeout(I2PTunnelHTTPClientBase.INITIAL_SO_TIMEOUT);
             out = s.getOutputStream();
             final InputReader reader = new InputReader(s.getInputStream());
-            final HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, usingWWWProxy, __requestId,
+            final HTTPRequestReader hrr = new HTTPRequestReader(s, _context, reader, __requestId,
                     I2PTunnelHTTPClientBase.BROWSER_READ_TIMEOUT, getTunnel(), nullClient());
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("clientConnectionRun on Tab-Aware Proxy to" + hrr.toString());
@@ -351,6 +374,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     _log.warn("Invalid URL used as origin in tab-aware proxy");
                 return;
             }
+            usingWWWProxy = hrr.getUsingWWWProxy();
             if (mapNewClient(hrr.originSeparator())) {
                 if (_log.shouldLog(Log.DEBUG))
                     _log.debug("Set up a new tab-aware proxy for: " + hrr.originSeparator());
@@ -374,10 +398,10 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 _log.debug("Locally-isolated destination for:" + hrr.originSeparator().getHost() + " is on: "
                         + httpClient.getLocalPort());
 
-            final boolean keepalive = getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
+            /*final boolean keepalive = getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
                     DEFAULT_KEEPALIVE_BROWSER)
                     &&
-                    !(s instanceof InternalSocket);
+                    !(s instanceof InternalSocket);*/
             do {
                 if (hrr.getNewRequest().length() > 0 && _log.shouldDebug())
                     _log.debug(httpClient.getPrefix(requestId) + "hrr.getNewRequest() header: [" + hrr.getNewRequest()
@@ -454,7 +478,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 if (hrr.getUsingInternalOutproxy()) {
                     final Socket outSocket = hrr.getOutproxy().connect(hrr.getHost(), hrr.getRemotePort());
                     final OnTimeout onTimeout = new OnTimeout(s, s.getOutputStream(), hrr.getTargetRequest(),
-                            usingWWWProxy,
+                            hrr.getUsingWWWProxy(),
                             hrr.getCurrentProxy(), requestId);
                     byte[] data;
                     byte[] response;
@@ -584,14 +608,14 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 if (clientDest == null) {
                     // l.log("Could not resolve " + destination + ".");
                     if (_log.shouldLog(Log.WARN)) {
-                        _log.warn("Unable to resolve " + hrr.getDestination() + " (proxy? " + usingWWWProxy
+                        _log.warn("Unable to resolve " + hrr.getDestination() + " (proxy? " + hrr.getUsingWWWProxy()
                                 + ", request: "
                                 + hrr.getTargetRequest());
                     }
                     String header;
                     String jumpServers = null;
                     String extraMessage = null;
-                    if (usingWWWProxy) {
+                    if (hrr.getUsingWWWProxy()) {
                         header = httpClient.getErrorPage("dnfp", I2PTunnelHTTPClientBase.ERR_DESTINATION_UNKNOWN);
                     } else if (hrr.getAhelperPresent()) {
                         header = httpClient.getErrorPage("dnfb", I2PTunnelHTTPClientBase.ERR_DESTINATION_UNKNOWN);
@@ -612,7 +636,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         }
                     }
                     try {
-                        httpClient.writeErrorMessage(header, extraMessage, out, hrr.getTargetRequest(), usingWWWProxy,
+                        httpClient.writeErrorMessage(header, extraMessage, out, hrr.getTargetRequest(), hrr.getUsingWWWProxy(),
                                 hrr.getDestination(),
                                 jumpServers);
                     } catch (final IOException ioe) {
@@ -624,7 +648,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 // as of 0.9.35, allowInternalSSL defaults to true, and overridden to true
                 // unless PROP_SSL_SET is set
                 if (hrr.getIsConnect() &&
-                        !usingWWWProxy &&
+                        !hrr.getUsingWWWProxy() &&
                         getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_SSL_SET) != null &&
                         !Boolean.parseBoolean(getTunnel().getClientOptions()
                                 .getProperty(I2PTunnelHTTPClient.PROP_INTERNAL_SSL, "true"))) {
@@ -697,7 +721,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         } catch (final IOException ioe) {
                         }
                     }
-                    final Properties opts = new Properties();
+                    final Properties opts = getHostMultiplexerProperties();// new Properties();
                     // opts.setProperty("i2p.streaming.inactivityTimeout", ""+120*1000);
                     // 1 == disconnect. see ConnectionOptions in the new streaming lib, which i
                     // dont want to hard link to here
@@ -728,7 +752,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 if (hrr.getIsConnect()) {
                     byte[] data;
                     byte[] response;
-                    if (usingWWWProxy) {
+                    if (hrr.getUsingWWWProxy()) {
                         data = hrr.getNewRequest().toString().getBytes("ISO-8859-1");
                         response = null;
                     } else {
@@ -741,16 +765,16 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 } else {
                     final byte[] data = hrr.getNewRequest().toString().getBytes("ISO-8859-1");
                     final OnTimeout onTimeout = new OnTimeout(s, s.getOutputStream(), hrr.getTargetRequest(),
-                            usingWWWProxy,
+                            hrr.getUsingWWWProxy(),
                             hrr.getCurrentProxy(), requestId, hrr.getHostLowerCase(), hrr.getIsConnect());
-                    final boolean keepaliveI2P = keepalive
+                    final boolean keepaliveI2P = hrr.getKeepAliveI2P()
                             && getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_I2P,
                                     I2PTunnelHTTPClient.DEFAULT_KEEPALIVE_I2P);
                     hrunner = new I2PTunnelHTTPClientRunner(s, i2ps, httpClient.sockLock, data, mySockets, onTimeout,
-                            keepaliveI2P, keepalive, hrr.getIsHead());
+                            keepaliveI2P, hrr.getKeepAliveI2P(), hrr.getIsHead());
                     t = hrunner;
                 }
-                if (usingWWWProxy) {
+                if (hrr.getUsingWWWProxy()) {
                     t.setSuccessCallback(
                             new OnProxySuccess(hrr.getCurrentProxy(), hrr.getHostLowerCase(), hrr.getIsConnect()));
                 }
@@ -762,7 +786,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 // the i2p-to-socket copier in-line. So we won't get here until the i2p socket
                 // is closed.
                 // check if whatever was in the response does not allow keepalive
-                if (keepalive && hrunner != null && !hrunner.getKeepAliveSocket())
+                if (hrr.getKeepAliveI2P() && hrunner != null && !hrunner.getKeepAliveSocket())
                     break;
                 // The old I2P socket was closed, null it out so we'll get a new one
                 // next time around
@@ -770,7 +794,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                     i2ps = null;
                 // go around again
                 requestCount++;
-            } while (keepalive);
+            } while (hrr.getKeepAliveI2P());
 
         } catch (final IOException ex) {
             // This is normal for keepalive when the browser closed the socket,

@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.i2p.I2PAppContext;
@@ -17,9 +18,11 @@ import net.i2p.data.DataHelper;
 import net.i2p.data.Destination;
 import net.i2p.data.Hash;
 import net.i2p.i2ptunnel.I2PTunnel;
+import net.i2p.i2ptunnel.I2PTunnelHTTPBrowserClient;
 import net.i2p.i2ptunnel.I2PTunnelHTTPClient;
 import net.i2p.i2ptunnel.localServer.LocalHTTPServer;
 import net.i2p.util.ConvertToHash;
+import net.i2p.util.InternalSocket;
 import net.i2p.util.Log;
 import net.i2p.util.PortMapper;
 import net.i2p.util.Translate;
@@ -73,16 +76,21 @@ public class HTTPRequestReader {
     private int remotePort = 0;
     private boolean ahelperPresent = false;
     private boolean ahelperNew = false;
+    private boolean keepalive = false;
     private String ahelperKey = null;
     private String referer = null;
 
-    public HTTPRequestReader(final Socket s, final I2PAppContext ctx, final InputReader reader, boolean keepalive,
+    public HTTPRequestReader(final Socket s, final I2PAppContext ctx, final InputReader reader,
             final AtomicLong __requestId,
             final int requestCount, final I2PTunnel tun, final I2PTunnelHTTPClient _client) throws IOException {
         String line = null;
         _tunnel = tun;
         _context = ctx;
         _log = ctx.logManager().getLog(getClass());
+        keepalive = getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
+                I2PTunnelHTTPBrowserClient.DEFAULT_KEEPALIVE_BROWSER)
+                &&
+                !(s instanceof InternalSocket);
 
         final long requestId = __requestId.incrementAndGet();
         URI origRequestURI = null;
@@ -929,19 +937,18 @@ public class HTTPRequestReader {
      *         Prior to 0.7.12, returned b64 key
      */
     private final String getHostName(final String host) {
-        if (host == null) {
-            return null;
-        }
-        if (host.toLowerCase(Locale.US).endsWith(".b32.i2p") && !host.toLowerCase().equals(Hash.FAKE_HASH.toBase32())) {
-            return host;
-        }
+        String rv = "";
+        if (host == null)
+            rv = null;
+        if (host.toLowerCase(Locale.US).endsWith(".b32.i2p"))
+            rv = host;
         final Destination dest = _context.namingService().lookup(host);
         if (dest == null)
-            return "i2p";
-        if (_log.shouldLog(Log.DEBUG)) {
-            _log.debug("Hostname resolved: " + dest.toBase32());
-        }
-        return dest.toBase32();
+            rv = "i2p";
+        rv = dest.toBase32();
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Hostname resolved: " + rv);
+        return rv;
     }
 
     public I2PTunnel getTunnel() {
@@ -1214,5 +1221,25 @@ public class HTTPRequestReader {
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("Address helper present: " + ahelperPresent);
         return ahelperPresent;
+    }
+
+    public boolean getUsingWWWProxy() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Using WWW Proxy: " + usingWWWProxy);
+        return usingWWWProxy;
+    }
+
+    public boolean getKeepAliveI2P() {
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("KeepAlive I2P: " + keepalive);
+        return keepalive;
+    }
+
+    protected boolean getBooleanOption(String opt, boolean dflt) {
+        Properties opts = getTunnel().getClientOptions();
+        String o = opts.getProperty(opt);
+        if (o != null)
+            return Boolean.parseBoolean(o);
+        return dflt;
     }
 }
