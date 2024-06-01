@@ -26,7 +26,6 @@ import net.i2p.data.Hash;
 import net.i2p.i2ptunnel.localServer.LocalHTTPServer;
 import net.i2p.i2ptunnel.util.HTTPRequestReader;
 import net.i2p.i2ptunnel.util.InputReader;
-import net.i2p.util.InternalSocket;
 import net.i2p.util.Log;
 import net.i2p.util.PortMapper;
 
@@ -50,11 +49,13 @@ import net.i2p.util.PortMapper;
  * @since 0.9.62
  */
 public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
-    HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
-    private InternalSocketRunner isr;
     public static final boolean DEFAULT_KEEPALIVE_BROWSER = true;
     public static final String AUTH_REALM = "I2P Browser Proxy";
+    public static final int INBOUND_DEFAULT_LENGTH = 1;
+    public static final int OUTBOUND_DEFAULT_LENGTH = 1;
     protected static final AtomicLong __requestId = new AtomicLong();
+    HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
+    private InternalSocketRunner isr;
 
     public I2PTunnelHTTPBrowserClient(final int clientPort, final Logging l, final boolean ownDest, final String proxy,
             final I2PTunnel i2pTunnel,
@@ -62,57 +63,6 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         super(clientPort, ownDest, l, i2pTunnel, proxy, tunnel);
         // setName(AUTH_REALM + " on " + tunnel.listenHost + ':' + clientPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
-    }
-
-    /**
-     * Get the client indexed by the Hash.FAKE_HASH value, which is used for all
-     * outproxy-bound requests.
-     * Returns the I2PTunnelHTTPClient associated with the FAKE_HASH from the
-     * clients HashMap.
-     *
-     * @return I2PTunnelHTTPClient used for outproxy requests.
-     * @since 0.9.62
-     */
-    private I2PTunnelHTTPClient nullClient() {
-        if (clients.get(Hash.FAKE_HASH) == null) {
-            if (_log.shouldLog(Log.ERROR))
-                _log.error("null client for outproxy request not found");
-        } else {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("Getting null client for outproxy request");
-        }
-        return clients.get(Hash.FAKE_HASH);
-    }
-
-    /**
-     * Create the default options (using the default timeout, etc).
-     * Warning, this does not make a copy of I2PTunnel's client options,
-     * it modifies them directly.
-     * Do not use overrides for per-socket options.
-     *
-     * This will throw IAE on tunnel build failure
-     *
-     * @since 0.9.62
-     */
-    @Override
-    protected I2PSocketOptions getDefaultOptions(final Properties overrides) {
-        final Properties defaultOpts = getTunnel().getClientOptions();
-        defaultOpts.putAll(overrides);
-        if (!defaultOpts.contains(I2PSocketOptions.PROP_READ_TIMEOUT)) {
-            defaultOpts.setProperty(I2PSocketOptions.PROP_READ_TIMEOUT,
-                    "" + I2PTunnelHTTPClient.DEFAULT_READ_TIMEOUT);
-        }
-        if (!defaultOpts.contains("i2p.streaming.inactivityTimeout")) {
-            defaultOpts.setProperty("i2p.streaming.inactivityTimeout",
-                    "" + I2PTunnelHTTPClient.DEFAULT_READ_TIMEOUT);
-        }
-        // delayed start
-        verifySocketManager();
-        final I2PSocketOptions opts = sockMgr.buildOptions(defaultOpts);
-        if (!defaultOpts.containsKey(I2PSocketOptions.PROP_CONNECT_TIMEOUT)) {
-            opts.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
-        }
-        return opts;
     }
 
     /**
@@ -136,13 +86,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         }
         try {
             final int port = findRandomOpenPort();
-            Object proxyList = getHostMultiplexerProperties().get("proxyList");
+            Object proxyList = getHostMultiplexerProperties(Hash.FAKE_HASH.toBase32()).get("proxyList");
             String proxyListString = null;
             if (proxyList != null)
                 proxyListString = proxyList.toString();
             final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                     port, l, _ownDest, proxyListString, getEventDispatcher(), getTunnel());
-            client.getTunnel().setClientOptions(getHostMultiplexerProperties());
+            client.getTunnel().setClientOptions(getHostMultiplexerProperties(Hash.FAKE_HASH.toBase32()));
             clients.put(Hash.FAKE_HASH, client);
         } catch (final IOException ioe) {
             if (_log.shouldLog(Log.DEBUG))
@@ -178,52 +128,6 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             this.isr.stopRunning();
         }
         return rv;
-    }
-
-    /**
-     * Registers a multiplexed I2PTunnelHTTPClient's port with the PortMapper.
-     * Uses @hash.toBase32() as a suffix to distinguish the proxy from other members
-     * of the multiplex.
-     *
-     * @param hostname
-     * @param port
-     * @since 0.9.62
-     */
-    private void mapPort(final Hash hash, final int port) {
-        _context.portMapper().register(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
-                hash.toBase32(),
-                getTunnel().listenHost, port);
-        _context.portMapper().register(PortMapper.SVC_HTTPS_PROXY_TABBED + "@" +
-                hash.toBase32(),
-                getTunnel().listenHost, port);
-    }
-
-    /**
-     * Unregisters a multiplexed I2PTunnelHTTPClient's port from the PortMapper
-     * using the hash.toBase32() to identify it.
-     *
-     * @since 0.9.62
-     */
-    private void unmapPort(final Hash hash) {
-        _context.portMapper().unregister(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
-                hash.toBase32());
-        _context.portMapper().unregister(PortMapper.SVC_HTTPS_PROXY_TABBED + "@" +
-                hash.toBase32());
-    }
-
-    /**
-     * Find an open port from the default range selected by Java by:
-     * opening a socket on a random port in the scope of the function
-     * returning the value of the automatically chosen port.
-     * closing the socket which dies at the end of the function.
-     *
-     * @return int a random number in Java's default random port range.
-     * @since 0.9.62
-     */
-    private int findRandomOpenPort() throws IOException {
-        try (ServerSocket socket = new ServerSocket(0);) {
-            return socket.getLocalPort();
-        }
     }
 
     /**
@@ -271,6 +175,37 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     }
 
     /**
+     * Create the default options (using the default timeout, etc).
+     * Warning, this does not make a copy of I2PTunnel's client options,
+     * it modifies them directly.
+     * Do not use overrides for per-socket options.
+     *
+     * This will throw IAE on tunnel build failure
+     *
+     * @since 0.9.62
+     */
+    @Override
+    protected I2PSocketOptions getDefaultOptions(final Properties overrides) {
+        final Properties defaultOpts = getTunnel().getClientOptions();
+        defaultOpts.putAll(overrides);
+        if (!defaultOpts.contains(I2PSocketOptions.PROP_READ_TIMEOUT))
+            defaultOpts.setProperty(I2PSocketOptions.PROP_READ_TIMEOUT, "" + I2PTunnelHTTPClient.DEFAULT_READ_TIMEOUT);
+        if (!defaultOpts.contains("i2p.streaming.inactivityTimeout"))
+            defaultOpts.setProperty("i2p.streaming.inactivityTimeout", "" + I2PTunnelHTTPClient.DEFAULT_READ_TIMEOUT);
+        if (!defaultOpts.contains("inbound.quantity"))
+            defaultOpts.setProperty("inbound.quantity", "" + I2PTunnelHTTPBrowserClient.INBOUND_DEFAULT_LENGTH);
+        if (!defaultOpts.contains("outbound.quantity"))
+            defaultOpts.setProperty("outbound.quantity", "" + I2PTunnelHTTPBrowserClient.OUTBOUND_DEFAULT_LENGTH);
+        // delayed start
+        verifySocketManager();
+        final I2PSocketOptions opts = sockMgr.buildOptions(defaultOpts);
+        if (!defaultOpts.containsKey(I2PSocketOptions.PROP_CONNECT_TIMEOUT)) {
+            opts.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+        }
+        return opts;
+    }
+
+    /**
      * Given a uri:
      * - Extract a hostname, discover a destination, then convert to a hash
      * - Check whether an I2PTunnelHTTPClient exists for that hash in clients
@@ -297,7 +232,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                     port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
             clients.put(destination.getHash(), client);
-            getI2PTunnelHTTPClient(hostname).getTunnel().setClientOptions(getHostMultiplexerProperties());
+            getI2PTunnelHTTPClient(hostname).getTunnel()
+                    .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
             getI2PTunnelHTTPClient(hostname).startRunning();
             mapPort(destination.getHash(), port);
         } catch (final IOException e) {
@@ -327,15 +263,19 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     /**
      *
      */
-    protected Properties getHostMultiplexerProperties() {
+    protected Properties getHostMultiplexerProperties(String identifier) {
         Properties opts = getTunnel().getClientOptions();
         if (opts == null)
             opts = new Properties();
         opts.remove("i2cp.leaseSetPrivateKey");
         opts.remove("inbound.randomKey");
         opts.remove("outbound.randomKey");
+        String inNick = opts.getProperty("inbound.nickname", "TABBED_PROXY");
+        String outNick = opts.getProperty("outbound.nickname", "TABBED_PROXY");
         opts.remove("inbound.nickname");
         opts.remove("outbound.nickname");
+        opts.setProperty("inbound.nickname", inNick + "@" + identifier);
+        opts.setProperty("outbound.nickname", outNick + "@" + identifier);
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("Options: " + opts.toString());
         return opts;
@@ -398,10 +338,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 _log.debug("Locally-isolated destination for:" + hrr.originSeparator().getHost() + " is on: "
                         + httpClient.getLocalPort());
 
-            /*final boolean keepalive = getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
-                    DEFAULT_KEEPALIVE_BROWSER)
-                    &&
-                    !(s instanceof InternalSocket);*/
+            /*
+             * final boolean keepalive =
+             * getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
+             * DEFAULT_KEEPALIVE_BROWSER)
+             * &&
+             * !(s instanceof InternalSocket);
+             */
             do {
                 if (hrr.getNewRequest().length() > 0 && _log.shouldDebug())
                     _log.debug(httpClient.getPrefix(requestId) + "hrr.getNewRequest() header: [" + hrr.getNewRequest()
@@ -636,7 +579,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         }
                     }
                     try {
-                        httpClient.writeErrorMessage(header, extraMessage, out, hrr.getTargetRequest(), hrr.getUsingWWWProxy(),
+                        httpClient.writeErrorMessage(header, extraMessage, out, hrr.getTargetRequest(),
+                                hrr.getUsingWWWProxy(),
                                 hrr.getDestination(),
                                 jumpServers);
                     } catch (final IOException ioe) {
@@ -721,7 +665,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         } catch (final IOException ioe) {
                         }
                     }
-                    final Properties opts = getHostMultiplexerProperties();// new Properties();
+                    final Properties opts = getHostMultiplexerProperties(hrr.originSeparator().getHost());// new
+                                                                                                          // Properties();
                     // opts.setProperty("i2p.streaming.inactivityTimeout", ""+120*1000);
                     // 1 == disconnect. see ConnectionOptions in the new streaming lib, which i
                     // dont want to hard link to here
@@ -834,5 +779,71 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      */
     protected String getRealm() {
         return AUTH_REALM;
+    }
+
+    /**
+     * Get the client indexed by the Hash.FAKE_HASH value, which is used for all
+     * outproxy-bound requests.
+     * Returns the I2PTunnelHTTPClient associated with the FAKE_HASH from the
+     * clients HashMap.
+     *
+     * @return I2PTunnelHTTPClient used for outproxy requests.
+     * @since 0.9.62
+     */
+    private I2PTunnelHTTPClient nullClient() {
+        if (clients.get(Hash.FAKE_HASH) == null) {
+            if (_log.shouldLog(Log.ERROR))
+                _log.error("null client for outproxy request not found");
+        } else {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("Getting null client for outproxy request");
+        }
+        return clients.get(Hash.FAKE_HASH);
+    }
+
+    /**
+     * Registers a multiplexed I2PTunnelHTTPClient's port with the PortMapper.
+     * Uses @hash.toBase32() as a suffix to distinguish the proxy from other members
+     * of the multiplex.
+     *
+     * @param hostname
+     * @param port
+     * @since 0.9.62
+     */
+    private void mapPort(final Hash hash, final int port) {
+        _context.portMapper().register(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
+                hash.toBase32(),
+                getTunnel().listenHost, port);
+        _context.portMapper().register(PortMapper.SVC_HTTPS_PROXY_TABBED + "@" +
+                hash.toBase32(),
+                getTunnel().listenHost, port);
+    }
+
+    /**
+     * Unregisters a multiplexed I2PTunnelHTTPClient's port from the PortMapper
+     * using the hash.toBase32() to identify it.
+     *
+     * @since 0.9.62
+     */
+    private void unmapPort(final Hash hash) {
+        _context.portMapper().unregister(PortMapper.SVC_HTTP_PROXY_TABBED + "@" +
+                hash.toBase32());
+        _context.portMapper().unregister(PortMapper.SVC_HTTPS_PROXY_TABBED + "@" +
+                hash.toBase32());
+    }
+
+    /**
+     * Find an open port from the default range selected by Java by:
+     * opening a socket on a random port in the scope of the function
+     * returning the value of the automatically chosen port.
+     * closing the socket which dies at the end of the function.
+     *
+     * @return int a random number in Java's default random port range.
+     * @since 0.9.62
+     */
+    private int findRandomOpenPort() throws IOException {
+        try (ServerSocket socket = new ServerSocket(0);) {
+            return socket.getLocalPort();
+        }
     }
 }
