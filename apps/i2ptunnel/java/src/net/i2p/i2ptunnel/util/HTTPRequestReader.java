@@ -43,13 +43,10 @@ import net.i2p.util.Translate;
  * @author idk
  */
 public class HTTPRequestReader {
-    private final I2PTunnel _tunnel;
-    // private final I2PTunnelHTTPClient _client;
     /**
      * The URL after fixup, always starting with http:// or https://
      */
     private String targetRequest = null;
-
     // in-net outproxy
     private boolean usingWWWProxy = false;
     // local outproxy plugin
@@ -63,7 +60,6 @@ public class HTTPRequestReader {
     private boolean isConnect = false;
     private boolean isHead = false;
     private final Log _log;
-    private final I2PAppContext _context;
     private final StringBuilder newRequest = new StringBuilder();
     private String method = null;
     private String protocol = null;
@@ -84,11 +80,9 @@ public class HTTPRequestReader {
             final AtomicLong __requestId,
             final int requestCount, final I2PTunnel tun, final I2PTunnelHTTPClient _client) throws IOException {
         String line = null;
-        _tunnel = tun;
-        _context = ctx;
         _log = ctx.logManager().getLog(getClass());
         keepalive = getBooleanOption(I2PTunnelHTTPClient.OPT_KEEPALIVE_BROWSER,
-                I2PTunnelHTTPBrowserClient.DEFAULT_KEEPALIVE_BROWSER)
+                I2PTunnelHTTPBrowserClient.DEFAULT_KEEPALIVE_BROWSER, tun)
                 &&
                 !(s instanceof InternalSocket);
 
@@ -117,7 +111,7 @@ public class HTTPRequestReader {
 
                 // various obscure fixups
                 if (request.startsWith("/")
-                        && getTunnel().getClientOptions().getProperty("i2ptunnel.noproxy") != null) {
+                        && tun.getClientOptions().getProperty("i2ptunnel.noproxy") != null) {
                     // what is this for ???
                     request = "http://i2p" + request;
                 } else if (request.startsWith("/eepproxy/")) {
@@ -232,7 +226,7 @@ public class HTTPRequestReader {
                         _log.warn(getPrefix(requestId) + "Bad request [" + request + "]", use);
                     }
                     try {
-                        out.write(getErrorPage("baduri", I2PTunnelHTTPClient.ERR_BAD_URI).getBytes("UTF-8"));
+                        out.write(getErrorPage("baduri", I2PTunnelHTTPClient.ERR_BAD_URI, ctx).getBytes("UTF-8"));
                         final String msg = use.getLocalizedMessage();
                         if (msg != null) {
                             out.write(DataHelper.getASCII("<p>\n"));
@@ -290,7 +284,7 @@ public class HTTPRequestReader {
                         // possible alternative:
                         // redirect to b32
                         destination = _dest;
-                        host = getHostName(destination);
+                        host = getHostName(destination, ctx);
                         targetRequest = requestURI.toASCIIString();
                         String newURI = oldPath.substring(slash);
                         final String query = requestURI.getRawQuery();
@@ -315,7 +309,7 @@ public class HTTPRequestReader {
                     destination = host;
                     // Host becomes the destination's "{b32}.b32.i2p" string, or "i2p" on lookup
                     // failure
-                    host = getHostName(destination);
+                    host = getHostName(destination, ctx);
 
                     final int rPort = requestURI.getPort();
                     if (rPort > 0) {
@@ -348,7 +342,7 @@ public class HTTPRequestReader {
                         final String[] helperStrings = removeHelper(query);
                         if (helperStrings != null &&
                                 !Boolean.parseBoolean(
-                                        getTunnel().getClientOptions()
+                                        tun.getClientOptions()
                                                 .getProperty(I2PTunnelHTTPClient.PROP_DISABLE_HELPER))) {
                             query = helperStrings[0];
                             if (query.equals("")) {
@@ -373,19 +367,20 @@ public class HTTPRequestReader {
                                      * <a href="?i2paddresshelper=name.i2p">This is the name I want to be
                                      * called.</a>
                                      */
-                                    final Destination _dest = _context.namingService().lookup(ahelperKey);
+                                    final Destination _dest = ctx.namingService().lookup(ahelperKey);
                                     if (_dest == null) {
                                         if (_log.shouldLog(Log.WARN)) {
                                             _log.warn(getPrefix(requestId) + "Could not find destination for "
                                                     + ahelperKey);
                                         }
                                         final String header = getErrorPage("ahelper-notfound",
-                                                I2PTunnelHTTPClient.ERR_AHELPER_NOTFOUND);
+                                                I2PTunnelHTTPClient.ERR_AHELPER_NOTFOUND, ctx);
                                         try {
                                             out.write(header.getBytes("UTF-8"));
-                                            out.write(("<p>" + _t("This seems to be a bad destination:") + " "
+                                            out.write(("<p>" + _t("This seems to be a bad destination:", ctx) + " "
                                                     + ahelperKey + " " +
-                                                    _t("i2paddresshelper cannot help you with a destination like that!")
+                                                    _t("i2paddresshelper cannot help you with a destination like that!",
+                                                            ctx)
                                                     +
                                                     "</p>").getBytes("UTF-8"));
                                             writeFooter(out);
@@ -421,7 +416,7 @@ public class HTTPRequestReader {
                                 } else {
                                     // If the host is resolvable from database, verify addresshelper key
                                     // Silently bypass correct keys, otherwise alert
-                                    final Destination hostDest = _context.namingService().lookup(destination);
+                                    final Destination hostDest = ctx.namingService().lookup(destination);
                                     if (hostDest != null) {
                                         final String destB64 = hostDest.toBase64();
                                         if (destB64 != null && !destB64.equals(ahelperKey)) {
@@ -444,11 +439,11 @@ public class HTTPRequestReader {
                         if (ahelperConflict) {
                             try {
                                 // convert ahelperKey to b32
-                                final String alias = getHostName(ahelperKey);
+                                final String alias = getHostName(ahelperKey, ctx);
                                 if (alias.equals("i2p")) {
                                     // bad ahelperKey
                                     final String header = getErrorPage("dnfb",
-                                            I2PTunnelHTTPClient.ERR_DESTINATION_UNKNOWN);
+                                            I2PTunnelHTTPClient.ERR_DESTINATION_UNKNOWN, ctx);
                                     _client.writeErrorMessage(header, out, targetRequest, false, destination);
                                 } else {
                                     final String trustedURL = requestURI.toASCIIString();
@@ -463,26 +458,26 @@ public class HTTPRequestReader {
                                     }
                                     final String conflictURL = conflictURI.toASCIIString();
                                     final String header = getErrorPage("ahelper-conflict",
-                                            I2PTunnelHTTPClient.ERR_AHELPER_CONFLICT);
+                                            I2PTunnelHTTPClient.ERR_AHELPER_CONFLICT, ctx);
                                     out.write(header.getBytes("UTF-8"));
                                     out.write("<p>".getBytes("UTF-8"));
                                     out.write(_t(
                                             "To visit the destination in your address book, click <a href=\"{0}\">here</a>. To visit the conflicting addresshelper destination, click <a href=\"{1}\">here</a>.",
-                                            trustedURL, conflictURL).getBytes("UTF-8"));
+                                            trustedURL, conflictURL, ctx).getBytes("UTF-8"));
                                     out.write("</p>".getBytes("UTF-8"));
                                     final Hash h1 = ConvertToHash.getHash(requestURI.getHost());
                                     final Hash h2 = ConvertToHash.getHash(ahelperKey);
                                     if (h1 != null && h2 != null) {
-                                        final String conURL = _context.portMapper().getConsoleURL();
+                                        final String conURL = ctx.portMapper().getConsoleURL();
                                         out.write(("\n<table class=\"conflict\"><tr><th align=\"center\">" +
                                                 "<a href=\"" + trustedURL + "\">").getBytes("UTF-8"));
-                                        out.write(_t("Destination for {0} in address book", requestURI.getHost())
+                                        out.write(_t("Destination for {0} in address book", requestURI.getHost(), ctx)
                                                 .getBytes("UTF-8"));
                                         out.write(("</a></th>\n<th align=\"center\">" +
                                                 "<a href=\"" + conflictURL + "\">").getBytes("UTF-8"));
-                                        out.write(_t("Conflicting address helper destination").getBytes("UTF-8"));
+                                        out.write(_t("Conflicting address helper destination", ctx).getBytes("UTF-8"));
                                         out.write(("</a></th></tr>\n").getBytes("UTF-8"));
-                                        if (_context.portMapper().isRegistered(PortMapper.SVC_IMAGEGEN)) {
+                                        if (ctx.portMapper().isRegistered(PortMapper.SVC_IMAGEGEN)) {
                                             out.write(("<tr><td align=\"center\">" +
                                                     "<a href=\"" + trustedURL + "\">" +
                                                     "<img src=\"" +
@@ -512,7 +507,7 @@ public class HTTPRequestReader {
 
                     final String addressHelper = _client.addressHelpers.get(destination);
                     if (addressHelper != null) {
-                        host = getHostName(addressHelper);
+                        host = getHostName(addressHelper, ctx);
                     }
 
                     targetRequest = requestURI.toASCIIString();
@@ -538,7 +533,7 @@ public class HTTPRequestReader {
                         host.startsWith("192.168.") || host.equals("[::1]")) {
                     // if somebody is trying to get to 192.168.example.com, oh well
                     try {
-                        out.write(getErrorPage("localhost", I2PTunnelHTTPClient.ERR_LOCALHOST).getBytes("UTF-8"));
+                        out.write(getErrorPage("localhost", I2PTunnelHTTPClient.ERR_LOCALHOST, ctx).getBytes("UTF-8"));
                         writeFooter(out);
                         reader.drain();
                     } catch (final IOException ioe) {
@@ -547,9 +542,9 @@ public class HTTPRequestReader {
                     return;
                 } else if (host.contains(".") || host.startsWith("[")) {
                     if (Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USE_OUTPROXY_PLUGIN,
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USE_OUTPROXY_PLUGIN,
                                     "true"))) {
-                        final ClientAppManager mgr = _context.clientAppManager();
+                        final ClientAppManager mgr = ctx.clientAppManager();
                         if (mgr != null) {
                             final ClientApp op = mgr.getRegisteredApp(Outproxy.NAME);
                             if (op != null) {
@@ -589,7 +584,8 @@ public class HTTPRequestReader {
                             }
                             try {
                                 out.write(
-                                        getErrorPage("noproxy", I2PTunnelHTTPClient.ERR_NO_OUTPROXY).getBytes("UTF-8"));
+                                        getErrorPage("noproxy", I2PTunnelHTTPClient.ERR_NO_OUTPROXY, ctx)
+                                                .getBytes("UTF-8"));
                                 writeFooter(out);
                                 reader.drain();
                             } catch (final IOException ioe) {
@@ -613,7 +609,8 @@ public class HTTPRequestReader {
                         _log.warn("NODOTS, NOI2P: " + request);
                     }
                     try {
-                        out.write(getErrorPage("denied", I2PTunnelHTTPClient.ERR_REQUEST_DENIED).getBytes("UTF-8"));
+                        out.write(
+                                getErrorPage("denied", I2PTunnelHTTPClient.ERR_REQUEST_DENIED, ctx).getBytes("UTF-8"));
                         writeFooter(out);
                         reader.drain();
                     } catch (final IOException ioe) {
@@ -687,13 +684,13 @@ public class HTTPRequestReader {
                     // save for deciding whether to offer address book form
                     userAgent = lowercaseLine.substring(12);
                     if (!Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USER_AGENT))) {
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USER_AGENT))) {
                         line = null;
                         continue;
                     }
                 } else if (lowercaseLine.startsWith("accept: ")) {
                     if (!Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_ACCEPT))) {
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_ACCEPT))) {
                         // Replace with a standard one if possible
                         final boolean html = lowercaseLine.indexOf("text/html") > 0;
                         final boolean css = lowercaseLine.indexOf("text/css") > 0;
@@ -716,7 +713,7 @@ public class HTTPRequestReader {
                     if (lowercaseLine.startsWith("accept-encoding: ")) {
                         allowGzip = lowercaseLine.contains("gzip");
                     } else if (!Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_ACCEPT))) {
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_ACCEPT))) {
                         line = null;
                         continue;
                     }
@@ -724,7 +721,7 @@ public class HTTPRequestReader {
                     // save for address helper form below
                     referer = line.substring(9);
                     if (!Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_REFERER))) {
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_REFERER))) {
                         try {
                             // Either strip or rewrite the referer line
                             final URI refererURI = new URI(referer);
@@ -754,7 +751,7 @@ public class HTTPRequestReader {
                     } // else allow
                 } else if (lowercaseLine.startsWith("via: ") &&
                         !Boolean.parseBoolean(
-                                getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_VIA))) {
+                                tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_VIA))) {
                     // line = "Via: i2p";
                     line = null;
                     continue; // completely strip the line
@@ -783,7 +780,7 @@ public class HTTPRequestReader {
 
             if (line.length() == 0) {
                 // No more headers, add our own and break out of the loop
-                final String ok = getTunnel().getClientOptions().getProperty("i2ptunnel.gzip");
+                final String ok = tun.getClientOptions().getProperty("i2ptunnel.gzip");
                 boolean gzip = I2PTunnelHTTPClient.DEFAULT_GZIP;
                 if (ok != null) {
                     gzip = Boolean.parseBoolean(ok);
@@ -793,7 +790,7 @@ public class HTTPRequestReader {
                     // an explicit q=0 for gzip doesn't. tested against orion.i2p, and it
                     // seems to work.
                     // if
-                    // (!Boolean.parseBoolean(getTunnel().getClientOptions().getProperty(PROP_ACCEPT)))
+                    // (!Boolean.parseBoolean(tun.getClientOptions().getProperty(PROP_ACCEPT)))
                     // newRequest.append("Accept-Encoding: \r\n");
                     if (!usingInternalOutproxy)
                         newRequest.append(
@@ -801,17 +798,17 @@ public class HTTPRequestReader {
                 }
                 if (!shout && !isConnect) {
                     if (!Boolean.parseBoolean(
-                            getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USER_AGENT))) {
+                            tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_USER_AGENT))) {
                         // let's not advertise to external sites that we are from I2P
                         String ua;
                         if (usingWWWProxy || usingInternalOutproxy) {
-                            ua = getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_UA_CLEARNET);
+                            ua = tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_UA_CLEARNET);
                             if (ua != null)
                                 ua = "User-Agent: " + ua + "\r\n";
                             else
                                 ua = I2PTunnelHTTPClient.UA_CLEARNET;
                         } else {
-                            ua = getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_UA_I2P);
+                            ua = tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_UA_I2P);
                             if (ua != null)
                                 ua = "User-Agent: " + ua + "\r\n";
                             else
@@ -823,16 +820,16 @@ public class HTTPRequestReader {
                 // Add Proxy-Authentication header for next hop (outproxy)
                 if (usingWWWProxy
                         && Boolean.parseBoolean(
-                                getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_AUTH))) {
+                                tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_AUTH))) {
                     // specific for this proxy
-                    String user = getTunnel().getClientOptions()
+                    String user = tun.getClientOptions()
                             .getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_USER_PREFIX + currentProxy);
-                    String pw = getTunnel().getClientOptions()
+                    String pw = tun.getClientOptions()
                             .getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_PW_PREFIX + currentProxy);
                     if (user == null || pw == null) {
                         // if not, look at default user and pw
-                        user = getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_USER);
-                        pw = getTunnel().getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_PW);
+                        user = tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_USER);
+                        pw = tun.getClientOptions().getProperty(I2PTunnelHTTPClient.PROP_OUTPROXY_PW);
                     }
                     if (user != null && pw != null) {
                         newRequest.append("Proxy-Authorization: Basic ")
@@ -910,7 +907,7 @@ public class HTTPRequestReader {
          *
          * if (!found) {
          * try {
-         * Destination d = _context.namingService().lookup(host);
+         * Destination d = ctx.namingService().lookup(host);
          * if (d == null) return false;
          * } catch (DataFormatException dfe) {
          * }
@@ -936,23 +933,19 @@ public class HTTPRequestReader {
      * @return b32hash.b32.i2p, or "i2p" on lookup failure.
      *         Prior to 0.7.12, returned b64 key
      */
-    private final String getHostName(final String host) {
+    private final String getHostName(final String host, final I2PAppContext ctx) {
         String rv = "";
         if (host == null)
             rv = null;
         if (host.toLowerCase(Locale.US).endsWith(".b32.i2p"))
             rv = host;
-        final Destination dest = _context.namingService().lookup(host);
+        final Destination dest = ctx.namingService().lookup(host);
         if (dest == null)
             rv = "i2p";
         rv = dest.toBase32();
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("Hostname resolved: " + rv);
         return rv;
-    }
-
-    public I2PTunnel getTunnel() {
-        return _tunnel;
     }
 
     /**
@@ -1032,8 +1025,8 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(final String key) {
-        return Translate.getString(key, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
+    protected String _t(final String key, I2PAppContext ctx) {
+        return Translate.getString(key, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
     /**
@@ -1042,8 +1035,8 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(final String key, final Object o) {
-        return Translate.getString(key, o, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
+    protected String _t(final String key, final Object o, I2PAppContext ctx) {
+        return Translate.getString(key, o, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
     /**
@@ -1052,8 +1045,8 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(final String key, final Object o, final Object o2) {
-        return Translate.getString(key, o, o2, _context, I2PTunnelHTTPClient.BUNDLE_NAME);
+    protected String _t(final String key, final Object o, final Object o2, I2PAppContext ctx) {
+        return Translate.getString(key, o, o2, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
     /**
@@ -1067,8 +1060,8 @@ public class HTTPRequestReader {
      * @return non-null
      * @since 0.9.4 moved from I2PTunnelHTTPClient
      */
-    protected String getErrorPage(final String base, final String backup) {
-        return I2PTunnelHTTPClient.getErrorPage(_context, base, backup);
+    protected String getErrorPage(final String base, final String backup, I2PAppContext ctx) {
+        return I2PTunnelHTTPClient.getErrorPage(ctx, base, backup);
     }
 
     public String toString() {
@@ -1235,8 +1228,8 @@ public class HTTPRequestReader {
         return keepalive;
     }
 
-    protected boolean getBooleanOption(String opt, boolean dflt) {
-        Properties opts = getTunnel().getClientOptions();
+    protected boolean getBooleanOption(String opt, boolean dflt, I2PTunnel tun) {
+        Properties opts = tun.getClientOptions();
         String o = opts.getProperty(opt);
         if (o != null)
             return Boolean.parseBoolean(o);
