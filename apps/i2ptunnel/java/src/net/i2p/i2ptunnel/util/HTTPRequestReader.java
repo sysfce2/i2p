@@ -38,14 +38,16 @@ import net.i2p.util.Translate;
  * loop that performs the same function and is almost a drop-in replacement for
  * it.
  *
+ * WARNING: Functionality in this class is I2PTunnelHTTP*-Specific.
+ * No guarantees are made that it will be useful in anything else.
+ * It is not intended to be, nor maintained as, an externally facing API.
+ *
  * adapted from I2PTunnelHTTPClient, original author mihi
  *
  * @author idk
  */
 public class HTTPRequestReader {
-    /**
-     * The URL after fixup, always starting with http:// or https://
-     */
+    //The URL after fixup, always starting with http:// or https://
     private String targetRequest = null;
     // in-net outproxy
     private boolean usingWWWProxy = false;
@@ -882,7 +884,7 @@ public class HTTPRequestReader {
      * }
      */
 
-    protected String getPrefix(final long requestId) {
+    private String getPrefix(final long requestId) {
         return "HTTPRequestReader[" + "Browser Proxy" + '/' + requestId + "]: ";
     }
 
@@ -924,7 +926,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    public static void writeFooter(final OutputStream out) throws IOException {
+    private static void writeFooter(final OutputStream out) throws IOException {
         out.write(I2PTunnelHTTPClient.getFooter().getBytes("UTF-8"));
         out.flush();
     }
@@ -1025,7 +1027,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(final String key, I2PAppContext ctx) {
+    private String _t(final String key, I2PAppContext ctx) {
         return Translate.getString(key, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1033,9 +1035,9 @@ public class HTTPRequestReader {
      * Translate
      * {0}
      *
-     * @since 0.9.14 moved from I2PTunnelHTTPClient
+     * @since 0.9.14 moved from I2PTunnelHTTPClient in 0.9.62
      */
-    protected String _t(final String key, final Object o, I2PAppContext ctx) {
+    private String _t(final String key, final Object o, I2PAppContext ctx) {
         return Translate.getString(key, o, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1045,7 +1047,7 @@ public class HTTPRequestReader {
      *
      * @since 0.9.14 moved from I2PTunnelHTTPClient
      */
-    protected String _t(final String key, final Object o, final Object o2, I2PAppContext ctx) {
+    private String _t(final String key, final Object o, final Object o2, I2PAppContext ctx) {
         return Translate.getString(key, o, o2, ctx, I2PTunnelHTTPClient.BUNDLE_NAME);
     }
 
@@ -1060,7 +1062,7 @@ public class HTTPRequestReader {
      * @return non-null
      * @since 0.9.4 moved from I2PTunnelHTTPClient
      */
-    protected String getErrorPage(final String base, final String backup, I2PAppContext ctx) {
+    private String getErrorPage(final String base, final String backup, I2PAppContext ctx) {
         return I2PTunnelHTTPClient.getErrorPage(ctx, base, backup);
     }
 
@@ -1228,7 +1230,7 @@ public class HTTPRequestReader {
         return keepalive;
     }
 
-    protected boolean getBooleanOption(String opt, boolean dflt, I2PTunnel tun) {
+    private boolean getBooleanOption(String opt, boolean dflt, I2PTunnel tun) {
         Properties opts = tun.getClientOptions();
         String o = opts.getProperty(opt);
         if (o != null)
