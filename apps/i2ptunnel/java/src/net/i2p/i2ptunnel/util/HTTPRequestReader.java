@@ -1079,10 +1079,12 @@ public class HTTPRequestReader {
     public URI originSeparator() {
         URI url = null;
         try {
-            url = new URI(this.toString());
+            url = new URI(this.getTargetRequest());
         } catch (final URISyntaxException use) {
             return null;
         }
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Origin Separator:" + url);
         return url;
     }
 
