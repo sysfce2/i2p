@@ -165,6 +165,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     public boolean close(final boolean forced) {
         if (ffq != null) {
             ffq.cancel();
+            ffq.destroy();
             ffq = null;
         }
         for (final Hash h : clients.keySet()) {
