@@ -77,20 +77,26 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         public I2PTunnelFIFOQueue() {
             super(_context.simpleTimer2());
             fillUpFIFOQueue();
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("for the first time");
         }
 
         public boolean fillUpFIFOQueue() {
             if (clientPrecache.size() < PREGENERATED_LIMIT) {
-                for (int i = 0; i < clientPrecache.size(); i++) {
+                if (_log.shouldLog(Log.DEBUG))
+                    _log.debug("Filling up the FIFO queue");
+                for (int i = 0; i < PREGENERATED_LIMIT; i++) {
                     try {
+                        if (_log.shouldLog(Log.DEBUG))
+                            _log.debug("generating an I2PTunnelHTTPClient");
                         final int port = findRandomOpenPort();
                         String hostname = "";
                         final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                                 port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
                         clientPrecache.add(client);
                     } catch (IOException ioe) {
-                        if (_log.shouldLog(Log.DEBUG))
-                            _log.debug("Fatal error when pre-generating clients for performance", ioe);
+                        if (_log.shouldLog(Log.ERROR))
+                            _log.error("Fatal error when pre-generating clients for performance", ioe);
                     }
                 }
                 return true;
@@ -99,6 +105,8 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         }
 
         public I2PTunnelHTTPClient poll() {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("fetching client from FIFO queue and deleting it from the queue.");
             return clientPrecache.poll();
         }
 
@@ -287,6 +295,11 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("Mapping new HTTP client for destination:" + uri.getHost() + "/" + destination.toBase32());
         I2PTunnelHTTPClient client = ffq.poll();
+        if (client == null){
+            if (_log.shouldLog(_log.ERROR))
+                _log.error("I2PTunnelHTTPClient from inside of I2PTunnelFIFOQueue is null");
+        }
+
         clients.put(destination.getHash(), client);
         getI2PTunnelHTTPClient(hostname).getTunnel()
                 .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
