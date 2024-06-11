@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicLong;
@@ -28,6 +29,8 @@ import net.i2p.i2ptunnel.util.HTTPRequestReader;
 import net.i2p.i2ptunnel.util.InputReader;
 import net.i2p.util.Log;
 import net.i2p.util.PortMapper;
+import net.i2p.util.SimpleTimer;
+import net.i2p.util.SimpleTimer2;
 
 /**
  * Act as a multiplexer of I2PTunnelHTTPClients with different ports on a single
@@ -56,13 +59,64 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
     protected static final AtomicLong __requestId = new AtomicLong();
     HashMap<Hash, I2PTunnelHTTPClient> clients = new HashMap<Hash, I2PTunnelHTTPClient>();
     private InternalSocketRunner isr;
+    private I2PTunnelFIFOQueue ffq = new I2PTunnelFIFOQueue();
 
     public I2PTunnelHTTPBrowserClient(final int clientPort, final Logging l, final boolean ownDest, final String proxy,
             final I2PTunnel i2pTunnel,
             final I2PTunnel tunnel) {
         super(clientPort, ownDest, l, i2pTunnel, proxy, tunnel);
+        ffq.schedule(5 * 60 * 1000L);
         // setName(AUTH_REALM + " on " + tunnel.listenHost + ':' + clientPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
+    }
+
+    private class I2PTunnelFIFOQueue extends SimpleTimer2.TimedEvent {
+        private final int PREGENERATED_LIMIT = 3;
+        private LinkedList<I2PTunnelHTTPClient> clientPrecache = new LinkedList<I2PTunnelHTTPClient>();
+
+        public I2PTunnelFIFOQueue() {
+            super(_context.simpleTimer2());
+            fillUpFIFOQueue();
+        }
+
+        public boolean fillUpFIFOQueue() {
+            if (clientPrecache.size() < PREGENERATED_LIMIT) {
+                for (int i = 0; i < clientPrecache.size(); i++) {
+                    try {
+                        final int port = findRandomOpenPort();
+                        String hostname = "";
+                        final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
+                                port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
+                        clientPrecache.add(client);
+                    } catch (IOException ioe) {
+                        if (_log.shouldLog(Log.DEBUG))
+                            _log.debug("Fatal error when pre-generating clients for performance", ioe);
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public I2PTunnelHTTPClient poll() {
+            return clientPrecache.poll();
+        }
+
+        public void destroy() {
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("destroyinging I2PTunnelFIFOQueue: len == " + clientPrecache.size());
+            for (int i = 0; i < clientPrecache.size(); i++) {
+                I2PTunnelHTTPClient client = clientPrecache.poll();
+                client.destroy();
+            }
+            if (_log.shouldLog(Log.DEBUG))
+                _log.debug("I2PTunnelFIFOQueue destroyed: len == " + clientPrecache.size());
+        }
+
+        @Override
+        public void timeReached() {
+            fillUpFIFOQueue();
+        }
     }
 
     /**
@@ -109,6 +163,10 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      */
     @Override
     public boolean close(final boolean forced) {
+        if (ffq != null) {
+            ffq.cancel();
+            ffq = null;
+        }
         for (final Hash h : clients.keySet()) {
             unmapClient(h);
             clients.get(h).close(forced);
@@ -225,20 +283,14 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         }
         if (getI2PTunnelHTTPClient(uri) != null)
             return false;
-        try {
-            if (_log.shouldLog(Log.DEBUG))
-                _log.debug("Mapping new HTTP client for destination:" + uri.getHost() + "/" + destination.toBase32());
-            final int port = findRandomOpenPort();
-            final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
-                    port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
-            clients.put(destination.getHash(), client);
-            getI2PTunnelHTTPClient(hostname).getTunnel()
-                    .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
-            getI2PTunnelHTTPClient(hostname).startRunning();
-            mapPort(destination.getHash(), port);
-        } catch (final IOException e) {
-            throw new RuntimeException("Failed to find a random open port", e);
-        }
+        if (_log.shouldLog(Log.DEBUG))
+            _log.debug("Mapping new HTTP client for destination:" + uri.getHost() + "/" + destination.toBase32());
+        I2PTunnelHTTPClient client = ffq.poll();
+        clients.put(destination.getHash(), client);
+        getI2PTunnelHTTPClient(hostname).getTunnel()
+                .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
+        getI2PTunnelHTTPClient(hostname).startRunning();
+        mapPort(destination.getHash(), client.getLocalPort());
         return true;
     }
 
@@ -841,7 +893,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
      * @return int a random number in Java's default random port range.
      * @since 0.9.62
      */
-    private int findRandomOpenPort() throws IOException {
+    private static int findRandomOpenPort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0);) {
             return socket.getLocalPort();
         }
