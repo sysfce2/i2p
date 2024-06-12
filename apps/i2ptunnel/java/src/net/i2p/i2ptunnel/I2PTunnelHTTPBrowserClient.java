@@ -65,7 +65,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             final I2PTunnel i2pTunnel,
             final I2PTunnel tunnel) {
         super(clientPort, ownDest, l, i2pTunnel, proxy, tunnel);
-        ffq.schedule(5 * 60 * 1000L);
+        ffq.schedule(1 * 60 * 1000L);
         // setName(AUTH_REALM + " on " + tunnel.listenHost + ':' + clientPort);
         notifyEvent("openBrowserHTTPClientResult", "ok");
     }
@@ -88,7 +88,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                 for (int i = 0; i < PREGENERATED_LIMIT; i++) {
                     try {
                         if (_log.shouldLog(Log.DEBUG))
-                            _log.debug("generating an I2PTunnelHTTPClient");
+                            _log.debug("generating I2PTunnelHTTPClient number: " + i);
                         final int port = findRandomOpenPort();
                         String hostname = "";
                         final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
@@ -107,7 +107,22 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         public I2PTunnelHTTPClient poll() {
             if (_log.shouldLog(Log.DEBUG))
                 _log.debug("fetching client from FIFO queue and deleting it from the queue.");
-            return clientPrecache.poll();
+            I2PTunnelHTTPClient rv = clientPrecache.poll();
+            if (rv == null) {
+                if (_log.shouldLog(Log.ERROR))
+                    _log.error("FIFO queue was empty. Attempting to generate new client on the fly.");
+                try {
+                    int port = findRandomOpenPort();
+                    String hostname = "";
+                    rv = new I2PTunnelHTTPClient(
+                            port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
+                } catch (IOException e) {
+                    if (_log.shouldLog(Log.ERROR))
+                        _log.error("Unable to create new client when FIFO queue was empty.");
+                }
+
+            }
+            return rv;
         }
 
         public void destroy() {
@@ -295,7 +310,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         if (_log.shouldLog(Log.DEBUG))
             _log.debug("Mapping new HTTP client for destination:" + uri.getHost() + "/" + destination.toBase32());
         I2PTunnelHTTPClient client = ffq.poll();
-        if (client == null){
+        if (client == null) {
             if (_log.shouldLog(_log.ERROR))
                 _log.error("I2PTunnelHTTPClient from inside of I2PTunnelFIFOQueue is null");
         }
