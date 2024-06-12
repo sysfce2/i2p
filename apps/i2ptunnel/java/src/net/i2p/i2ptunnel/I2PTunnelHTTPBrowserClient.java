@@ -93,6 +93,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
                         String hostname = "";
                         final I2PTunnelHTTPClient client = new I2PTunnelHTTPClient(
                                 port, l, _ownDest, hostname, getEventDispatcher(), getTunnel());
+                        client.startRunning();
                         clientPrecache.add(client);
                     } catch (IOException ioe) {
                         if (_log.shouldLog(Log.ERROR))
@@ -318,7 +319,7 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
         clients.put(destination.getHash(), client);
         getI2PTunnelHTTPClient(hostname).getTunnel()
                 .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
-        getI2PTunnelHTTPClient(hostname).startRunning();
+        //getI2PTunnelHTTPClient(hostname).startRunning();
         mapPort(destination.getHash(), client.getLocalPort());
         return true;
     }
