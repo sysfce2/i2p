@@ -16,6 +16,9 @@ class ValueScaler {
     }
 
     Scaled scale(double value, boolean mustRescale) {
+        // I2P avoid NaN in legend
+        if (Double.isNaN(value))
+            value = 0.0;
         Scaled scaled;
         if (mustRescale) {
             scaled = rescale(value);
@@ -47,6 +50,11 @@ class ValueScaler {
         }
         if (sindex <= SYMB_CENTER && sindex >= -SYMB_CENTER) {
             unit = UNIT_SYMBOLS[sindex + SYMB_CENTER];
+            // I2P show 0.xxx instead of xxx m
+            if (unit.equals("m")) {
+                unit = "";
+                magfact *= 1000;
+            }
         }
         else {
             unit = UNIT_UNKNOWN;
