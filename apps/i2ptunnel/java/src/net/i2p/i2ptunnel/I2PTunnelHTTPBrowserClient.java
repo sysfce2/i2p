@@ -312,14 +312,13 @@ public class I2PTunnelHTTPBrowserClient extends I2PTunnelHTTPClientBase {
             _log.debug("Mapping new HTTP client for destination:" + uri.getHost() + "/" + destination.toBase32());
         I2PTunnelHTTPClient client = ffq.poll();
         if (client == null) {
-            if (_log.shouldLog(_log.ERROR))
+            if (_log.shouldLog(Log.ERROR))
                 _log.error("I2PTunnelHTTPClient from inside of I2PTunnelFIFOQueue is null");
         }
-
         clients.put(destination.getHash(), client);
         getI2PTunnelHTTPClient(hostname).getTunnel()
                 .setClientOptions(getHostMultiplexerProperties(destination.toBase32()));
-        //getI2PTunnelHTTPClient(hostname).startRunning();
+        // getI2PTunnelHTTPClient(hostname).startRunning();
         mapPort(destination.getHash(), client.getLocalPort());
         return true;
     }
