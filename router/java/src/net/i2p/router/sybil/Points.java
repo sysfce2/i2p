@@ -9,21 +9,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.i2p.data.DataHelper;
 
 /**
- *  A total score and a List of reason Strings
+ * A total score and a List of reason Strings
  *
- *  @since 0.9.38 moved from SybilRenderer
+ * @since 0.9.38 moved from SybilRenderer
  */
 public class Points implements Comparable<Points> {
     private final Map<String, Double> reasons;
+
     /**
-     *  @since 0.9.38
+     * @since 0.9.38
      */
     private Points() {
         reasons = new ConcurrentHashMap<String, Double>(4);
     }
 
     /**
-     *  @param reason may not contain '%'
+     * @param reason may not contain '%'
      */
     public Points(double d, String reason) {
         this();
@@ -32,29 +33,29 @@ public class Points implements Comparable<Points> {
 
     private double points() {
         double rv = 0;
-        for (String reason: reasons.keySet()){
+        for (String reason : reasons.keySet()) {
             rv += reasons.get(reason);
         }
         return rv;
     }
 
     /**
-     *  @since 0.9.38
+     * @since 0.9.38
      */
     public double getPoints() {
         return points();
     }
 
     /**
-     *  @since 0.9.38
+     * @since 0.9.38
      */
     public Map<String, Double> getReasons() {
         return reasons;
     }
 
     /**
-     *  @param reason may not contain '%'
-     *  @since 0.9.38
+     * @param reason may not contain '%'
+     * @since 0.9.38
      */
     public void addPoints(double d, String reason) {
         DecimalFormat format = new DecimalFormat("#0.00");
@@ -63,7 +64,7 @@ public class Points implements Comparable<Points> {
         if (rp == null) {
             // reason was not yet present in the map, create a new entry for it.
             reasons.put(rsn, d);
-        }else{
+        } else {
             // reason was present in the map, add the points to it.
             rp += d;
         }
@@ -74,7 +75,7 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     *  @since 0.9.38
+     * @since 0.9.38
      */
     @Override
     public String toString() {
@@ -84,41 +85,42 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     *  For persistence.
-     *  Total points and reasons, '%' separated, no newline.
-     *  The separation character is chosen to not conflict with
-     *  decimal point in various locales, or chars in reasons, including HTML links,
-     *  or special chars in Pattern.
+     * For persistence.
+     * points and reasons, '%' separated, new line between pairs.
+     * The separation character is chosen to not conflict with
+     * decimal point in various locales, or chars in reasons, including HTML links,
+     * or special chars in Pattern.
      *
-     *  @since 0.9.38
+     * Format changed in 0.9.64
+     *
+     * @since 0.9.38
      */
     public void toString(StringBuilder buf) {
-        buf.append(points());
         for (String r : reasons.keySet()) {
-            buf.append('%').append(r.replace("%", "&#x25;"));
+            buf.append(reasons.get(r)).append('%').append(r.replace("%", "&#x25;")).append("\n");
         }
     }
 
     /**
-     *  For persistence.
-     *  @return null on failure
-     *  @since 0.9.38
+     * For persistence.
+     *
+     * @return null on failure
+     * @since 0.9.38
      */
     public static Points fromString(String s) {
-        String[] ss = DataHelper.split(s, "%");
-        if (ss.length < 2)
-            return null;
-        double d;
-        try {
-            d = Double.parseDouble(ss[0]);
-        } catch (NumberFormatException nfe) {
-            return null;
-        }
         Points rv = new Points();
-        for (int i = 1; i < ss.length; i++) {
-            rv.reasons.put(ss[i], d);
+        for (String lineString : DataHelper.split(s, "\n")) {
+            String[] ss = DataHelper.split(s, "%");
+            if (ss.length != 2)
+                return null;
+            double d;
+            try {
+                d = Double.parseDouble(ss[0]);
+            } catch (NumberFormatException nfe) {
+                return null;
+            }
+            rv.reasons.put(ss[1], d);
         }
         return rv;
     }
 }
-
