@@ -103,7 +103,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     public static final double MIN_CLOSE = 242.0;
     private static final double PAIR_DISTANCE_FACTOR = 2.0;
     private static final double OUR_KEY_FACTOR = 4.0;
-    private static final double VERSION_FACTOR = 1.0;
+    private static final double VERSION_FACTOR = 1.5;
     private static final double POINTS_BAD_VERSION = 20.0;
     private static final double POINTS_UNREACHABLE = 4.0;
     private static final double POINTS_NEW = 4.0;
