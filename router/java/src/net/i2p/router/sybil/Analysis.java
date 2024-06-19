@@ -80,10 +80,13 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     public static final int MAX = 10;
     // multiplied by size - 1, will also get POINTS24 added
     private static final double POINTS32 = 5.0;
+    private static final double POINTS32_MAX = 100;
     // multiplied by size - 1, will also get POINTS16 added
     private static final double POINTS24 = 4.0;
+    private static final double POINTS24_MAX = 100;
     // multiplied by size - 1
     private static final double POINTS16 = 0.25;
+    private static final double POINTS16_MAX = 100;
     private static final double POINTS_US32 = 25.0;
     private static final double POINTS_US24 = 20.0;
     private static final double POINTS_US16 = 10.0;
@@ -92,7 +95,9 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     private static final double POINTS_V6_US64 = 12.5;
     private static final double POINTS_V6_US48 = 5.0;
     private static final double POINTS64 = 2.0;
+    private static final double POINTS64_MAX = 100;
     private static final double POINTS48 = 0.5;
+    private static final double POINTS48_MAX = 100;
 
     private static final double POINTS_FAMILY = -10.0;
     private static final double POINTS_FAMILY_VERIFIED = POINTS_FAMILY * 4;
@@ -320,12 +325,37 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
 
     /** */
     private void addPoints(Map<Hash, Points> points, Hash h, double d, String reason) {
+        double maximum = 100000;
+        addPoints(points, h, d, reason, maximum);
+    }
+
+    private void addPoints(Map<Hash, Points> points, Hash h, double d, String reason, double maximum) {
         Points dd = points.get(h);
         if (dd != null) {
-            dd.addPoints(d, reason);
+            if (dd.getPoints() <= maximum)
+                dd.addPoints(d, reason);
         } else {
             points.put(h, new Points(d, reason));
         }
+    }
+
+    private double calculateLimitedPoints(double count, double penalty, double max) {
+        /*
+        The old way of calculating it, but with an optional maximum applied
+        double result = (count - 1) * penalty;
+        */
+
+        /*
+         The penalty calculated on a curve instead
+         */
+        double result = 0;
+        for (int i = 1; i < count; i++) {
+            result += (1 / i) * penalty;
+        }
+
+        if (result > max)
+            return max;
+        return result;
     }
 
     /**
@@ -401,11 +431,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         // unused here, just for the console, so use the same for all of them
         List<RouterInfo> dummy = new DummyList();
         calculateIPGroupsUs(ris, points, dummy, dummy, dummy, dummy, dummy);
-        //calculateIPGroups32(ris, points);
-        //calculateIPGroups24(ris, points);
-        //calculateIPGroups16(ris, points);
-        //calculateIPGroups64(ris, points);
-        //calculateIPGroups48(ris, points);
+        calculateIPGroups32(ris, points);
+        calculateIPGroups24(ris, points);
+        calculateIPGroups16(ris, points);
+        calculateIPGroups64(ris, points);
+        calculateIPGroups48(ris, points);
 
         // Pairwise distance analysis
         // O(n**2)
@@ -673,14 +703,14 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                 if (ip[0] == ourIP[0] && ip[1] == ourIP[1]) {
                     if (ip[2] == ourIP[2]) {
                         if (ip[3] == ourIP[3]) {
-                            addPoints(points, info.getHash(), POINTS_US32, reason32);
+                            addPoints(points, info.getHash(), POINTS_US32, reason32, 25);
                             ri32.add(info);
                         } else {
-                            addPoints(points, info.getHash(), POINTS_US24, reason24);
+                            addPoints(points, info.getHash(), POINTS_US24, reason24, 25);
                             ri24.add(info);
                         }
                     } else {
-                        addPoints(points, info.getHash(), POINTS_US16, reason16);
+                        addPoints(points, info.getHash(), POINTS_US16, reason16, 25);
                         ri16.add(info);
                     }
                 }
@@ -691,10 +721,10 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                     continue;
                 if (DataHelper.eq(ip, 0, ourIPv6, 0, 6)) {
                     if (ip[6] == ourIPv6[6] && ip[7] == ourIPv6[7]) {
-                        addPoints(points, info.getHash(), POINTS_V6_US64, reason64);
+                        addPoints(points, info.getHash(), POINTS_V6_US64, reason64, 25);
                         ri64.add(info);
                     } else {
-                        addPoints(points, info.getHash(), POINTS_V6_US48, reason48);
+                        addPoints(points, info.getHash(), POINTS_V6_US48, reason48, 15);
                         ri48.add(info);
                     }
                 }
@@ -723,7 +753,8 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS32 * (count - 1);
+            //double point = POINTS32 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS32, POINTS32_MAX);
             int i = ii.intValue();
             int i0 = (i >> 24) & 0xff;
             int i1 = (i >> 16) & 0xff;
@@ -773,7 +804,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS24 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS24, POINTS24_MAX);
             int i = ii.intValue();
             int i0 = i >> 16;
             int i1 = (i >> 8) & 0xff;
@@ -798,7 +829,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                         continue;
                 }
                 e.getValue().add(info);
-                addPoints(points, info.getHash(), point, reason);
+                addPoints(points, info.getHash(), point, reason, 25);
             }
         }
         return rv;
@@ -825,7 +856,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Integer, List<RouterInfo>> e : rv.entrySet()) {
             Integer ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS16 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS16, POINTS16_MAX);
             int i = ii.intValue();
             int i0 = i >> 8;
             int i1 = i & 0xff;
@@ -841,7 +872,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                 if ((ip[1] & 0xff) != i1)
                     continue;
                 e.getValue().add(info);
-                addPoints(points, info.getHash(), point, reason);
+                addPoints(points, info.getHash(), point, reason, 25);
             }
         }
         return rv;
@@ -868,7 +899,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Long, List<RouterInfo>> e : rv.entrySet()) {
             Long ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS64 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS64, POINTS64_MAX);
             long i = ii.longValue();
             int i0 = (int) ((i >> 56) & 0xff);
             int i1 = (int) ((i >> 48) & 0xff);
@@ -906,7 +937,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                 if ((ip[7] & 0xff) != i7)
                     continue;
                 e.getValue().add(info);
-                addPoints(points, info.getHash(), point, reason);
+                addPoints(points, info.getHash(), point, reason, 25);
             }
         }
         return rv;
@@ -933,7 +964,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (Map.Entry<Long, List<RouterInfo>> e : rv.entrySet()) {
             Long ii = e.getKey();
             int count = oc.count(ii);
-            double point = POINTS48 * (count - 1);
+            double point = calculateLimitedPoints(count, POINTS48, POINTS48_MAX);
             long i = ii.longValue();
             int i0 = (int) ((i >> 40) & 0xff);
             int i1 = (int) ((i >> 32) & 0xff);
@@ -964,7 +995,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                 if ((ip[5] & 0xff) != i5)
                     continue;
                 e.getValue().add(info);
-                addPoints(points, info.getHash(), point, reason);
+                addPoints(points, info.getHash(), point, reason, 25);
             }
         }
         return rv;
