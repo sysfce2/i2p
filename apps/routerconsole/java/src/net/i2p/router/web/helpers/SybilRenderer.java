@@ -64,8 +64,8 @@ public class SybilRenderer {
     private final Log _log;
     private final DecimalFormat fmt = new DecimalFormat("#0.00");
 
-    private static final int PAIRMAX = Analysis.PAIRMAX;
-    private static final int MAX = Analysis.MAX;
+    private static final int PAIR_MAX = Analysis.PAIR_MAX;
+    private static final int MAX = Analysis.RI_CALC_MAX;
     private static final double MIN_CLOSE = Analysis.MIN_CLOSE;
     private static final double MIN_DISPLAY_POINTS = 20.0;
     private static final int[] HOURS = { 1, 6, 24, 7*24, 30*24, 0 };
@@ -441,7 +441,7 @@ public class SybilRenderer {
      */
     private void renderPairSummary(Writer out, StringBuilder buf, Analysis analysis, List<RouterInfo> ris, Map<Hash, Points> points) throws IOException {
         // Pairwise distance analysis
-        List<Pair> pairs = new ArrayList<Pair>(PAIRMAX);
+        List<Pair> pairs = new ArrayList<Pair>(PAIR_MAX);
         double avg = analysis.calculatePairDistance(ris, points, pairs);
         renderPairDistance(out, buf, pairs, avg);
     }
