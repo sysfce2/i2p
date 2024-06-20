@@ -16,6 +16,31 @@ import net.i2p.data.DataHelper;
 public class Points implements Comparable<Points> {
     private final Map<String, Double> reasons;
 
+    public static final String REASON_NON_FLOODFILL = "Non-floodfill: ";
+    public static final String REASON_TOO_CLOSE = "Very close: ";
+    public static final String REASON_ALWAYS_FAIL_LOOKUP = "Lookup fail rate: ";
+    public static final String REASON_UNREACHABLE = "Unreachable: ";
+
+    public static final String REASON_BAD_VERSION = "Strange Version: ";
+    public static final String REASON_OLD_VERSION = "Old Version: ";
+
+    public static final String REASON_MY_FAMILY = "Our family: ";
+    public static final String REASON_SPOOFED_MY_FAMILY = "Spoofed my family: ";
+    public static final String REASON_KNOWN_FAMILY = "Verified family: ";
+    public static final String REASON_INVALID_FAMILY = "Invalid family: ";
+    public static final String REASON_VALID_FAMILY = "Valid Unverified family: ";
+
+    public static final String REASON_SAME_IP4 = "Same IPv4: ";
+    public static final String REASON_SAME_IP4_16 = "Same IPv4/16: ";
+    public static final String REASON_SAME_IP4_24 = "Same IPv4/24: ";
+
+    public static final String REASON_SAME_IP6 = "Same IPv6: ";
+    public static final String REASON_SAME_IP6_48 = "Same IPv6/48: ";
+    public static final String REASON_SAME_IP6_64 = "Same IPv6/64: ";
+
+    public static final String REASON_BANLISTED = "Banlisted: ";
+    public static final String REASON_CONTACT = "First Heard About: ";
+
     /**
      * @since 0.9.38
      */
@@ -29,6 +54,24 @@ public class Points implements Comparable<Points> {
     public Points(double d, String reason) {
         this();
         addPoints(d, reason);
+    }
+
+    /**
+     * Compare 2 reason strings by comparing them to the list of static constants above.
+     * Ignores anything following the `:` when comparing the strings.
+     *
+     * @param comparator
+     * @param base
+     * @return
+     */
+    public static boolean compareReason(String comparator, String base) {
+        String[] comparatorPrefix = DataHelper.split(comparator, ":");
+        String[] basePrefix = DataHelper.split(base, ":");
+        if (comparatorPrefix == null)
+            return false;
+        if (basePrefix == null)
+            return false;
+        return basePrefix[0].toLowerCase().equals(comparatorPrefix[0].toLowerCase());
     }
 
     private double points() {
