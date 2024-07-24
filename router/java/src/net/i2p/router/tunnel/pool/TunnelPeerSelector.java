@@ -238,8 +238,10 @@ public abstract class TunnelPeerSelector extends ConnectChecker {
 
         // reduce load on floodfills
         String caps = info.getCapabilities();
-        if (isExploratory &&
-            caps.indexOf(FloodfillNetworkDatabaseFacade.CAPABILITY_FLOODFILL) >= 0 &&
+        boolean isFF = caps.indexOf(FloodfillNetworkDatabaseFacade.CAPABILITY_FLOODFILL) >= 0;
+        if (isFF && caps.indexOf(Router.CAPABILITY_UNREACHABLE) >= 0)
+            return true;
+        if (isExploratory && isFF &&
             ctx.random().nextInt(4) != 0)
             return true;
 
@@ -387,14 +389,6 @@ public abstract class TunnelPeerSelector extends ConnectChecker {
 
         // minimum version check
         String v = peer.getVersion();
-        if (v.equals("0.9.52")) {
-            // c++ bug in 2.40.0/0.9.52, drops SSU messages
-            for (RouterAddress addr : peer.getAddresses()) {
-                if (addr.getCost() == 9 && addr.getTransportStyle().equals("SSU"))
-                    return true;
-            }
-            return false;
-        }
         // quick check to skip the comparator
         if (v.equals(CoreVersion.PUBLISHED_VERSION))
             return false;
