@@ -49,7 +49,7 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     * @param reason may not contain '%'
+     * @param reason may not contain '%' or '\n'
      */
     public Points(double d, String reason) {
         this();
@@ -97,7 +97,7 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     * @param reason may not contain '%'
+     * @param reason may not contain '%' or '\n'
      * @since 0.9.38
      */
     public void addPoints(double d, String reason) {
