@@ -153,7 +153,7 @@ public class Points implements Comparable<Points> {
     public static Points fromString(String s) {
         Points rv = new Points();
         for (String lineString : DataHelper.split(s, "\n")) {
-            String[] ss = DataHelper.split(s, "%");
+            String[] ss = DataHelper.split(lineString, "%");
             if (ss.length != 2)
                 return null;
             double d;
