@@ -543,10 +543,10 @@ public class SybilRenderer {
                 if (p < minDisplay)
                     break;  // sorted
                 buf.append("<p class=\"threatpoints\"><b>Threat Points: " + fmt.format(p) + "</b></p><ul>");
-                Map<String, Double> reasons = pp.getReasons();
-                if (reasons.keySet().size() > 1)
-                    //Collections.sort(reasons.keySet(), rcomp);
-                for (String s : reasons.keySet()) {
+                List<String> reasons = new ArrayList<>(pp.getReasons().keySet());
+                if (reasons.size() > 1)
+                    Collections.sort(reasons, rcomp);
+                for (String s : reasons) {
                     int c = s.indexOf(':');
                     if (c <= 0)
                         continue;
