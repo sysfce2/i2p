@@ -49,7 +49,7 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     * @param reason may not contain '%' or '\n'
+     * @param reason may not contain '%' or '\t'
      */
     public Points(double d, String reason) {
         this();
@@ -97,7 +97,7 @@ public class Points implements Comparable<Points> {
     }
 
     /**
-     * @param reason may not contain '%' or '\n'
+     * @param reason may not contain '%' or '\t'
      * @since 0.9.38
      */
     public void addPoints(double d, String reason) {
@@ -140,7 +140,7 @@ public class Points implements Comparable<Points> {
      */
     public void toString(StringBuilder buf) {
         for (String r : reasons.keySet()) {
-            buf.append(reasons.get(r)).append('%').append(r.replace("%", "&#x25;")).append("\n");
+            buf.append(reasons.get(r)).append('%').append(r.replace("%", "&#x25;")).append("\t");
         }
     }
 
@@ -152,7 +152,7 @@ public class Points implements Comparable<Points> {
      */
     public static Points fromString(String s) {
         Points rv = new Points();
-        for (String lineString : DataHelper.split(s, "\n")) {
+        for (String lineString : DataHelper.split(s, "\t")) {
             String[] ss = DataHelper.split(lineString, "%");
             if (ss.length != 2)
                 return null;
