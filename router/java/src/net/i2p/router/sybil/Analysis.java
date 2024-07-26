@@ -49,7 +49,7 @@ import net.i2p.util.Translate;
 
 /**
  *
- *  @since 0.9.38 split out from SybilRenderer
+ * @since 0.9.38 split out from SybilRenderer
  *
  */
 public class Analysis extends JobImpl implements RouterApp, Runnable {
@@ -64,7 +64,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     private final List<String> _familyExemptPoints24 = new ArrayList<String>(2);
 
     /**
-     *  The name we register with the ClientAppManager
+     * The name we register with the ClientAppManager
      */
     public static final String APP_NAME = "sybil";
     public static final String PROP_FREQUENCY = "router.sybilFrequency";
@@ -73,8 +73,8 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     public static final String PROP_NONFF = "router.sybilAnalyzeAll";
     public static final String PROP_BLOCKTIME = "router.sybilBlockPeriod";
     public static final String PROP_REMOVETIME = "router.sybilDeleteOld";
-    private static final long MIN_FREQUENCY = 60*60*1000L;
-    private static final long MIN_UPTIME = 75*60*1000L;
+    private static final long MIN_FREQUENCY = 60 * 60 * 1000L;
+    private static final long MIN_UPTIME = 75 * 60 * 1000L;
 
     public static final int PAIRMAX = 20;
     public static final int MAX = 10;
@@ -112,16 +112,22 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     private static final double POINTS_BANLIST = 10.0;
     public static final boolean DEFAULT_BLOCK = true;
     public static final double DEFAULT_BLOCK_THRESHOLD = 50.0;
-    public static final long DEFAULT_BLOCK_TIME = 7*24*60*60*1000L;
-    public static final long DEFAULT_REMOVE_TIME = 10*24*60*60*1000L;
-    public static final long SHORT_REMOVE_TIME = 2*24*60*60*1000L;
-    public static final long DEFAULT_FREQUENCY = 24*60*60*1000L;
+    public static final long DEFAULT_BLOCK_TIME = 7 * 24 * 60 * 60 * 1000L;
+    public static final long DEFAULT_REMOVE_TIME = 10 * 24 * 60 * 60 * 1000L;
+    public static final long SHORT_REMOVE_TIME = 2 * 24 * 60 * 60 * 1000L;
+    public static final long DEFAULT_FREQUENCY = 24 * 60 * 60 * 1000L;
     public static final float MIN_BLOCK_POINTS = 12.01f;
     private static final byte[] IPV6_LOCALHOST = new byte[16];
-    static { IPV6_LOCALHOST[15] = 1; }
+    static {
+        IPV6_LOCALHOST[15] = 1;
+    }
     // i2pd bug 64:ff9b::/96
     private static final byte[] IPV6_NAT64 = new byte[16];
-    static { IPV6_NAT64[1] = 0x64; IPV6_NAT64[2] = (byte) 0xff; IPV6_NAT64[3] = (byte) 0x9b; }
+    static {
+        IPV6_NAT64[1] = 0x64;
+        IPV6_NAT64[2] = (byte) 0xff;
+        IPV6_NAT64[3] = (byte) 0x9b;
+    }
 
     /** Get via getInstance() */
     private Analysis(RouterContext ctx, ClientAppManager mgr, String[] args) {
@@ -135,7 +141,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @return non-null, creates new if not already registered
+     * @return non-null, creates new if not already registered
      */
     public synchronized static Analysis getInstance(RouterContext ctx) {
         ClientAppManager cmgr = ctx.clientAppManager();
@@ -149,17 +155,23 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         return rv;
     }
 
-    public PersistSybil getPersister() { return _persister; }
+    public PersistSybil getPersister() {
+        return _persister;
+    }
 
     /**
-     *  Load the persisted blocklist and tell the router
+     * Load the persisted blocklist and tell the router
      *
-     *  @since 0.9.50
+     * @since 0.9.50
      */
     private class InitJob extends JobImpl {
-        public InitJob() { super(_context); }
+        public InitJob() {
+            super(_context);
+        }
 
-        public String getName() { return "Load Sybil Blocklist"; }
+        public String getName() {
+            return "Load Sybil Blocklist";
+        }
 
         public void runJob() {
             Map<String, Long> map = _persister.readBlocklist();
@@ -196,7 +208,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.58
+     * @since 0.9.58
      */
     public void run() {
         long now = _context.clock().now();
@@ -218,7 +230,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     /////// begin ClientApp methods
 
     /**
-     *  ClientApp interface
+     * ClientApp interface
      */
     public synchronized void startup() {
         changeState(STARTING);
@@ -226,15 +238,16 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         _cmgr.register(this);
         _persister.removeOld();
         InitJob init = new InitJob();
-        long start = _context.clock().now() + 5*1000;
+        long start = _context.clock().now() + 5 * 1000;
         init.getTiming().setStartAfter(start);
         _context.jobQueue().addJob(init);
         schedule();
     }
 
     /**
-     *  ClientApp interface
-     *  @param args ignored
+     * ClientApp interface
+     *
+     * @param args ignored
      */
     public synchronized void shutdown(String[] args) {
         if (_state == STOPPED)
@@ -267,7 +280,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         long freq = _context.getProperty(PROP_FREQUENCY, DEFAULT_FREQUENCY);
         if (freq > 0) {
             List<Long> previous = _persister.load();
-            long now = _context.clock().now() + 15*1000;
+            long now = _context.clock().now() + 15 * 1000;
             if (freq < MIN_FREQUENCY)
                 freq = MIN_FREQUENCY;
             long when;
@@ -288,35 +301,38 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     private static class RouterInfoRoutingKeyComparator implements Comparator<RouterInfo>, Serializable {
-         private final Hash _us;
-         /** @param us ROUTING KEY */
-         public RouterInfoRoutingKeyComparator(Hash us) {
-             _us = us;
-         }
-         public int compare(RouterInfo l, RouterInfo r) {
-             return HashDistance.getDistance(_us, l.getHash()).compareTo(HashDistance.getDistance(_us, r.getHash()));
+        private final Hash _us;
+
+        /** @param us ROUTING KEY */
+        public RouterInfoRoutingKeyComparator(Hash us) {
+            _us = us;
+        }
+
+        public int compare(RouterInfo l, RouterInfo r) {
+            return HashDistance.getDistance(_us, l.getHash()).compareTo(HashDistance.getDistance(_us, r.getHash()));
         }
     }
 
     /**
-     *  Merge points1 into points2.
-     *  points1 is unmodified.
+     * Merge points1 into points2.
+     * points1 is unmodified.
      */
-/****
-    private void mergePoints(Map<Hash, Points> points1, Map<Hash, Points> points2) {
-        for (Map.Entry<Hash, Points> e : points1.entrySet()) {
-             Hash h = e.getKey();
-             Points p1 = e.getValue();
-             Points p2 = points2.get(h);
-             if (p2 != null) {
-                 p2.points += p1.points;
-                 p2.reasons.addAll(p1.reasons);
-             } else {
-                 points2.put(h, p1);
-             }
-        }
-    }
-****/
+    /****
+     * private void mergePoints(Map<Hash, Points> points1, Map<Hash, Points>
+     * points2) {
+     * for (Map.Entry<Hash, Points> e : points1.entrySet()) {
+     * Hash h = e.getKey();
+     * Points p1 = e.getValue();
+     * Points p2 = points2.get(h);
+     * if (p2 != null) {
+     * p2.points += p1.points;
+     * p2.reasons.addAll(p1.reasons);
+     * } else {
+     * points2.put(h, p1);
+     * }
+     * }
+     * }
+     ****/
 
     /** */
     private void addPoints(Map<Hash, Points> points, Hash h, double d, String reason) {
@@ -329,32 +345,34 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  All the floodfills, not including us
-     *  @since 0.9.38 split out from renderRouterInfoHTML
+     * All the floodfills, not including us
+     *
+     * @since 0.9.38 split out from renderRouterInfoHTML
      */
     public List<RouterInfo> getFloodfills(Hash us) {
         Set<Hash> ffs = _context.peerManager().getPeersByCapability('f');
         List<RouterInfo> ris = new ArrayList<RouterInfo>(ffs.size());
         for (Hash ff : ffs) {
-             if (ff.equals(us))
-                 continue;
-             RouterInfo ri = _context.netDb().lookupRouterInfoLocally(ff);
-             if (ri != null)
-                 ris.add(ri);
+            if (ff.equals(us))
+                continue;
+            RouterInfo ri = _context.netDb().lookupRouterInfoLocally(ff);
+            if (ri != null)
+                ris.add(ri);
         }
         return ris;
     }
 
     /**
-     *  All the routers, not including us
-     *  @since 0.9.41
+     * All the routers, not including us
+     *
+     * @since 0.9.41
      */
     public List<RouterInfo> getAllRouters(Hash us) {
         Set<RouterInfo> set = _context.netDb().getRouters();
         List<RouterInfo> ris = new ArrayList<RouterInfo>(set.size());
         for (RouterInfo ri : set) {
             if (!ri.getIdentity().getHash().equals(us))
-            ris.add(ri);
+                ris.add(ri);
         }
         return ris;
     }
@@ -374,10 +392,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  Analyze threats. No output.
-     *  Return separate maps for each cause instead?
-     *  @param includeAll false for floodfills only
-     *  @since 0.9.38
+     * Analyze threats. No output.
+     * Return separate maps for each cause instead?
+     *
+     * @param includeAll false for floodfills only
+     * @since 0.9.38
      */
     public synchronized Map<Hash, Points> backgroundAnalysis(boolean includeAll) {
         _wasRun = true;
@@ -401,11 +420,11 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         // unused here, just for the console, so use the same for all of them
         List<RouterInfo> dummy = new DummyList();
         calculateIPGroupsUs(ris, points, dummy, dummy, dummy, dummy, dummy);
-        //calculateIPGroups32(ris, points);
-        //calculateIPGroups24(ris, points);
-        //calculateIPGroups16(ris, points);
-        //calculateIPGroups64(ris, points);
-        //calculateIPGroups48(ris, points);
+        // calculateIPGroups32(ris, points);
+        // calculateIPGroups24(ris, points);
+        // calculateIPGroups16(ris, points);
+        // calculateIPGroups64(ris, points);
+        // calculateIPGroups48(ris, points);
 
         // Pairwise distance analysis
         // O(n**2)
@@ -433,14 +452,15 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             boolean isLocal = _context.clientManager().isLocal(client);
             if (!isLocal)
                 continue;
-            if (! _context.clientManager().shouldPublishLeaseSet(client))
+            if (!_context.clientManager().shouldPublishLeaseSet(client))
                 continue;
             LeaseSet ls = _context.netDb().lookupLeaseSetLocally(client);
             if (ls == null)
                 continue;
             Hash rkey = ls.getRoutingKey();
             TunnelPool in = clientInboundPools.get(client);
-            String name = (in != null) ? DataHelper.escapeHTML(in.getSettings().getDestinationNickname()) : client.toBase64().substring(0,4);
+            String name = (in != null) ? DataHelper.escapeHTML(in.getSettings().getDestinationNickname())
+                    : client.toBase64().substring(0, 4);
             // closest to routing key today
             calculateRouterInfo(rkey, name, ris, points);
             // closest to routing key tomorrow
@@ -457,27 +477,35 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.57
+     * @since 0.9.57
      */
     private static class DummyList extends ArrayList<RouterInfo> {
-        public DummyList() { super(0); }
+        public DummyList() {
+            super(0);
+        }
+
         @Override
-        public boolean add(RouterInfo ri) { return true; }
+        public boolean add(RouterInfo ri) {
+            return true;
+        }
     }
 
     /**
-     *  Blocklist and Banlist if configured
-     *  @since 0.9.41
+     * Blocklist and Banlist if configured
+     *
+     * @since 0.9.41
      */
     private void doBlocking(Map<Hash, Points> points) {
         double threshold = DEFAULT_BLOCK_THRESHOLD;
         long now = _context.clock().now();
         long blockUntil = _context.getProperty(Analysis.PROP_BLOCKTIME, DEFAULT_BLOCK_TIME) + now;
         try {
-            threshold = Double.parseDouble(_context.getProperty(PROP_THRESHOLD, Double.toString(DEFAULT_BLOCK_THRESHOLD)));
+            threshold = Double
+                    .parseDouble(_context.getProperty(PROP_THRESHOLD, Double.toString(DEFAULT_BLOCK_THRESHOLD)));
             if (threshold < MIN_BLOCK_POINTS)
                 threshold = MIN_BLOCK_POINTS;
-        } catch (NumberFormatException nfe) {}
+        } catch (NumberFormatException nfe) {
+        }
         String day = DataHelper.formatTime(now);
         Set<String> blocks = new HashSet<String>();
         for (Map.Entry<Hash, Points> e : points.entrySet()) {
@@ -511,12 +539,12 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @param pairs out parameter, sorted
-     *  @return average distance
-     *  @since 0.9.38 split out from renderPairDistance()
+     * @param pairs out parameter, sorted
+     * @return average distance
+     * @since 0.9.38 split out from renderPairDistance()
      */
     public double calculatePairDistance(List<RouterInfo> ris, Map<Hash, Points> points,
-                                        List<Pair> pairs) {
+            List<Pair> pairs) {
         int sz = ris.size();
         double total = 0;
         for (int i = 0; i < sz; i++) {
@@ -549,14 +577,14 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             double distance = biLog2(p.dist);
             double point = MIN_CLOSE - distance;
             if (point < 0)
-                break;  // sorted;
+                break; // sorted;
             point *= PAIR_DISTANCE_FACTOR;
             String b2 = p.r2.getHash().toBase64();
-            addPoints(points, p.r1.getHash(), point, "Very close (" + fmt.format(distance) +
-                          ") to other " + other + " <a href=\"netdb?r=" + b2 + "\">" + b2 + "</a>");
+            addPoints(points, p.r1.getHash(), point, Points.REASON_TOO_CLOSE + " (" + fmt.format(distance) +
+                    ") to other " + other + " <a href=\"netdb?r=" + b2 + "\">" + b2 + "</a>");
             String b1 = p.r1.getHash().toBase64();
-            addPoints(points, p.r2.getHash(), point, "Very close (" + fmt.format(distance) +
-                          ") to other " + other + " <a href=\"netdb?r=" + b1 + "\">" + b1 + "</a>");
+            addPoints(points, p.r2.getHash(), point, Points.REASON_TOO_CLOSE + " (" + fmt.format(distance) +
+                    ") to other " + other + " <a href=\"netdb?r=" + b1 + "\">" + b1 + "</a>");
         }
         return avg;
     }
@@ -585,6 +613,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
 
     /**
      * v6 only
+     *
      * @since 0.9.57
      */
     private static byte[] getIPv6(RouterInfo ri) {
@@ -599,16 +628,16 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @param ri32 out parameter
-     *  @param ri24 out parameter
-     *  @param ri16 out parameter
-     *  @param ri64 out parameter
-     *  @param ri48 out parameter
-     *  @since 0.9.38 split out from renderIPGroupsUs()
+     * @param ri32 out parameter
+     * @param ri24 out parameter
+     * @param ri16 out parameter
+     * @param ri64 out parameter
+     * @param ri48 out parameter
+     * @since 0.9.38 split out from renderIPGroupsUs()
      */
     public void calculateIPGroupsUs(List<RouterInfo> ris, Map<Hash, Points> points,
-                                    List<RouterInfo> ri32, List<RouterInfo> ri24, List<RouterInfo> ri16,
-                                    List<RouterInfo> ri64, List<RouterInfo> ri48) {
+            List<RouterInfo> ri32, List<RouterInfo> ri24, List<RouterInfo> ri16,
+            List<RouterInfo> ri64, List<RouterInfo> ri48) {
         RouterInfo us = _context.router().getRouterInfo();
         byte[] ourIP = getIP(us);
         if (ourIP == null) {
@@ -632,35 +661,35 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         String reason48;
 
         if (ourIP != null) {
-            reason32 = "Same IP as <a href=\"/netdb?ip=" +
-                       Addresses.toString(ourIP) +
-                       "&amp;sybil\">us</a>";
-            reason24 = "Same IPv4 /24 as <a href=\"/netdb?ip=" +
-                       (ourIP[0] & 0xff) + '.' +
-                       (ourIP[1] & 0xff) + '.' +
-                       (ourIP[2] & 0xff) +
-                       ".0/24&amp;sybil\">us</a>";
-            reason16 = "Same IPv4 /16 as <a href=\"/netdb?ip=" +
-                       (ourIP[0] & 0xff) + '.' +
-                       (ourIP[1] & 0xff) +
-                       ".0.0/16&amp;sybil\">us</a>";
+            reason32 = Points.REASON_SAME_IP4 + " as <a href=\"/netdb?ip=" +
+                    Addresses.toString(ourIP) +
+                    "&amp;sybil\">us</a>";
+            reason24 = Points.REASON_SAME_IP4_24 + " as <a href=\"/netdb?ip=" +
+                    (ourIP[0] & 0xff) + '.' +
+                    (ourIP[1] & 0xff) + '.' +
+                    (ourIP[2] & 0xff) +
+                    ".0/24&amp;sybil\">us</a>";
+            reason16 = Points.REASON_SAME_IP4_16 + " as <a href=\"/netdb?ip=" +
+                    (ourIP[0] & 0xff) + '.' +
+                    (ourIP[1] & 0xff) +
+                    ".0.0/16&amp;sybil\">us</a>";
         } else {
             reason32 = null;
             reason24 = null;
             reason16 = null;
         }
         if (ourIPv6 != null) {
-            reason64 = "Same IPv6 /64 as <a href=\"/netdb?ip=" +
-                        Integer.toString(((ourIPv6[0] << 8) & 0xff00) | (ourIPv6[1] & 0xff), 16) + ':' +
-                        Integer.toString(((ourIPv6[2] << 8) & 0xff00) | (ourIPv6[3] & 0xff), 16) + ':' +
-                        Integer.toString(((ourIPv6[4] << 8) & 0xff00) | (ourIPv6[5] & 0xff), 16) + ':' +
-                        Integer.toString(((ourIPv6[6] << 8) & 0xff00) | (ourIPv6[7] & 0xff), 16) +
-                        "::&amp;sybil\">us</a>";
-            reason48 = "Same IPv6 /48 as <a href=\"/netdb?ip=" +
-                        Integer.toString(((ourIPv6[0] << 8) & 0xff00) | (ourIPv6[1] & 0xff), 16) + ':' +
-                        Integer.toString(((ourIPv6[2] << 8) & 0xff00) | (ourIPv6[3] & 0xff), 16) + ':' +
-                        Integer.toString(((ourIPv6[4] << 8) & 0xff00) | (ourIPv6[5] & 0xff), 16) +
-                        "::&amp;sybil\">us</a>";
+            reason64 = Points.REASON_SAME_IP6_64 + " as <a href=\"/netdb?ip=" +
+                    Integer.toString(((ourIPv6[0] << 8) & 0xff00) | (ourIPv6[1] & 0xff), 16) + ':' +
+                    Integer.toString(((ourIPv6[2] << 8) & 0xff00) | (ourIPv6[3] & 0xff), 16) + ':' +
+                    Integer.toString(((ourIPv6[4] << 8) & 0xff00) | (ourIPv6[5] & 0xff), 16) + ':' +
+                    Integer.toString(((ourIPv6[6] << 8) & 0xff00) | (ourIPv6[7] & 0xff), 16) +
+                    "::&amp;sybil\">us</a>";
+            reason48 = Points.REASON_SAME_IP6_48 + " as <a href=\"/netdb?ip=" +
+                    Integer.toString(((ourIPv6[0] << 8) & 0xff00) | (ourIPv6[1] & 0xff), 16) + ':' +
+                    Integer.toString(((ourIPv6[2] << 8) & 0xff00) | (ourIPv6[3] & 0xff), 16) + ':' +
+                    Integer.toString(((ourIPv6[4] << 8) & 0xff00) | (ourIPv6[5] & 0xff), 16) +
+                    "::&amp;sybil\">us</a>";
         } else {
             reason64 = null;
             reason48 = null;
@@ -703,7 +732,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.38 split out from renderIPGroups32()
+     * @since 0.9.38 split out from renderIPGroups32()
      */
     public Map<Integer, List<RouterInfo>> calculateIPGroups32(List<RouterInfo> ris, Map<Hash, Points> points) {
         ObjectCounterUnsafe<Integer> oc = new ObjectCounterUnsafe<Integer>();
@@ -729,9 +758,9 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int i1 = (i >> 16) & 0xff;
             int i2 = (i >> 8) & 0xff;
             int i3 = i & 0xff;
-            String reason = "Same IP with <a href=\"/netdb?ip=" +
-                            i0 + '.' + i1 + '.' + i2 + '.' + i3 + "&amp;sybil\">" +
-                            (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+            String reason = Points.REASON_SAME_IP4 + " with <a href=\"/netdb?ip=" +
+                    i0 + '.' + i1 + '.' + i2 + '.' + i3 + "&amp;sybil\">" +
+                    (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
             for (RouterInfo info : ris) {
                 byte[] ip = getIP(info);
                 if (ip == null)
@@ -752,7 +781,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.38 split out from renderIPGroups24()
+     * @since 0.9.38 split out from renderIPGroups24()
      */
     public Map<Integer, List<RouterInfo>> calculateIPGroups24(List<RouterInfo> ris, Map<Hash, Points> points) {
         ObjectCounterUnsafe<Integer> oc = new ObjectCounterUnsafe<Integer>();
@@ -778,9 +807,9 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int i0 = i >> 16;
             int i1 = (i >> 8) & 0xff;
             int i2 = i & 0xff;
-            String reason = "Same IPv4 /24 with <a href=\"/netdb?ip=" +
-                            i0 + '.' + i1 + '.' + i2 + ".0/24&amp;sybil\">" +
-                            (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+            String reason = Points.REASON_SAME_IP4_24 + " with <a href=\"/netdb?ip=" +
+                    i0 + '.' + i1 + '.' + i2 + ".0/24&amp;sybil\">" +
+                    (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
             for (RouterInfo info : ris) {
                 byte[] ip = getIP(info);
                 if (ip == null)
@@ -794,7 +823,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                 if (fkc != null) {
                     String f = info.getOption("family");
                     if (f != null && _familyExemptPoints24.contains(f) &&
-                        fkc.verify(info) == FamilyKeyCrypto.Result.STORED_KEY)
+                            fkc.verify(info) == FamilyKeyCrypto.Result.STORED_KEY)
                         continue;
                 }
                 e.getValue().add(info);
@@ -805,7 +834,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.38 split out from renderIPGroups16()
+     * @since 0.9.38 split out from renderIPGroups16()
      */
     public Map<Integer, List<RouterInfo>> calculateIPGroups16(List<RouterInfo> ris, Map<Hash, Points> points) {
         ObjectCounterUnsafe<Integer> oc = new ObjectCounterUnsafe<Integer>();
@@ -829,9 +858,9 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int i = ii.intValue();
             int i0 = i >> 8;
             int i1 = i & 0xff;
-            String reason = "Same IPv4 /16 with <a href=\"/netdb?ip=" +
-                            i0 + '.' + i1 + ".0.0/16&amp;sybil\">" +
-                            (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+            String reason = Points.REASON_SAME_IP4_16 + " with <a href=\"/netdb?ip=" +
+                    i0 + '.' + i1 + ".0.0/16&amp;sybil\">" +
+                    (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
             for (RouterInfo info : ris) {
                 byte[] ip = getIP(info);
                 if (ip == null)
@@ -848,7 +877,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.57
+     * @since 0.9.57
      */
     public Map<Long, List<RouterInfo>> calculateIPGroups64(List<RouterInfo> ris, Map<Hash, Points> points) {
         ObjectCounterUnsafe<Long> oc = new ObjectCounterUnsafe<Long>();
@@ -878,13 +907,13 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int i5 = (int) ((i >> 16) & 0xff);
             int i6 = (int) ((i >> 8) & 0xff);
             int i7 = (int) (i & 0xff);
-            String reason = "Same IPv6 /64 with <a href=\"/netdb?ip=" +
-                            Integer.toString((i0 << 8) | i1, 16) + ':' +
-                            Integer.toString((i2 << 8) | i3, 16) + ':' +
-                            Integer.toString((i4 << 8) | i5, 16) + ':' +
-                            Integer.toString((i6 << 8) | i7, 16) +
-                            "::&amp;sybil\">" +
-                            (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+            String reason = Points.REASON_SAME_IP6_64 + " with <a href=\"/netdb?ip=" +
+                    Integer.toString((i0 << 8) | i1, 16) + ':' +
+                    Integer.toString((i2 << 8) | i3, 16) + ':' +
+                    Integer.toString((i4 << 8) | i5, 16) + ':' +
+                    Integer.toString((i6 << 8) | i7, 16) +
+                    "::&amp;sybil\">" +
+                    (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
             for (RouterInfo info : ris) {
                 byte[] ip = getIPv6(info);
                 if (ip == null)
@@ -913,7 +942,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @since 0.9.57
+     * @since 0.9.57
      */
     public Map<Long, List<RouterInfo>> calculateIPGroups48(List<RouterInfo> ris, Map<Hash, Points> points) {
         ObjectCounterUnsafe<Long> oc = new ObjectCounterUnsafe<Long>();
@@ -941,12 +970,12 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int i3 = (int) ((i >> 16) & 0xff);
             int i4 = (int) ((i >> 8) & 0xff);
             int i5 = (int) (i & 0xff);
-            String reason = "Same IPv6 /48 with <a href=\"/netdb?ip=" +
-                            Integer.toString((i0 << 8) | i1, 16) + ':' +
-                            Integer.toString((i2 << 8) | i3, 16) + ':' +
-                            Integer.toString((i4 << 8) | i5, 16) +
-                            "::&amp;sybil\">" +
-                            (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+            String reason = Points.REASON_SAME_IP6_48 + " with <a href=\"/netdb?ip=" +
+                    Integer.toString((i0 << 8) | i1, 16) + ':' +
+                    Integer.toString((i2 << 8) | i3, 16) + ':' +
+                    Integer.toString((i4 << 8) | i5, 16) +
+                    "::&amp;sybil\">" +
+                    (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
             for (RouterInfo info : ris) {
                 byte[] ip = getIPv6(info);
                 if (ip == null)
@@ -971,8 +1000,8 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  @return map of family name to list of routers in that family
-     *  @since 0.9.38 split out from renderIPGroupsFamily()
+     * @return map of family name to list of routers in that family
+     * @since 0.9.38 split out from renderIPGroupsFamily()
      */
     public Map<String, List<RouterInfo>> calculateIPGroupsFamily(List<RouterInfo> ris, Map<Hash, Points> points) {
         Map<String, List<RouterInfo>> rv = new HashMap<String, List<RouterInfo>>();
@@ -1001,10 +1030,13 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                     if (s.equals(ourFamily)) {
                         if (fkc.verifyOurFamily(info)) {
                             point = POINTS_OUR_FAMILY;
-                            reason = "Our family \"" + ss + "\" with <a href=\"/netdb?fam=" + ss + "&amp;sybil\">" + (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+                            reason = Points.REASON_MY_FAMILY + " \"" + ss + "\" with <a href=\"/netdb?fam=" + ss
+                                    + "&amp;sybil\">"
+                                    + (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
                         } else {
                             point = POINTS_BAD_OUR_FAMILY;
-                            reason = "Spoofed our family \"" + ss + "\" with <a href=\"/netdb?fam=" + ss + "&amp;sybil\">" + (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+                            reason = Points.REASON_SPOOFED_MY_FAMILY + " \"" + ss + "\" with <a href=\"/netdb?fam=" + ss
+                                    + "&amp;sybil\">" + (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
                         }
                     } else {
                         FamilyKeyCrypto.Result r = fkc.verify(info);
@@ -1014,13 +1046,16 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                             case INVALID_SIG:
                             case NO_SIG:
                                 point = POINTS_BAD_FAMILY;
-                                reason = "Bad family config \"" + ss + '"';
+                                reason = Points.REASON_INVALID_FAMILY + " \"" + ss + '"';
                                 break;
 
                             case STORED_KEY:
                                 point = POINTS_FAMILY_VERIFIED;
                                 if (count > 1)
-                                    reason = "In verified family \"" + ss + "\" with <a href=\"/netdb?fam=" + ss + "&amp;sybil\">" + (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+                                    reason = Points.REASON_KNOWN_FAMILY + " \"" + ss + "\" with <a href=\"/netdb?fam="
+                                            + ss
+                                            + "&amp;sybil\">" + (count - 1) + " other" + ((count > 2) ? "s" : "")
+                                            + "</a>";
                                 else
                                     reason = "In verified family \"" + ss + '"';
                                 break;
@@ -1030,22 +1065,27 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                             case UNSUPPORTED_SIG:
                             case NAME_CHANGED:
                             case SIG_CHANGED:
-                            case NO_FAMILY:  // won't happen
+                            case NO_FAMILY: // won't happen
                             default:
                                 point = POINTS_FAMILY;
                                 if (count > 1)
-                                    reason = "In unverified family \"" + ss + "\" with <a href=\"/netdb?fam=" + ss + "&amp;sybil\">" + (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+                                    reason = Points.REASON_VALID_FAMILY + " \"" + ss + "\" with <a href=\"/netdb?fam="
+                                            + ss
+                                            + "&amp;sybil\">" + (count - 1) + " other" + ((count > 2) ? "s" : "")
+                                            + "</a>";
                                 else
-                                    reason = "In unverified family \"" + ss + '"';
+                                    reason = Points.REASON_VALID_FAMILY + " \"" + ss + '"';
                                 break;
                         }
                     }
                 } else if (count > 1) {
                     point = POINTS_FAMILY;
-                    reason = "In unverified family \"" + ss + "\" with <a href=\"/netdb?fam=" + ss + "&amp;sybil\">" + (count - 1) + " other" + (( count > 2) ? "s" : "") + "</a>";
+                    reason = Points.REASON_VALID_FAMILY + " \"" + ss + "\" with <a href=\"/netdb?fam=" + ss
+                            + "&amp;sybil\">"
+                            + (count - 1) + " other" + ((count > 2) ? "s" : "") + "</a>";
                 } else {
                     point = POINTS_FAMILY;
-                    reason = "In unverified family \"" + ss + '"';
+                    reason = Points.REASON_VALID_FAMILY + " \"" + ss + '"';
                 }
                 addPoints(points, info.getHash(), point, reason);
             }
@@ -1053,7 +1093,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         return rv;
     }
 
-    private static final long DAY = 24*60*60*1000L;
+    private static final long DAY = 24 * 60 * 60 * 1000L;
 
     public void addProfilePoints(List<RouterInfo> ris, Map<Hash, Points> points) {
         Map<Hash, Banlist.Entry> banEntries = _context.banlist().getEntries();
@@ -1062,7 +1102,7 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         for (RouterInfo info : ris) {
             Hash h = info.getHash();
             if (_context.banlist().isBanlisted(h)) {
-                StringBuilder buf = new StringBuilder("Banlisted");
+                StringBuilder buf = new StringBuilder(Points.REASON_BANLISTED);
                 Banlist.Entry entry = banEntries.get(h);
                 if (entry != null) {
                     if (entry.cause != null) {
@@ -1087,20 +1127,21 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
                         // (POINTS_NEW / 48) for every hour under 48, max POINTS_NEW
                         double point = Math.min(POINTS_NEW, (2 * DAY - age) / (2 * DAY / POINTS_NEW));
                         addPoints(points, h, point,
-                                  "First heard about: " + _t("{0} ago", DataHelper.formatDuration2(age)));
+                                Points.REASON_CONTACT + " " + _t("{0} ago", DataHelper.formatDuration2(age)));
                     }
                 }
                 DBHistory dbh = prof.getDBHistory();
                 if (dbh != null) {
                     RateStat rs = dbh.getFailedLookupRate();
                     if (rs != null) {
-                        Rate r = rs.getRate(24*60*60*1000);
+                        Rate r = rs.getRate(24 * 60 * 60 * 1000);
                         if (r != null) {
                             r.computeAverages(ra, false);
                             if (ra.getTotalEventCount() > 0) {
                                 double avg = 100 * ra.getAverage();
                                 if (avg > 40)
-                                    addPoints(points, h, (avg - 40) / 6.0, "Lookup fail rate " + ((int) avg) + '%');
+                                    addPoints(points, h, (avg - 40) / 6.0,
+                                            Points.REASON_ALWAYS_FAIL_LOOKUP + " " + ((int) avg) + '%');
                             }
                         }
                     }
@@ -1111,10 +1152,12 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
 
     public void addVersionPoints(List<RouterInfo> ris, Map<Hash, Points> points) {
         RouterInfo us = _context.router().getRouterInfo();
-        if (us == null) return;
+        if (us == null)
+            return;
         String ourVer = us.getVersion();
         // TODO do the math once we hit version 1.0.0
-        if (!ourVer.startsWith("0.9.")) return;
+        if (!ourVer.startsWith("0.9."))
+            return;
         ourVer = ourVer.substring(4);
         int dot = ourVer.indexOf('.');
         if (dot > 0)
@@ -1122,18 +1165,21 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
         int minor;
         try {
             minor = Integer.parseInt(ourVer);
-        } catch (NumberFormatException nfe) { return; }
+        } catch (NumberFormatException nfe) {
+            return;
+        }
         for (RouterInfo info : ris) {
             Hash h = info.getHash();
             String caps = info.getCapabilities();
             if (!caps.contains("R"))
-                addPoints(points, h, POINTS_UNREACHABLE, "Unreachable: " + DataHelper.escapeHTML(caps));
+                addPoints(points, h, POINTS_UNREACHABLE, Points.REASON_UNREACHABLE + DataHelper.escapeHTML(caps));
             if (!caps.contains("f"))
-                addPoints(points, h, POINTS_NONFF, "Non-floodfill");
+                addPoints(points, h, POINTS_NONFF, Points.REASON_NON_FLOODFILL);
             String hisFullVer = info.getVersion();
             if (!hisFullVer.startsWith("0.9.")) {
                 if (!hisFullVer.startsWith("1."))
-                    addPoints(points, h, POINTS_BAD_VERSION, "Strange version " + DataHelper.escapeHTML(hisFullVer));
+                    addPoints(points, h, POINTS_BAD_VERSION,
+                            Points.REASON_BAD_VERSION + DataHelper.escapeHTML(hisFullVer));
                 // TODO do the math once we hit version 1.0.0
                 continue;
             }
@@ -1144,21 +1190,24 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             int hisMinor;
             try {
                 hisMinor = Integer.parseInt(hisVer);
-            } catch (NumberFormatException nfe) { continue; }
+            } catch (NumberFormatException nfe) {
+                continue;
+            }
             int howOld = minor - hisMinor;
             if (howOld < 3)
                 continue;
-            addPoints(points, h, howOld * VERSION_FACTOR, howOld + " versions behind: " + DataHelper.escapeHTML(hisFullVer));
+            addPoints(points, h, howOld * VERSION_FACTOR,
+                    Points.REASON_OLD_VERSION + howOld + " versions behind: " + DataHelper.escapeHTML(hisFullVer));
         }
     }
 
     /**
-     *  @param usName HTML escaped
-     *  @param ris will be re-sorted in place
-     *  @since 0.9.38 split out from renderRouterInfoHTML()
+     * @param usName HTML escaped
+     * @param ris    will be re-sorted in place
+     * @since 0.9.38 split out from renderRouterInfoHTML()
      */
     public void calculateRouterInfo(Hash us, String usName,
-                                     List<RouterInfo> ris, Map<Hash, Points> points) {
+            List<RouterInfo> ris, Map<Hash, Points> points) {
         Collections.sort(ris, new RouterInfoRoutingKeyComparator(us));
         int count = Math.min(MAX, ris.size());
         for (int i = 0; i < count; i++) {
@@ -1172,13 +1221,15 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
             if (point <= 0)
                 break;
             point *= OUR_KEY_FACTOR;
-            addPoints(points, ri.getHash(), point, "Very close (" + fmt.format(dist) + ") to our key " + usName + ": " + us.toBase64());
+            addPoints(points, ri.getHash(), point,
+                    Points.REASON_TOO_CLOSE + "(" + fmt.format(dist) + ") to our key " + usName + ": " + us.toBase64());
         }
     }
 
     /**
      * For debugging
      * http://forums.sun.com/thread.jspa?threadID=597652
+     *
      * @since 0.7.14
      */
     private static double biLog2(BigInteger a) {
@@ -1192,16 +1243,16 @@ public class Analysis extends JobImpl implements RouterApp, Runnable {
     }
 
     /**
-     *  translate a string with a parameter
-     *  This is a lot more expensive than _t(s), so use sparingly.
+     * translate a string with a parameter
+     * This is a lot more expensive than _t(s), so use sparingly.
      *
-     *  @param s string to be translated containing {0}
-     *    The {0} will be replaced by the parameter.
-     *    Single quotes must be doubled, i.e. ' -> '' in the string.
-     *  @param o parameter, not translated.
-     *    To translate parameter also, use _t("foo {0} bar", _t("baz"))
-     *    Do not double the single quotes in the parameter.
-     *    Use autoboxing to call with ints, longs, floats, etc.
+     * @param s string to be translated containing {0}
+     *          The {0} will be replaced by the parameter.
+     *          Single quotes must be doubled, i.e. ' -> '' in the string.
+     * @param o parameter, not translated.
+     *          To translate parameter also, use _t("foo {0} bar", _t("baz"))
+     *          Do not double the single quotes in the parameter.
+     *          Use autoboxing to call with ints, longs, floats, etc.
      */
     private String _t(String s, Object o) {
         return Translate.getString(s, o, _context, BUNDLE_NAME);
