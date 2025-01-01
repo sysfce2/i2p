@@ -291,6 +291,28 @@ public class PeerState2 extends PeerState implements SSU2Payload.PayloadCallback
      *  @since 0.9.55 split out from above
      */
     private boolean checkRetransmitSessionConfirmed(long now, boolean force) {
+        boolean rv = checkRetransmitSessionConfirmed2(now, force);
+        if (!rv) {
+            // pulled out from synch block below to avoid deadlock
+            if (_log.shouldWarn())
+                _log.warn("Fail, no Sess Conf ACK rcvd on " + this);
+            try {
+                UDPPacket pkt = _transport.getBuilder2().buildSessionDestroyPacket(SSU2Util.REASON_FRAME_TIMEOUT, this);
+                _transport.send(pkt);
+            } catch (IOException ioe) {}
+            _transport.dropPeer(this, true, "No Sess Conf ACK rcvd");
+        }
+        return rv;
+    }
+
+    /**
+     *  Only call for outbound, if we don't have ack 0 yet.
+     *
+     *  @param force ignore timer, always send
+     *  @return success, false if total fail
+     *  @since 0.9.65 split out from above
+     */
+    private boolean checkRetransmitSessionConfirmed2(long now, boolean force) {
         UDPPacket[] packets = null;
         synchronized(this) {
             if (_sessConfForReTX != null) {
@@ -300,13 +322,6 @@ public class PeerState2 extends PeerState implements SSU2Payload.PayloadCallback
                         // note: we generally won't get here, because the
                         // first outbound message will timeout before this
                         // and close the session in super.finishMessages()
-                        if (_log.shouldWarn())
-                            _log.warn("Fail, no Sess Conf ACK rcvd on " + this);
-                        try {
-                            UDPPacket pkt = _transport.getBuilder2().buildSessionDestroyPacket(SSU2Util.REASON_FRAME_TIMEOUT, this);
-                            _transport.send(pkt);
-                        } catch (IOException ioe) {}
-                        _transport.dropPeer(this, true, "No Sess Conf ACK rcvd");
                         _sessConfForReTX = null;
                         return false;
                     }
@@ -719,9 +734,12 @@ public class PeerState2 extends PeerState implements SSU2Payload.PayloadCallback
     }
 
     public void gotRelayIntro(Hash aliceHash, byte[] data) {
-        _transport.getIntroManager().receiveRelayIntro(this, aliceHash, data);
+        IntroductionManager.RelayIntroResult result = _transport.getIntroManager().receiveRelayIntro(this, aliceHash, data);
         // Relay blocks are ACK-eliciting
-        messagePartiallyReceived();
+        // but we will usually respond to Bob immediately with a relay response, which includes the ack,
+        // so only schedule an ack if we didn't respond
+        if (result != IntroductionManager.RelayIntroResult.REPLIED)
+            messagePartiallyReceived();
     }
 
     public void gotPeerTest(int msg, int status, Hash h, byte[] data) {

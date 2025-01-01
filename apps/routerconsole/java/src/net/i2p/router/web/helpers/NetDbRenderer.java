@@ -776,8 +776,6 @@ class NetDbRenderer {
                 buf.append("</ul></td></tr>\n");
             }
             buf.append("<tr><td><b>Total Known Remote Leasesets:</b></td><td colspan=\"3\">").append(leases.size()-1).append("</td></tr>\n");
-            buf.append("</ul></td></tr>\n" +
-                   "</table>\n");
         } else {
             buf.append("<tr><th colspan=\"3\">Leaseset Summary for Floodfill</th>" +
                        "<th><a href=\"/configadvanced\" title=\"").append(_t("Manually Configure Floodfill Participation")).append("\">[")
@@ -822,6 +820,7 @@ class NetDbRenderer {
           boolean linkSusi = _context.portMapper().isRegistered("susidns");
           long now = _context.clock().now();
           buf.append("<div class=\"leasesets_container\">");
+          boolean ldebug = debug || client != null;
           for (LeaseSet ls : leases) {
             String distance;
             if (debug) {
@@ -835,7 +834,7 @@ class NetDbRenderer {
                 distance = null;
             }
             if (!ls.getHash().equals(myLeaseSet.getHash())) {
-                renderLeaseSet(buf, ls, debug, now, linkSusi, distance);
+                renderLeaseSet(buf, ls, ldebug, now, linkSusi, distance);
                 out.write(buf.toString());
                 buf.setLength(0);
             }
